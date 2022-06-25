@@ -2,11 +2,14 @@
 
 namespace Awz\Ydelivery\Api\Filters;
 
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Security;
 use Bitrix\Main\Engine\ActionFilter\Base;
 use Bitrix\Main\Error;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
+
+Loc::loadMessages(__FILE__);
 
 class Sign extends Base {
 
@@ -23,27 +26,27 @@ class Sign extends Base {
     public function onBeforeAction(Event $event)
     {
         try {
-            $signer = new Security\Sign\Signer;
-            $params = $signer->unsign($this->action->getController()->getRequest()->get('signedParameters'));
+            $signer = new Security\Sign\Signer();
+            $params = $signer->unsign($this->getAction()->getController()->getRequest()->get('signedParameters'));
             $params = unserialize(base64_decode($params));
         }catch (\Exception $e){
             $this->addError(new Error(
-                'wrong signedParameters',
+                Loc::getMessage('AWZ_YDELIVERY_API_FILTERS_ERR_SIGN'),
                 self::ERROR_INVALID_PARAMS
             ));
 
-            return new EventResult(EventResult::ERROR, null, null, $this);
+            return new EventResult(EventResult::ERROR, null, 'awz.ydelivery', $this);
         }
 
 
         if (empty($params))
         {
             $this->addError(new Error(
-                'wrong signedParameters',
+                Loc::getMessage('AWZ_YDELIVERY_API_FILTERS_ERR_SIGN'),
                 self::ERROR_INVALID_PARAMS
             ));
 
-            return new EventResult(EventResult::ERROR, null, null, $this);
+            return new EventResult(EventResult::ERROR, null, 'awz.ydelivery', $this);
         }
 
 

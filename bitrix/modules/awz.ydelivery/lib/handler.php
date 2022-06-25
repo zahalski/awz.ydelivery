@@ -4,37 +4,16 @@ namespace Awz\Ydelivery;
 
 use Bitrix\Main\Localization\Loc;
 
+Loc::loadMessages(__FILE__);
+
 class Handler extends \Bitrix\Sale\Delivery\Services\Base {
+
+    const MODULE_ID = 'awz.ydelivery';
 
     protected static $isCalculatePriceImmediately = true;
     protected static $whetherAdminExtraServicesShow = false;
 
     protected static $canHasProfiles = true;
-
-    public static function registerHandler(){
-
-        $result = new \Bitrix\Main\EventResult(
-            \Bitrix\Main\EventResult::SUCCESS,
-            array(
-                'Awz\Ydelivery\Handler' => '/bitrix/modules/awz.ydelivery/lib/handler.php',
-                'Awz\Ydelivery\Profiles\Pickup' => '/bitrix/modules/awz.ydelivery/lib/profiles/pickup.php',
-                'Awz\Ydelivery\Profiles\Standart' => '/bitrix/modules/awz.ydelivery/lib/profiles/standart.php',
-            )
-        );
-
-        return $result;
-
-    }
-
-    public static function OrderDeliveryBuildList(&$arResult, &$arUserResult, $arParams)
-    {
-        global $APPLICATION;
-        \CUtil::InitJSCore(array('ajax', 'awz_yd_lib'));
-
-        $key = \Bitrix\Main\Config\Option::get("fileman", "yandex_map_api_key");
-        $APPLICATION->AddHeadString('<script src="//api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey='.$key.'"></script>', true);
-
-    }
 
     public static function getClassTitle()
     {
@@ -76,7 +55,23 @@ class Handler extends \Bitrix\Sale\Delivery\Services\Base {
 
     protected function calculateConcrete(\Bitrix\Sale\Shipment $shipment = null)
     {
-        throw new \Bitrix\Main\SystemException('Use profiles');
+        throw new \Bitrix\Main\SystemException(Loc::getMessage('AWZ_YDELIVERY_HANDLER_NOPROFILE'));
+    }
+
+    public static function getLogo(){
+
+        $arFile = \CFile::MakeFileArray('/bitrix/images/'.self::MODULE_ID.'/yandex-dost.png');
+        $arSavedFile = \CFile::SaveFile($arFile, "sale/delivery/logotip");
+        return $arSavedFile;
+
+    }
+
+    public static function onBeforeAdd(array &$fields = array()): \Bitrix\Main\Result
+    {
+        if(!$fields['LOGOTIP']){
+            $fields['LOGOTIP'] = Handler::getLogo();
+        }
+        return new \Bitrix\Main\Result();
     }
 
 }

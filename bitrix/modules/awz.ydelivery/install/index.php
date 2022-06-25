@@ -16,6 +16,8 @@ class awz_ydelivery extends CModule {
     var $MODULE_CSS;
     var $MODULE_GROUP_RIGHTS = "Y";
 
+    var $errors = false;
+
     function __construct()
     {
         $arModuleVersion = array();
@@ -33,61 +35,122 @@ class awz_ydelivery extends CModule {
 
     function InstallDB()
     {
+        global $DB, $DBType, $APPLICATION;
+        $this->errors = false;
+        $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/install.sql");
+        if (!$this->errors) {
+            return true;
+        } else {
+            $APPLICATION->ThrowException(implode("", $this->errors));
+            return $this->errors;
+        }
         return true;
     }
 
 
     function UnInstallDB()
     {
-        return true;
+        global $DB, $DBType, $APPLICATION;
+
+        $this->errors = false;
+        $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/uninstall.sql");
+        if (!$this->errors) {
+            return true;
+        }
+        else {
+            $APPLICATION->ThrowException(implode("", $this->errors));
+            return $this->errors;
+        }
     }
 
-    function InstallHandlers()
+
+    function InstallEvents()
     {
         $eventManager = EventManager::getInstance();
         $eventManager->registerEventHandler(
             'sale', 'onSaleDeliveryHandlersClassNamesBuildList',
-            $this->MODULE_ID, '\Awz\Ydelivery\Handler', 'registerHandler'
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'registerHandler'
         );
         $eventManager->registerEventHandlerCompatible("sale", "OnSaleComponentOrderOneStepDelivery",
-            $this->MODULE_ID, "\Awz\Ydelivery\Handler", 'OrderDeliveryBuildList'
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OrderDeliveryBuildList'
         );
-
-        return true;
-    }
-
-    function UnInstallHandlers()
-    {
-        $eventManager = EventManager::getInstance();
-        $eventManager->unRegisterEventHandler(
-            'sale', 'onSaleDeliveryHandlersClassNamesBuildList',
-            $this->MODULE_ID, '\Awz\Ydelivery\Handler', 'registerHandler'
+        $eventManager->registerEventHandlerCompatible("sale", "OnSaleComponentOrderCreated",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnSaleComponentOrderCreated'
         );
-        $eventManager->unRegisterEventHandler(
-            'sale', 'OnSaleComponentOrderOneStepDelivery',
-            $this->MODULE_ID, '\Awz\Ydelivery\Handler', 'OrderDeliveryBuildList'
+        $eventManager->registerEventHandlerCompatible("main", "OnEndBufferContent",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnEndBufferContent'
         );
-
-        return true;
-    }
-
-    function InstallEvents()
-    {
+        $eventManager->registerEventHandlerCompatible("main", "OnAdminSaleOrderEditDraggable",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnAdminSaleOrderEditDraggable'
+        );
+        $eventManager->registerEventHandler("sale", "OnSaleOrderBeforeSaved",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', "OnSaleOrderBeforeSaved");
+        $eventManager->registerEventHandlerCompatible("main", "OnAdminContextMenuShow",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', "OnAdminContextMenuShow");
+        $eventManager->registerEventHandlerCompatible("main", "OnEpilog",
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', "OnEpilog");
         return true;
     }
 
     function UnInstallEvents()
     {
+        $eventManager = EventManager::getInstance();
+        $eventManager->unRegisterEventHandler(
+            'sale', 'onSaleDeliveryHandlersClassNamesBuildList',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'registerHandler'
+        );
+        $eventManager->unRegisterEventHandler(
+            'sale', 'OnSaleComponentOrderOneStepDelivery',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OrderDeliveryBuildList'
+        );
+        $eventManager->unRegisterEventHandler(
+            'sale', 'OnSaleComponentOrderCreated',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnSaleComponentOrderCreated'
+        );
+        $eventManager->unRegisterEventHandler(
+            'main', 'OnEndBufferContent',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnEndBufferContent'
+        );
+        $eventManager->unRegisterEventHandler(
+            'main', 'OnAdminSaleOrderEditDraggable',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnAdminSaleOrderEditDraggable'
+        );
+        $eventManager->unRegisterEventHandler(
+            'sale', 'OnSaleOrderBeforeSaved',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnSaleOrderBeforeSaved'
+        );
+        $eventManager->unRegisterEventHandler(
+            'main', 'OnAdminContextMenuShow',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnAdminContextMenuShow'
+        );
+        $eventManager->unRegisterEventHandler(
+            'main', 'OnEpilog',
+            $this->MODULE_ID, '\Awz\Ydelivery\handlersBx', 'OnEpilog'
+        );
         return true;
     }
 
     function InstallFiles()
     {
+        CopyDirFiles($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/admin/", $_SERVER['DOCUMENT_ROOT']."/bitrix/admin/", true);
+        CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$this->MODULE_ID."/install/js/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/js/".$this->MODULE_ID, true);
+        CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$this->MODULE_ID."/install/css/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/css/".$this->MODULE_ID, true);
+        CopyDirFiles($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/images/", $_SERVER['DOCUMENT_ROOT']."/bitrix/images/".$this->MODULE_ID, true);
+        CopyDirFiles($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/components/ydelivery.baloon/", $_SERVER['DOCUMENT_ROOT']."/bitrix/components/awz/ydelivery.baloon", true, true);
         return true;
     }
 
     function UnInstallFiles()
     {
+        DeleteDirFilesEx("/bitrix/js/".$this->MODULE_ID);
+        DeleteDirFilesEx("/bitrix/css/".$this->MODULE_ID);
+        DeleteDirFilesEx("/bitrix/images/".$this->MODULE_ID);
+        DeleteDirFilesEx("/bitrix/components/awz/ydelivery.baloon");
+        DeleteDirFiles(
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/admin",
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/admin"
+        );
+
         return true;
     }
 
@@ -98,7 +161,7 @@ class awz_ydelivery extends CModule {
         $this->InstallFiles();
         $this->InstallDB();
         $this->InstallEvents();
-        $this->InstallHandlers();
+        $this->createAgents();
 
         ModuleManager::RegisterModule($this->MODULE_ID);
 
@@ -109,13 +172,41 @@ class awz_ydelivery extends CModule {
     {
         global $APPLICATION, $step;
 
-        $this->UnInstallDB();
-        $this->UnInstallFiles();
-        $this->UnInstallEvents();
-        $this->UnInstallHandlers();
+        $step = intval($step);
+        if($step < 2) { //выводим предупреждение
+            $APPLICATION->IncludeAdminFile(Loc::getMessage('AWZ_YDELIVERY_INSTALL_TITLE'), $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/'. $this->MODULE_ID .'/install/unstep.php');
+        }
+        elseif($step == 2) {
+            //проверяем условие
+            if($_REQUEST['save'] != 'Y' && !isset($_REQUEST['save'])) {
+                $this->UnInstallDB();
+            }
+            $this->UnInstallFiles();
+            $this->UnInstallEvents();
+            $this->deleteAgents();
 
-        ModuleManager::UnRegisterModule($this->MODULE_ID);
-        return true;
+            ModuleManager::UnRegisterModule($this->MODULE_ID);
+
+            return true;
+        }
+    }
+
+    function createAgents() {
+        CAgent::AddAgent(
+            "\\Awz\\Ydelivery\\Checker::agentGetStatus();",
+            $this->MODULE_ID,
+            "N",
+            600);
+        CAgent::AddAgent(
+            "\\Awz\\Ydelivery\\Checker::agentGetPickpoints();",
+            $this->MODULE_ID,
+            "N",
+            86400*7);
+    }
+
+    function deleteAgents() {
+        CAgent::RemoveAgent("\\Awz\\Ydelivery\\Checker::agentGetStatus();", $this->MODULE_ID);
+        CAgent::RemoveAgent("\\Awz\\Ydelivery\\Checker::agentGetPickpoints();", $this->MODULE_ID);
     }
 
 }

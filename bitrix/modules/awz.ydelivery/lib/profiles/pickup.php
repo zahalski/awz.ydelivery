@@ -1,9 +1,13 @@
 <?php
 namespace Awz\Ydelivery\Profiles;
 
+use Awz\Ydelivery\Handler;
 use Awz\Ydelivery\Helper;
+use Bitrix\Main\Context;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Security;
+
+Loc::loadMessages(__FILE__);
 
 class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 {
@@ -12,8 +16,14 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 
     public function __construct(array $initParams)
     {
+        if(empty($initParams["PARENT_ID"]))
+            throw new \Bitrix\Main\ArgumentNullException('initParams[PARENT_ID]');
         parent::__construct($initParams);
         $this->parent = \Bitrix\Sale\Delivery\Services\Manager::getObjectById($this->parentId);
+        if(!($this->parent instanceof Handler))
+            throw new ArgumentNullException('parent is not instance of \Awz\Ydelivery\Handler');
+        if(isset($initParams['PROFILE_ID']) && intval($initParams['PROFILE_ID']) > 0)
+            $this->serviceType = intval($initParams['PROFILE_ID']);
     }
 
     public static function getClassTitle()
@@ -51,63 +61,63 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
     {
         $result = array(
             "MAIN" => array(
-                'TITLE' => 'Интеграция',
-                'DESCRIPTION' => 'Основные настройки интеграции',
+                'TITLE' => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_INTG'),
+                'DESCRIPTION' => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_INTG_DESC'),
                 'ITEMS' => array(
                     'TEST_MODE' => array(
                         'TYPE' => 'Y/N',
-                        "NAME" => 'Тестовый режим',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_TEST_MODE'),
                         "DEFAULT" => 'Y'
                     ),
                     'TOKEN' => array(
                         'TYPE' => 'STRING',
-                        "NAME" => 'Ключ API',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_TOKEN'),
                         "DEFAULT" => ''
                     ),
                     'TOKEN_TEST' => array(
                         'TYPE' => 'STRING',
-                        "NAME" => 'Ключ API Тестовый',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_TOKEN_TEST'),
                         "DEFAULT" => ''
                     ),
                     'STORE_ID' => array(
                         'TYPE' => 'STRING',
-                        "NAME" => 'ИД склада отгрузки',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_SOURCE'),
                         "DEFAULT" => ''
                     ),
                     'STORE_ID_TEST' => array(
                         'TYPE' => 'STRING',
-                        "NAME" => 'ИД склада отгрузки тестовый',
-                        "DEFAULT" => ''
-                    ),
-                    'STORE_ADRESS' => array(
-                        'TYPE' => 'STRING',
-                        "NAME" => 'Адрес отгрузки',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_SOURCE_TEST'),
                         "DEFAULT" => ''
                     ),
                     'BTN_CLASS' => array(
                         'TYPE' => 'STRING',
-                        "NAME" => 'Класс кнопки выбора ПВЗ',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_BTN_CLASS'),
                         "DEFAULT" => 'btn btn-primary'
                     ),
                     'ERROR_COST_DSBL' => array(
                         'TYPE' => 'Y/N',
-                        "NAME" => 'Отключить доставку при ошибках расчета',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DSBL1'),
                         "DEFAULT" => 'Y'
                     ),
                     'ERROR_COST_DSBL_SROK' => array(
                         'TYPE' => 'Y/N',
-                        "NAME" => 'Отключить доставку при отсутствии сроков доставки',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DSBL2'),
                         "DEFAULT" => 'Y'
                     ),
                     'ERROR_COST' => array(
                         'TYPE' => 'NUMBER',
-                        "NAME" => 'Стоимость доставки при ошибке расчета',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_COST_DEF'),
                         "DEFAULT" => '500.00'
                     ),
                     'WEIGHT_DEFAULT' => array(
                         'TYPE' => 'NUMBER',
-                        "NAME" => 'Вес посылки в граммах по умолчанию (если не найден вес товара)',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_WEIGHT_DEF'),
                         "DEFAULT" => '3000'
+                    ),
+                    'PRED_DEFAULT' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DEM_DEF'),
+                        "DEFAULT" => '10'
                     ),
                 )
             )
@@ -119,7 +129,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
     {
 
         $config = $this->getConfigValues();
-        $api = Helper::getYdApi($this);
+        $api = Helper::getApiFromProfile($this);
         if($api->isTest()){
             $config['MAIN']['STORE_ID'] = $config['MAIN']['STORE_ID_TEST'];
         }
@@ -163,7 +173,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             }
         }
         if(!$locationName){
-            $result->addError(new \Bitrix\Main\Error('Не указан регион доставки'));
+            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_REGION')));
             return $result;
         }
         $res = \Bitrix\Sale\Location\LocationTable::getList(array(
@@ -198,6 +208,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             $data['source'] = array('address'=>$config['MAIN']['STORE_ADRESS']);
         }
 
+        $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), 86400);
         $r = $api->calc($data);
 
         if($r->isSuccess()){
@@ -212,7 +223,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 $result->addErrors($r->getErrors());
                 return $result;
             }else{
-                $result->setDescription('<p style="color:red;">Произошла ошибка при расчете стоимости доставки</p>');
+                $result->setDescription('<p style="color:red;">'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_COST').'</p>');
 
                 global $USER;
                 if($USER->isAdmin()){
@@ -228,6 +239,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         $calkData = $r->getData();
         if($calkData['result']['pricing_total']){
 
+            $api->setCacheParams(md5(serialize(array($data, $config, 'grafik'))), 3600);
             $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'full_address'=>$locationName));
             //print_r($r->getData());
             if($r->isSuccess()){
@@ -241,26 +253,30 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         $fromDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($fromDay>0){
                             $result->setPeriodFrom($fromDay);
-                            $result->setPeriodDescription($fromDay.' д.');
+                            $result->setPeriodDescription($fromDay.' '.GetMessage("AWZ_YDELIVERY_D"));
                         }
                         $toDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($toDay>0 && $toDay!=$fromDay){
                             $result->setPeriodTo($toDay);
-                            $result->setPeriodDescription($fromDay.'-'.$toDay.' д.');
+                            $result->setPeriodDescription($fromDay.'-'.$toDay.' '.GetMessage("AWZ_YDELIVERY_D"));
                         }
 
                         break;
-                        //$offer['from']
-                        //$offer['to']
                     }
                 }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
-                    $result->addError(new \Bitrix\Main\Error('Нет графика доставки'));
+                    $result->addError(
+                        new \Bitrix\Main\Error(
+                            Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF')
+                        )
+                    );
                     return $result;
                 }
-                //echo'<pre>';print_r($grafikData);echo'</pre>';
-                //die();
             }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
-                $result->addError(new \Bitrix\Main\Error('Нет графика доставки'));
+                $result->addError(
+                    new \Bitrix\Main\Error(
+                        Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF')
+                    )
+                );
                 return $result;
             }
 
@@ -272,32 +288,84 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             );
         }
 
-        //print_r($r->getData());
-        //die();
-
-        //print_r($r);
-        //die();
-
-        $signer = new Security\Sign\Signer;
+        $signer = new Security\Sign\Signer();
 
         $signedParameters = $signer->sign(base64_encode(serialize(array(
             'address'=>$locationName,
-            'geo_id'=>$locationGeoId
+            'geo_id'=>$locationGeoId,
+            'profile_id'=>$this->getId(),
+            's_id'=>bitrix_sessid()
         ))));
 
-        $buttonHtml = '<a class="'.$config['MAIN']['BTN_CLASS'].'" href="#" onclick="window.awz_yd_modal.show(\'Выберите пункт самовывоза\',\''.$signedParameters.'\');return false;">Выбрать пункт выдачи</a>';
+        $pointId = false;
+        $pointHtml = '';
+        $request = Context::getCurrent()->getRequest();
+        if($request->get('AWZ_YD_POINT_ID')){
+            $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
+        }
+        if($pointId){
+            $blnRes = Helper::getBaloonHtml($pointId, true);
+            if($blnRes->isSuccess()){
+                $blnData = $blnRes->getData();
+                $pointHtml = $blnData['html'];
+            }
+        }
+
+        $buttonHtml = '<a id="AWZ_YD_POINT_LINK" class="'.$config['MAIN']['BTN_CLASS'].'" href="#" onclick="window.awz_yd_modal.show(\''.Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_BTN_OPEN').'\',\''.$signedParameters.'\');return false;">'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_BTN_OPEN').'</a><div id="AWZ_YD_POINT_INFO">'.$pointHtml.'</div>';
         $result->setDescription($result->getDescription().
             '<!--btn-ydost-start-->'.
             $buttonHtml
             .'<!--btn-ydost-end-->'
         );
 
+        $event = new \Bitrix\Main\Event(
+            Handler::MODULE_ID, "OnCalcBeforeReturn",
+            array('shipment'=>$shipment, 'calcResult'=>$result)
+        );
+        $event->send();
+        if ($event->getResults()) {
+            foreach ($event->getResults() as $evenResult) {
+                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                    $r = $evenResult->getParameters();
+                    $r = $r['result'];
+                    if($r instanceof \Bitrix\Main\Result){
+                        if(!$r->isSuccess()) {
+                            foreach ($r->getErrors() as $error) {
+                                $result->addError($error);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //DATE_CODE_
+        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+        if(!$request->isAdminSection()){
+            $AWZ_YD_POINT_DATE = date('d.m.Y', time() + $result->getPeriodFrom()*86400);
+            if($ydProfileId = Helper::getProfileId($order, Helper::DOST_TYPE_ALL)){
+                $code = Helper::getPropDateCode($this->getId());
+                if($code){
+                    /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+                    foreach($props as $prop){
+                        if($prop->getField('CODE') == $code){
+                            $prop->setValue($AWZ_YD_POINT_DATE);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         return $result;
 
-        //$basket = $shipment->getOrder()->getBasket();
-        //foreach($basket as $basketItem){
-            //echo'<pre>';print_r($basketItem);echo'</pre>';
-        //}
+    }
 
+    public static function onBeforeAdd(array &$fields = array()): \Bitrix\Main\Result
+    {
+        if(!$fields['LOGOTIP']){
+            $fields['LOGOTIP'] = Handler::getLogo();
+        }
+        return new \Bitrix\Main\Result();
     }
 }
