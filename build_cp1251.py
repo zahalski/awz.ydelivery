@@ -40,7 +40,7 @@ def get_files(file_path, copy_dir):
     for name in os.listdir(file_path):
         if not os.path.isdir(os.path.join(file_path,name)):
             shutil.copyfile(os.path.join(file_path,name), os.path.join(copy_dir,name))
-            if '/lang/ru/' in os.path.join(file_path,name):
+            if '\\lang\\ru\\' in os.path.join(file_path,name):
                 res = check_encoding(os.path.join(copy_dir,name))
                 if res['charset'] != 'utf-8':
                     raise Exception('incorrect charset: '+res['charset']+' from file '+res['path'])
@@ -59,6 +59,6 @@ def build_main(module_path, zip_name):
     shutil.rmtree(tmp_dir)
 
 module_path = os.path.abspath('bitrix/modules/awz.ydelivery/')
-zip_name = os.path.abspath('dist/awz.ydelivery.cp1251.zip')
+zip_name = os.path.abspath('dist/.last_version.zip')
 
 build_main(module_path, zip_name)
