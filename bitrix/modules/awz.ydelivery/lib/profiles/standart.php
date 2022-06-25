@@ -293,11 +293,13 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             foreach ($event->getResults() as $evenResult) {
                 if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
-                    $r = $r['result'];
-                    if($r instanceof \Bitrix\Main\Result){
-                        if(!$r->isSuccess()) {
-                            foreach ($r->getErrors() as $error) {
-                                $result->addError($error);
+                    if(isset($r['result'])){
+                        $r = $r['result'];
+                        if($r instanceof \Bitrix\Main\Result){
+                            if(!$r->isSuccess()) {
+                                foreach ($r->getErrors() as $error) {
+                                    $result->addError($error);
+                                }
                             }
                         }
                     }

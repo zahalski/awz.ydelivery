@@ -416,9 +416,11 @@ class OffersTable extends Entity\DataManager
             foreach ($event->getResults() as $evenResult) {
                 if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
-                    $r = $r['result'];
-                    if($r instanceof \Bitrix\Main\Result){
-                        $result = $r['result'];
+                    if(isset($r['result'])){
+                        $r = $r['result'];
+                        if($r instanceof \Bitrix\Main\Result){
+                            $result = $r;
+                        }
                     }
                 }
             }

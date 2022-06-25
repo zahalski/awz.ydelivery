@@ -241,9 +241,11 @@ class Helper {
             foreach ($event->getResults() as $evenResult) {
                 if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
-                    $r = $r['result'];
-                    if($r instanceof Result){
-                        return $r;
+                    if(isset($r['result'])){
+                        $r = $r['result'];
+                        if($r instanceof Result){
+                            return $r;
+                        }
                     }
                 }
             }
@@ -338,8 +340,8 @@ class Helper {
             foreach ($event->getResults() as $evenResult) {
                 if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
-                    if($r['items'] && is_array($r)){
-                        $arFinItems = $r;
+                    if(isset($r['items']) && is_array($r['items'])){
+                        $arFinItems = $r['items'];
                     }
                 }
             }
