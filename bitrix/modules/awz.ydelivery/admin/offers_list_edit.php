@@ -460,7 +460,7 @@ if(!$ID && $isOrdered){
                                             <?
                                             $val = $item['name'];
                                             if(isset($_REQUEST['product'][$key]['name']))
-                                                $val = trim($_REQUEST['product'][$key]['name']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['product'][$key]['name']));
                                             ?>
                                             <input type="text" name="product[<?=$key?>][name]" value="<?=$val?>"><br>
                                             <?
@@ -474,13 +474,13 @@ if(!$ID && $isOrdered){
                                             <?
                                             $val = $item['barcode'];
                                             if(isset($_REQUEST['product'][$key]['barcode']))
-                                                $val = trim($_REQUEST['product'][$key]['barcode']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['product'][$key]['barcode']));
                                             ?>
                                             <input type="text" name="product[<?=$key?>][barcode]" value="<?=$val?>"><br>
                                             <?
                                             $val = $item['place_barcode'];
                                             if(isset($_REQUEST['product'][$key]['place_barcode']))
-                                                $val = trim($_REQUEST['product'][$key]['place_barcode']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['product'][$key]['place_barcode']));
                                             ?>
                                             <input type="text" name="product[<?=$key?>][place_barcode]" value="<?=$val?>">
                                         </td>
@@ -488,13 +488,13 @@ if(!$ID && $isOrdered){
                                             <?
                                             $val = $item['article'];
                                             if(isset($_REQUEST['product'][$key]['article']))
-                                                $val = trim($_REQUEST['product'][$key]['article']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['product'][$key]['article']));
                                             ?>
                                             <input type="text" name="product[<?=$key?>][article]" value="<?=$val?>">
                                             <?
                                             $val = $item['marking_code'];
                                             if(isset($_REQUEST['product'][$key]['marking_code']))
-                                                $val = trim($_REQUEST['product'][$key]['marking_code']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['product'][$key]['marking_code']));
                                             ?>
                                             <br><input type="text" name="product[<?=$key?>][marking_code]" value="<?=$val?>">
                                         </td>
@@ -572,7 +572,7 @@ if(!$ID && $isOrdered){
                                         <td class="adm-list-table-cell">
                                             <?$val = $items[0]['place_barcode'];
                                             if($key != 0) $val = '';
-                                            if(isset($_REQUEST['places'][$key]['barcode'])) $val = trim($_REQUEST['places'][$key]['barcode']);
+                                            if(isset($_REQUEST['places'][$key]['barcode'])) $val = htmlspecialcharsEx(trim($_REQUEST['places'][$key]['barcode']));
                                             ?>
                                             <input type="text" name="places[<?=$key?>][barcode]" value="<?=$val?>">
                                         </td>
@@ -625,7 +625,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = '';
-                                        if(isset($_REQUEST['info']['order_new'])) $val = trim($_REQUEST['info']['order_new']);
+                                        if(isset($_REQUEST['info']['order_new'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['order_new']));
                                         ?>
                                         <input type="text" name="info[order_new]" value="<?=$val?>">
                                     </td>
@@ -652,7 +652,7 @@ if(!$ID && $isOrdered){
                                         if($userComment){
                                             $val .= '; '.$userComment;
                                         }
-                                        if(isset($_REQUEST['info']['comment'])) $val = trim($_REQUEST['info']['comment']);
+                                        if(isset($_REQUEST['info']['comment'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['comment']));
                                         ?>
                                         <textarea cols="30" rows="5" name="info[comment]"><?=$val?></textarea>
                                     </td>
@@ -665,7 +665,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = $locationName.', '.$adressProp->getValue();
-                                        if(isset($_REQUEST['info']['address'])) $val = trim($_REQUEST['info']['address']);
+                                        if(isset($_REQUEST['info']['address'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address']));
                                         ?>
                                         <textarea cols="30" rows="5" name="info[address]"><?=$val?></textarea>
                                     </td>
@@ -678,7 +678,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = '';
-                                        if(isset($_REQUEST['info']['address_kv'])) $val = trim($_REQUEST['info']['address_kv']);
+                                        if(isset($_REQUEST['info']['address_kv'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_kv']));
                                         ?>
                                         <input type="text" name="info[address_kv]" value="<?=$val?>">
                                     </td>
@@ -698,7 +698,7 @@ if(!$ID && $isOrdered){
                                                     $val = $prop->getValue();
                                                 }
                                             }
-                                            if(isset($_REQUEST['info']['pvz'])) $val = trim($_REQUEST['info']['pvz']);
+                                            if(isset($_REQUEST['info']['pvz'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['pvz']));
                                             ?>
                                             <input type="text" id="info-pvz-field" name="info[pvz]" value="<?=$val?>">
                                             <a onclick="BX.SidePanel.Instance.open('/bitrix/admin/awz_ydelivery_picpoint_list.php?LANG=ru&page=order_edit&order=<?=intval($_REQUEST['ORDER_ID'])?>',{cacheable: false});return false;" href="#">
@@ -755,7 +755,7 @@ if(!$ID && $isOrdered){
                                                 $val = $prop->getValue();
                                             }
                                         }
-                                        if(isset($_REQUEST['info']['date_dost'])) $val = trim($_REQUEST['info']['date_dost']);
+                                        if(isset($_REQUEST['info']['date_dost'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['date_dost']));
                                         ?>
                                         <input type="text" name="info[date_dost]" value="<?=$val?>">
                                     </td>
@@ -767,7 +767,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = $propertyCollection->getPayerName()->getValue();
-                                        if(isset($_REQUEST['info']['first_name'])) $val = trim($_REQUEST['info']['first_name']);
+                                        if(isset($_REQUEST['info']['first_name'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['first_name']));
                                         ?>
                                         <input type="text" name="info[first_name]" value="<?=$val?>">
                                     </td>
@@ -779,7 +779,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = $propertyCollection->getPhone()->getValue();
-                                        if(isset($_REQUEST['info']['phone'])) $val = trim($_REQUEST['info']['phone']);
+                                        if(isset($_REQUEST['info']['phone'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['phone']));
                                         ?>
                                         <input type="text" name="info[phone]" value="<?=$val?>">
                                     </td>
@@ -791,7 +791,7 @@ if(!$ID && $isOrdered){
                                     <td class="adm-detail-content-cell-r">
                                         <?
                                         $val = $propertyCollection->getUserEmail()->getValue();
-                                        if(isset($_REQUEST['info']['email'])) $val = trim($_REQUEST['info']['email']);
+                                        if(isset($_REQUEST['info']['email'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['email']));
                                         ?>
                                         <input type="text" name="info[email]" value="<?=$val?>">
                                     </td>
@@ -840,7 +840,7 @@ if(!$ID && $isOrdered){
                                             $methods = Helper::getYandexPayMethods();
 
                                             if(isset($_REQUEST['order']['payment_method']))
-                                                $val = trim($_REQUEST['order']['payment_method']);
+                                                $val = htmlspecialcharsEx(trim($_REQUEST['order']['payment_method']));
 
                                             ?>
                                             <?if(count($valAr)>1){?>
@@ -870,7 +870,7 @@ if(!$ID && $isOrdered){
                                                 $methods = Helper::getYandexLastMilePolicy(Helper::DOST_TYPE_PVZ);
                                             }
 
-                                            if(isset($_REQUEST['order']['last_mile_policy'])) $val = trim($_REQUEST['order']['last_mile_policy']);
+                                            if(isset($_REQUEST['order']['last_mile_policy'])) $val = htmlspecialcharsEx(trim($_REQUEST['order']['last_mile_policy']));
 
                                             ?>
                                             <select name="order[last_mile_policy]">
