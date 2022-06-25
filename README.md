@@ -1,0 +1,179 @@
+# AWZ: Яндекс Доставка
+
+Интеграция с логистической платформой Яндекс Доставка для Cms Bitrix    
+Маркетплейс 1с-Битрикс https://marketplace.1c-bitrix.ru/solutions/awz.ydelivery/
+
+## 1. Установка
+
+вариант 1    
+Установите модуль с Маркетплейса 1с-Битрикс кнопкой "Установить"    
+либо по ссылке https://<МОЙ_САЙТ>/bitrix/admin/update_system_partner.php?addmodule=awz.ydelivery    
+    
+вариант 2    
+Скопируйте файлы модуля в папку /bitrix/modules/awz.ydelivery/    
+Перейдите в админ панели: Маркетплейс - Установленные решения
+   
+версия для cp1251 в папке dist
+
+## 2. События модуля
+
+**OnCalcBeforeReturn**    
+Позволяет переопределить или изменить результат расчета перед установкой даты доставки в свойство заказа
+
+| Параметр | Описание |
+| --- | --- |
+| `shipment` `\Bitrix\Sale\Shipment` | Объект отгрузки
+| `calcResult` `\Bitrix\Sale\Delivery\CalculationResult` | Объект расчета доставки
+
+должен вернуть [`result` => `\Bitrix\Main\Result`] в случае ошибки    
+изменение данных расчета через объект `\Bitrix\Sale\Delivery\CalculationResult`
+
+```php
+//добавим 1-2 дня к сроку доставки если сегодня суббота или воскресенье
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'OnCalcBeforeReturn', array('handlersDelivery','OnCalcBeforeReturn'));
+
+class handlersDelivery {
+
+    public static function OnCalcBeforeReturn(\Bitrix\Main\Event $event){
+
+        $result = new \Bitrix\Main\Result();
+        $calc = $event->getParameter('calcResult');
+
+        $addDay = 0;
+        if(date("w") == 0){ //воскресенье
+            $addDay += 1;
+        }elseif(date("w") == 6){ //суббота
+            $addDay += 2;
+        }
+
+        if($addDay){
+            $fromDay = $calc->getPeriodFrom();
+            if($fromDay>0){
+                $fromDay += $addDay;
+                $calc->setPeriodFrom($fromDay);
+                $calc->setPeriodDescription($fromDay.' д.');
+            }
+            $toDay = $calc->getPeriodFrom();
+            if($toDay>0 && $toDay!=$fromDay){
+                $toDay += $addDay;
+                $calc->setPeriodTo($toDay);
+                $calc->setPeriodDescription($fromDay.'-'.$toDay.' д.');
+            }
+        }
+        
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('result'=>$result)
+        );
+
+    }
+
+}
+```
+
+**changePrepareData**    
+Позволяет переопределить подготовленную заявку в доставку
+
+| Параметр | Описание |
+| --- | --- |
+| `result` `\Bitrix\Main\Result` | Объект с данными заявки |
+
+должен вернуть [`result` => `\Bitrix\Main\Result`] с новыми данными либо ошибкой    
+изменение данных возможно и через объект на входе `\Bitrix\Main\Result` с данными заявки
+
+```php
+//переопределим минимальный и максимальный срок доставки перед получением списка офферов (0-7 дней)
+//вернем ошибку если сумма доставки в заказе меньше 500 рублей
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'changePrepareData', array('handlersDelivery','changePrepareData'));
+
+class handlersDelivery {
+
+    public static function changePrepareData(\Bitrix\Main\Event $event){
+
+        $result = new \Bitrix\Main\Result();
+
+        $prepareData = $event->getParameter('result')->getData();
+
+        $orderId = $prepareData['info']['operator_request_id'];
+        $order = \Bitrix\Sale\Order::load($orderId);
+        if($order->getDeliveryPrice()<500){
+            $result->addError(new \Bitrix\Main\Error('Неверная сумма доставки'));
+        }else{
+            $prepareData['destination']['interval']['from'] = strtotime(date('d.m.Y'));
+            $prepareData['destination']['interval']['to'] += 7*86400;
+            $result->setData($prepareData);
+        }
+
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('result'=>$result)
+        );
+
+    }
+
+}
+```
+
+**onBeforeReturnBarCode**    
+Позволяет переопределить сгенерированный штрих код места в посылке
+
+| Параметр | Описание |
+| --- | --- |
+| `order` `\Bitrix\Sale\Order` | Объект заказа
+| `barCode` `string` | Сгенерированный штрих код
+
+должен вернуть [`barCode` => `string`] с новым штрих кодом
+
+```php
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'onBeforeReturnBarCode', array('handlersDelivery','onBeforeReturnBarCode'));
+
+class handlersDelivery {
+
+    public static function onBeforeReturnBarCode(\Bitrix\Main\Event $event){
+        $result = new \Bitrix\Main\Result();
+        
+        $order = $event->getParameter('order');
+        
+        $newBarCode = time().'-'.$order->getId();
+
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('barCode'=>$newBarCode)
+        );
+    }
+}
+```
+
+
+**setOffer**    
+Переопределяет метод выбора варианта доставки из списка офферов
+
+| Параметр | Описание |
+| --- | --- |
+| `offers` `array` | $resp['result']['offers'] с ответа апи доставки |
+| `order` `\Bitrix\Sale\Order` | Объект заказа |
+
+Должен вернуть [`result` => `\Bitrix\Main\Result`] с новым оффером либо ошибку    
+
+```php
+
+$offer_id = $resp['result']['offers'][0]['id'];
+$result = new \Bitrix\Main\Result();
+$result->setData(array('offer_id'=>$offer_id));
+
+```
+
+**onBeforeReturnItems**    
+Позволяет изменить параметры товаров в заявке
+
+| Параметр | Описание |
+| --- | --- |
+| `order` `\Bitrix\Sale\Order` | Объект заказа |
+| `items` `array` | Список товаров |
+
+Должен вернуть [`items` => `array()`] с новым списком товаров  
