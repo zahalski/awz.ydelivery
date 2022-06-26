@@ -32,7 +32,10 @@
 //добавим 1-2 дня к сроку доставки если сегодня суббота или воскресенье
 
 $eventManager = \Bitrix\Main\EventManager::getInstance();
-$eventManager->addEventHandler('awz.ydelivery', 'OnCalcBeforeReturn', array('handlersDelivery','OnCalcBeforeReturn'));
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'OnCalcBeforeReturn', 
+    array('handlersDelivery','OnCalcBeforeReturn')
+);
 
 class handlersDelivery {
 
@@ -88,7 +91,10 @@ class handlersDelivery {
 //вернем ошибку если сумма доставки в заказе меньше 500 рублей
 
 $eventManager = \Bitrix\Main\EventManager::getInstance();
-$eventManager->addEventHandler('awz.ydelivery', 'changePrepareData', array('handlersDelivery','changePrepareData'));
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'changePrepareData', 
+    array('handlersDelivery','changePrepareData')
+);
 
 class handlersDelivery {
 
@@ -132,7 +138,10 @@ class handlersDelivery {
 //сделаем наш штрик код места в формате <UNIXTIME>-<НОМЕР ЗАКАЗА>
 
 $eventManager = \Bitrix\Main\EventManager::getInstance();
-$eventManager->addEventHandler('awz.ydelivery', 'onBeforeReturnBarCode', array('handlersDelivery','onBeforeReturnBarCode'));
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onBeforeReturnBarCode', 
+    array('handlersDelivery','onBeforeReturnBarCode')
+);
 
 class handlersDelivery {
 
@@ -167,7 +176,10 @@ class handlersDelivery {
 //Выберем минимальный по сроку доставки с учетом отгрузки выше
 
 $eventManager = \Bitrix\Main\EventManager::getInstance();
-$eventManager->addEventHandler('awz.ydelivery', 'setOffer', array('handlersDelivery','setOffer'));
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'setOffer', 
+    array('handlersDelivery','setOffer')
+);
 
 class handlersDelivery {
 
@@ -227,7 +239,10 @@ class handlersDelivery {
 //добавим номер заказа в штрихкод товара в посылке (по умолчанию ид записи в корзине)
 
 $eventManager = \Bitrix\Main\EventManager::getInstance();
-$eventManager->addEventHandler('awz.ydelivery', 'onBeforeReturnItems', array('handlersDelivery','onBeforeReturnItems'));
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onBeforeReturnItems', 
+    array('handlersDelivery','onBeforeReturnItems')
+);
 
 class handlersDelivery {
 
