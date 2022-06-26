@@ -129,6 +129,8 @@ class handlersDelivery {
 должен вернуть [`barCode` => `string`] с новым штрих кодом
 
 ```php
+//сделаем наш штрик код места в формате <UNIXTIME>-<НОМЕР ЗАКАЗА>
+
 $eventManager = \Bitrix\Main\EventManager::getInstance();
 $eventManager->addEventHandler('awz.ydelivery', 'onBeforeReturnBarCode', array('handlersDelivery','onBeforeReturnBarCode'));
 
@@ -161,11 +163,54 @@ class handlersDelivery {
 Должен вернуть [`result` => `\Bitrix\Main\Result`] с новым оффером либо ошибку    
 
 ```php
+//Будем проверять предложения только с датой отгрузки больше чем 2 дня от текущей
+//Выберем минимальный по сроку доставки с учетом отгрузки выше
 
-$offer_id = $resp['result']['offers'][0]['id'];
-$result = new \Bitrix\Main\Result();
-$result->setData(array('offer_id'=>$offer_id));
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'setOffer', array('handlersDelivery','setOffer'));
 
+class handlersDelivery {
+
+    public static function setOffer(\Bitrix\Main\Event $event){
+        $result = new \Bitrix\Main\Result();
+        $order = $event->getParameter('order');
+        $offers = $event->getParameter('offers');
+
+        if(!empty($offers['result']['offers'])){
+
+            $findOffer = null;
+            $minTime = time()+86400*30;
+            foreach($offers['result']['offers'] as $offer){
+                //пропускаем предложения с отгрузкой менее чем через 2 дня
+                if(strtotime($offer['offer_details']['pickup_interval']['min']) < (time()+86400*2)){
+                    continue;
+                }
+                if($minTime > strtotime($offer['offer_details']['delivery_interval']['min'])){
+                    $minTime = strtotime($offer['offer_details']['delivery_interval']['min']);
+                    $findOffer = $offer;
+                }
+            }
+
+            if($findOffer){
+                $result->setData(array('offer_id'=>$findOffer['offer_id']));
+            }else{
+                $result->addError(
+                    new \Bitrix\Main\Error(
+                        'Нет предложений по доставке в заказе '.$order->getId()
+                    )
+                );
+            }
+
+            return new \Bitrix\Main\EventResult(
+                \Bitrix\Main\EventResult::SUCCESS,
+                array('result'=>$result)
+            );
+
+        }
+
+    }
+    
+}
 ```
 
 **onBeforeReturnItems**    
@@ -177,3 +222,30 @@ $result->setData(array('offer_id'=>$offer_id));
 | `items` `array` | Список товаров |
 
 Должен вернуть [`items` => `array()`] с новым списком товаров  
+
+```php
+//добавим номер заказа в штрихкод товара в посылке (по умолчанию ид записи в корзине)
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'onBeforeReturnItems', array('handlersDelivery','onBeforeReturnItems'));
+
+class handlersDelivery {
+
+    public static function onBeforeReturnItems(\Bitrix\Main\Event $event){
+
+        $items = $event->getParameter('items');
+        $order = $event->getParameter('order');
+
+        foreach($items as &$item){
+            $item['barcode'] = $item['barcode'].'-'.$order->getId();
+        }
+        unset($item);
+
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('items'=>$items)
+        );
+
+    }
+}
+```
