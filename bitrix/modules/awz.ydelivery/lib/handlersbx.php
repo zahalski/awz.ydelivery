@@ -304,7 +304,7 @@ class handlersBx {
                 'N', ''
             );
 
-            if($hidePaySystems == 'N') return;
+            if($hidePaySystems != 'Y') return;
 
             $pointId = false;
             if($request->get('AWZ_YD_POINT_ID')){
