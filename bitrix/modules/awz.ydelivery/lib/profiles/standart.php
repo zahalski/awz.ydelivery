@@ -243,6 +243,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                 $grafikData = $r->getData();
                 if(isset($grafikData['result']['offers']) && !empty($grafikData['result']['offers'])){
                     $tmpData = $result->getTmpData();
+                    if(!is_array($tmpData)) $tmpData = array();
                     $tmpData['offers'] = $grafikData['result']['offers'];
                     $result->setTmpData($tmpData);
                     foreach($grafikData['result']['offers'] as $offer){

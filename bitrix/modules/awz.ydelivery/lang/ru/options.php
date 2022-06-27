@@ -3,7 +3,7 @@ $MESS["AWZ_YDELIVERY_OPT_TITLE"] = "Настройки модуля AWZ: Янд�
 $MESS["AWZ_YDELIVERY_OPT_SECT1"] = "Общие настройки";
 $MESS["AWZ_YDELIVERY_OPT_MESS1"] = "ПВЗ удалены";
 $MESS["AWZ_YDELIVERY_OPT_MESS2"] = "ПВЗ загружены";
-$MESS["AWZ_YDELIVERY_OPT_MESS3"] = "Настройки не сохранены! Если нужно охранить, нажмите кнопку сохранения еще раз!";
+$MESS["AWZ_YDELIVERY_OPT_MESS3"] = "Для сохранения настроек модуля, нажмите кнопку сохранения еще раз!";
 $MESS["AWZ_YDELIVERY_OPT_SECT2"] = "Настройки #PROFILE_NAME#";
 $MESS["AWZ_YDELIVERY_OPT_SECT3"] = "Права доступа";
 $MESS["AWZ_YDELIVERY_OPT_L_BARCODE_TEMPLATE"] = "Шаблон генерации штрих кода посылки";
@@ -95,4 +95,7 @@ $MESS["AWZ_YDELIVERY_STATUS_UTOCNAETSA"] = "Статус уточняется";
 $MESS["AWZ_YDELIVERY_OTMENEN_POLQZOVATELE"] = "Отменен пользователем";
 $MESS["AWZ_YDELIVERY_VSE_STATUSY"] = "Все статусы";
 $MESS["AWZ_YDELIVERY_OTKLUCITQ"] = "Отключить";
+$MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LINK"] = "Связь ПВЗ с внешними источниками";
+$MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LOAD"] = "Перейти к загрузке";
+$MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LINK_ON"] = "Включить поиск ПВЗ по внешним кодам";
 ?>

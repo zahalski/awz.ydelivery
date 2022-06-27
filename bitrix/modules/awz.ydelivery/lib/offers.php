@@ -516,6 +516,7 @@ class OffersTable extends Entity\DataManager
                                 'OFFER_ID'=>$bronData['result']['request_id'],
                                 'CREATE_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()),
                                 'LAST_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()),
+                                'HISTORY_FIN'=>'N'
                             )
                         );
 

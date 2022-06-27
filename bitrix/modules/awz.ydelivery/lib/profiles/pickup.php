@@ -247,6 +247,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 if(isset($grafikData['result']['offers']) && !empty($grafikData['result']['offers'])){
                     //$result->addData();
                     $tmpData = $result->getTmpData();
+                    if(!is_array($tmpData)) $tmpData = array();
                     $tmpData['offers'] = $grafikData['result']['offers'];
                     $result->setTmpData($tmpData);
                     foreach($grafikData['result']['offers'] as $offer){

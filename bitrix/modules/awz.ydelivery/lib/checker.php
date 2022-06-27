@@ -113,7 +113,7 @@ class Checker {
             );
 
             $filter = array(
-                "HISTORY_FIN"=>false,
+                "!HISTORY_FIN"=>'Y',
                 'ORD.CANCELED'=>'N',
                 '<=LAST_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()-$opt_interval)
             );
@@ -175,7 +175,7 @@ class Checker {
                     $finUp['count_error'] = intval($finUp['count_error']) + 1;
                 }
 
-                $finalize = '';
+                $finalize = 'N';
                 if($finUp['count_resp']>$opt_maxcount) {
                     $finalize = 'Y';
                     //проблема с заказом, статус не финализировался
@@ -235,13 +235,18 @@ class Checker {
                             /* @var $result \Bitrix\Sale\Result */
                             if(!$result->isSuccess()){
                                 $finUp['errors'][] = $result->getErrorMessages();
-                                OffersTable::update(
-                                    array('ID'=>$data['ID']),
-                                    array(
-                                        'HISTORY'=>$finUp
-                                    )
-                                );
+                            }else{
+                                if(!isset($finUp['setstatus'])){
+                                    $finUp['setstatus'] = array();
+                                }
+                                $finUp['setstatus'][] = array(time(), $newStatus);
                             }
+                            OffersTable::update(
+                                array('ID'=>$data['ID']),
+                                array(
+                                    'HISTORY'=>$finUp
+                                )
+                            );
                         }
                     }
                 }

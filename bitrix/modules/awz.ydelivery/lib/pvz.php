@@ -6,6 +6,7 @@ use Bitrix\Main\Error;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity;
 use Bitrix\Main\Result;
+use Bitrix\Main\Config\Option;
 
 Loc::loadMessages(__FILE__);
 
@@ -72,6 +73,15 @@ class PvzTable extends Entity\DataManager
     }
 
     public static function getPvz($pvzId){
+
+        if(Option::get(Handler::MODULE_ID, "SEARCH_EXT", "N","") == 'Y'){
+            $extRes = PvzExtTable::getList(array(
+                'select'=>array('PVZ_ID'),
+                'filter'=>array('=EXT_ID'=>$pvzId),
+                'limit'=>1
+            ))->fetch();
+            if($extRes) $pvzId = $extRes['PVZ_ID'];
+        }
 
         $result = self::getList(array(
             'select'=>array('*'),

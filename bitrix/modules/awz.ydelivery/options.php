@@ -110,11 +110,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
     //print_r($_REQUEST);
     //die();
 
-    if(!$sendRunAgent){
+    //if(!$sendRunAgent){
 
         Option::set($module_id, "DELETE_AFTER_RESP", trim($_REQUEST["DELETE_AFTER_RESP"]), "");
         Option::set($module_id, "BAR_CODE_TEMPLATE", trim($_REQUEST["BAR_CODE_TEMPLATE"]), "");
         Option::set($module_id, "UPDATE_PVZ_BG", trim($_REQUEST["UPDATE_PVZ_BG"]), "");
+        Option::set($module_id, "SEARCH_EXT", trim($_REQUEST["SEARCH_EXT"]), "");
 
         foreach($statusList as $k=>$v){
             foreach($deliveryProfileList as $profileId=>$profileName){
@@ -138,10 +139,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
                 Option::set($module_id, "PARAMS_STATUS_TO_".$profileId.'_'.$k, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
             }
         }
-    }else{
-        CAdminMessage::ShowMessage(array('TYPE'=>'ERR',
-            'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS3')));
-    }
+    //}else{
+    //    CAdminMessage::ShowMessage(array('TYPE'=>'ERR',
+    //        'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS3')));
+    //}
 
 }
 
@@ -248,6 +249,25 @@ $tabControl->BeginNextTab();
         <td>
             <?$val = "N";?>
             <input type="checkbox" value="Y" name="UPDATE_PVZ" <?if ($val=="Y") echo "checked";?>></td>
+    </tr>
+    <tr class="heading">
+        <td colspan="2">
+            <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_UPPVZ_LINK')?>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_UPPVZ_LINK_ON')?></td>
+        <td>
+            <?$val = Option::get($module_id, "SEARCH_EXT", "N","");?>
+            <input type="checkbox" value="Y" name="SEARCH_EXT" <?if ($val=="Y") echo "checked";?>></td>
+    </tr>
+    <tr>
+        <td width="50%"></td>
+        <td>
+            <a href="/bitrix/admin/awz_ydelivery_picpoint_ext.php?lang=ru">
+                <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_UPPVZ_LOAD')?>
+            </a>
+        </td>
     </tr>
 
 
