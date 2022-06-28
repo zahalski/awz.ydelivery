@@ -8,4 +8,4 @@ version = get_module_version(module_path)
 if version:
     zip_name = os.path.abspath('../dist/update/'+version+'.zip')
     updater_path = os.path.join(updates_path, version)
-    build_main(updater_path, zip_name, "")
+    build_main(updater_path, zip_name, version)
