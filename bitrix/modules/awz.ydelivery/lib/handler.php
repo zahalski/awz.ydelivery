@@ -29,18 +29,15 @@ class Handler extends \Bitrix\Sale\Delivery\Services\Base {
     public function createProfileObject($fields)
     {
         $profiles = self::getChildrenClassNames();
-        if(!$fields['PROFILE_ID'] && !$fields['SERVICE_TYPE']){
-            $fields['SERVICE_TYPE'] = $profiles[0];
-            $fields['CLASS_NAME'] = $profiles[0];
-            //$file = \CFile::MakeFileArray(Handler::getLogo());
-            //$fields['LOGOTIP'] = $file;
-        }elseif($fields['PROFILE_ID']==1 && !$fields['SERVICE_TYPE']){
-            $fields['SERVICE_TYPE'] = $profiles[1];
-            $fields['CLASS_NAME'] = $profiles[1];
-            //$file = \CFile::MakeFileArray(Handler::getLogo());
-            //$fields['LOGOTIP'] = $file;
+        if(!$fields['ID']) {
+            if (!$fields['PROFILE_ID'] && !$fields['SERVICE_TYPE']) {
+                $fields['SERVICE_TYPE'] = $profiles[0];
+                $fields['CLASS_NAME'] = $profiles[0];
+            } elseif ($fields['PROFILE_ID'] == 1 && !$fields['SERVICE_TYPE']) {
+                $fields['SERVICE_TYPE'] = $profiles[1];
+                $fields['CLASS_NAME'] = $profiles[1];
+            }
         }
-        //echo'<pre>';print_r($fields);echo'</pre>';
         return Manager::createObject($fields);
     }
 
