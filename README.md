@@ -264,3 +264,100 @@ class handlersDelivery {
     }
 }
 ```
+
+**onBeforeStatusUpdate**    
+Вызывается перед запуском механизма обновления статусов модулем
+
+| Параметр | Описание |
+| --- | --- |
+| `order` `\Bitrix\Sale\Order` | Объект заказа |
+| `ordStatus` `string` | Код текущего статуса заказа |
+| `newOrdStatus` `string` | Расчитанный Код нового статуса заказа |
+| `startStatus` `string` | Предыдущий код статуса логистической платформы |
+| `newStatus` `string` | Текущий код статуса логистической платформы |
+
+```php
+//для отмены обновления статуса должен вернуть пустой статус
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onBeforeStatusUpdate', 
+    array('handlersDelivery','onBeforeStatusUpdate')
+);
+
+class handlersDelivery {
+
+    public static function onBeforeStatusUpdate(\Bitrix\Main\Event $event){
+        $newOrdStatus = $event->getParameter('newOrdStatus');        
+        
+        if($newOrdStatus == 'F') $newOrdStatus = false;
+
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('newOrdStatus'=>$newOrdStatus)
+        );
+    }
+
+}
+```
+
+```php
+//для добавления ошибки в лог \Bitrix\Main\Result
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onBeforeStatusUpdate', 
+    array('handlersDelivery','onBeforeStatusUpdate')
+);
+
+class handlersDelivery {
+
+    public static function onBeforeStatusUpdate(\Bitrix\Main\Event $event){
+        $result = new \Bitrix\Main\Result();
+        $result->addError(new \Bitrix\Main\Error('текст ошибки'));
+        
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('newOrdStatus'=>false, 'result'=>$result)
+        );
+    }
+
+}
+
+```
+
+**onOfterStatusUpdate**    
+Вызывается после механизма обновления статусов модулем
+
+| Параметр | Описание |
+| --- | --- |
+| `order` `\Bitrix\Sale\Order` | Объект заказа |
+| `ordStatus` `string` | Код текущего статуса заказа |
+| `newOrdStatus` `string` | Расчитанный Код нового статуса заказа |
+| `startStatus` `string` | Предыдущий код статуса логистической платформы |
+| `newStatus` `string` | Текущий код статуса логистической платформы |
+| `chekerUpdate` `array('unixtime', 'код статуса в битриксе')` | Текущий установленный код статуса заказа |
+| `chekerUpdateErr` `array('string')` | Ошибки обновления статуса |
+
+```php
+//обработчик можно использовать для логирования
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onOfterStatusUpdate', 
+    array('handlersDelivery','onOfterStatusUpdate')
+);
+
+class handlersDelivery {
+
+    public static function onOfterStatusUpdate(\Bitrix\Main\Event $event){
+        $order = $event->getParameter('order');
+        $chekerUpdateErr = $event->getParameter('chekerUpdateErr');
+        if(!empty($chekerUpdateErr)){
+            $message = 'order: '.$order->getId().', errors: '.implode('; ', $chekerUpdateErr);
+            //записываем сообщение
+        }
+    }
+
+}
+```
