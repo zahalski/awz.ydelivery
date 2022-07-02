@@ -222,17 +222,20 @@ $arParams = array(
         array(
             "NAME"=>"LAST_STATUS",
             "KEY"=>"LAST_STATUS", "GROUP"=>"LAST_STATUS", "FILTER_TYPE"=>"=","TYPE"=>"LIST",
-            "VALUES"=> $lastStatusValue
+            "VALUES"=> $lastStatusValue,
+            "MULTIPLE"=>'Y'
         ),
         array(
             "NAME"=>"ORD.STATUS_ID","TITLE"=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_STATUS_FILTER'),
             "KEY"=>"ORD.STATUS_ID", "GROUP"=>"ORD.STATUS_ID", "FILTER_TYPE"=>"=","TYPE"=>"LIST",
-            "VALUES"=> $statusValues
+            "VALUES"=> $statusValues,
+            "MULTIPLE"=>'Y'
         ),
         array(
             "NAME"=>"ORD.DELIVERY_ID","TITLE"=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DELIVERY_ID_FILTER'),
             "KEY"=>"ORD.DELIVERY_ID", "GROUP"=>"ORD.DELIVERY_ID", "FILTER_TYPE"=>"=","TYPE"=>"LIST",
-            "VALUES"=> $deliveryValue
+            "VALUES"=> $deliveryValue,
+            "MULTIPLE"=>'Y'
         )
     ),
 	"LIST" => array("ACTIONS" => array(
