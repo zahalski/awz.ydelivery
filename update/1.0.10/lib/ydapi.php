@@ -176,7 +176,12 @@ class Ydapi {
      * @return Result
      */
     public function getInvoice(array $data){
-        return $this->send('api/b2b/platform/request/get-handover-act', $data);
+        $url = 'api/b2b/platform/request/get-handover-act';
+        if(isset($data['request_id'])){
+            $url .= '?request_id='.implode(',',$data['request_id']);
+        }
+
+        return $this->send($url, array(), 'get');
     }
 
     /**
@@ -257,10 +262,10 @@ class Ydapi {
             $httpClient = new HttpClient();
             $httpClient->disableSslVerification();
             $httpClient->setHeaders(array(
-                                        'Authorization'=>'Bearer '.$this->getToken(),
-                                        "Content-Type"=> "application/json",
-                                        "Accept-Language"=>"ru"
-                                    ));
+                'Authorization'=>'Bearer '.$this->getToken(),
+                "Content-Type"=> "application/json",
+                "Accept-Language"=>"ru"
+            ));
             if($type == 'get'){
                 $res = $httpClient->get($url);
             }else{
