@@ -319,6 +319,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             .'<!--btn-ydost-end-->'
         );
 
+        $disableWriteDate = false;
         $event = new \Bitrix\Main\Event(
             Handler::MODULE_ID, "OnCalcBeforeReturn",
             array('shipment'=>$shipment, 'calcResult'=>$result)
@@ -328,11 +329,14 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             foreach ($event->getResults() as $evenResult) {
                 if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
-                    if(isset($r['result'])){
-                        $r = $r['result'];
-                        if($r instanceof \Bitrix\Main\Result){
-                            if(!$r->isSuccess()) {
-                                foreach ($r->getErrors() as $error) {
+                    if(isset($r['disableWriteDate'])){
+                        $disableWriteDate = $r['disableWriteDate'];
+                    }
+                    if(isset($r['result']) || isset($r['RESULT'])){
+                        $rOb = isset($r['result']) ? $r['result'] : $r['RESULT'];
+                        if($rOb instanceof \Bitrix\Main\Result){
+                            if(!$rOb->isSuccess()) {
+                                foreach ($rOb->getErrors() as $error) {
                                     $result->addError($error);
                                 }
                             }
@@ -344,11 +348,11 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 
         //DATE_CODE_
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
-        if(!$request->isAdminSection()){
+        if(!$request->isAdminSection() && !$disableWriteDate){
             $AWZ_YD_POINT_DATE = date('d.m.Y', time() + $result->getPeriodFrom()*86400);
-            if($ydProfileId = Helper::getProfileId($order, Helper::DOST_TYPE_ALL)){
+            if($this->getId() == Helper::getProfileId($order, Helper::DOST_TYPE_ALL)){
                 $code = Helper::getPropDateCode($this->getId());
-                if($code){
+                if($code && ($order->getField('DELIVERY_ID') == $this->getId())){
                     /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
                     foreach($props as $prop){
                         if($prop->getField('CODE') == $code){

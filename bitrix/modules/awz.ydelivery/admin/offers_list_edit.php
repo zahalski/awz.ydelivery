@@ -801,7 +801,8 @@ if(!$ID && $isOrdered){
                                             $val = $prepareAutoData['bx_external']['delivery_date'];
                                         if(isset($_REQUEST['info']['date_dost'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['date_dost']));
                                         ?>
-                                        <input type="text" name="info[date_dost]" value="<?=$val?>">
+                                        <?=\CAdminCalendar::CalendarDate('info[date_dost]', $val)?>
+
                                     </td>
                                 </tr>
                                 <tr>
@@ -1023,6 +1024,79 @@ if(!$ID && $isOrdered){
                 'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ERR_NUM')
             ));
         }
+    }elseif($_REQUEST['GET_EXTERNAL_INVOICE'] == 'Y' && $data){
+        //order_invoice_file
+
+        $config = Helper::getConfigFromOrderId($data['ORDER_ID']);
+        $api = Helper::getApiFromConfig($config);
+        $resInvoice = $api->getInvoice(array(
+                'request_id'=>array($data['OFFER_ID'])
+            )
+        );
+        if($resInvoice->isSuccess()){
+
+            $invoiceData = $resInvoice->getData();
+            $fileContent = $invoiceData['result'];
+            $tmpName = time().'-invoice-'.\Bitrix\Main\Security\Random::getString(20).'.pdf';
+            $fileOb = new \Bitrix\Main\IO\File(\Bitrix\Main\Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
+            $fileOb->putContents($fileContent);
+            $makeFile = \CFile::MakeFileArray($fileOb->getPath());
+            $makeFile['MODULE_ID'] = $module_id;
+            $fileId = \CFile::SaveFile($makeFile, "ydelivery");
+            if(intval($fileId)>0){
+                if(!is_array($data['HISTORY'])) $data['HISTORY'] = array();
+                if($data['HISTORY']['order_invoice_file']){
+                    \CFile::Delete($data['HISTORY']['order_invoice_file']);
+                }
+                $data['HISTORY']['order_invoice_file'] = $fileId;
+                OffersTable::update(array('ID'=>$data['ID']), array('HISTORY'=>$data['HISTORY']));
+            }
+            $fileOb->delete();
+
+        }else{
+            CAdminMessage::ShowMessage(array(
+                'TYPE'=>'ERROR',
+                'MESSAGE'=>implode('; ', $resInvoice->getErrorMessages())
+            ));
+        }
+
+    }elseif($_REQUEST['GET_EXTERNAL_LABEL'] == 'Y' && $data){
+
+        $config = Helper::getConfigFromOrderId($data['ORDER_ID']);
+        $api = Helper::getApiFromConfig($config);
+        $labelType = $_REQUEST['GET_EXTERNAL_LABEL_TYPE'] == 'one' ? 'one': 'many';
+        Option::set($module_id, 'label_type', $labelType, '');
+        $resLabel = $api->getLabels(array(
+            'generate_type'=>$labelType,
+            'request_ids'=>array($data['OFFER_ID'])
+            )
+        );
+        if($resLabel->isSuccess()){
+
+            $labelData = $resLabel->getData();
+            $fileContent = $labelData['result'];
+            $tmpName = time().'-label-'.\Bitrix\Main\Security\Random::getString(20).'.pdf';
+            $fileOb = new \Bitrix\Main\IO\File(\Bitrix\Main\Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
+            $fileOb->putContents($fileContent);
+            $makeFile = \CFile::MakeFileArray($fileOb->getPath());
+            $makeFile['MODULE_ID'] = $module_id;
+            $fileId = \CFile::SaveFile($makeFile, "ydelivery");
+            if(intval($fileId)>0){
+                if(!is_array($data['HISTORY'])) $data['HISTORY'] = array();
+                if($data['HISTORY']['order_label_file']){
+                    \CFile::Delete($data['HISTORY']['order_label_file']);
+                }
+                $data['HISTORY']['order_label_file'] = $fileId;
+                OffersTable::update(array('ID'=>$data['ID']), array('HISTORY'=>$data['HISTORY']));
+            }
+            $fileOb->delete();
+
+        }else{
+            CAdminMessage::ShowMessage(array(
+                'TYPE'=>'ERROR',
+                'MESSAGE'=>implode('; ', $resLabel->getErrorMessages())
+            ));
+        }
     }
 
     if(!$data){
@@ -1038,7 +1112,7 @@ if(!$ID && $isOrdered){
         $config = Helper::getConfigFromOrderId($data['ORDER_ID']);
         $api = Helper::getApiFromConfig($config);
 
-        if(!empty($data['HISTORY']['last'])){
+        if($_REQUEST['UPDATE_EXTERNAL_DATA']!='Y' && !empty($data['HISTORY']['last'])){
             $yandexRes = new \Bitrix\Main\Result();
             $yandexRes->setData($data['HISTORY']['last']);
         }else{
@@ -1049,6 +1123,9 @@ if(!$ID && $isOrdered){
     if($yandexRes->isSuccess()){
         $yandexData = $yandexRes->getData();
         $data['HISTORY']['last'] = $yandexData;
+        if(!$data['HISTORY']['last_history_date']) {
+            $data['HISTORY']['last_history_time'] = time();
+        }
         OffersTable::update(array('ID'=>$ID), array('HISTORY'=>$data['HISTORY']));
         ?>
         <div class="adm-list-table-layout">
@@ -1056,6 +1133,96 @@ if(!$ID && $isOrdered){
             <div class="adm-list-table-top">
                 <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage("AWZ_YDELIVERY_ZAAVKA")?><?=$yandexData['result']['request_id']?></b>
             </div>
+        <div class="adm-list-table adm-list-table-without-header">
+            <div class="adm-detail-content-wrap">
+                <div class="adm-detail-content">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <?if($data['HISTORY']['last_history_time']){?>
+                                    <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_UP_LABEL')?></b>:
+                                        <?=\Bitrix\Main\Type\DateTime::createFromTimestamp($data['HISTORY']['last_history_time'])->toString()?></p>
+                                <?}?>
+
+
+                                <form method="post">
+                                    <input type="hidden" name="UPDATE_EXTERNAL_DATA" value="Y">
+                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_UPDATE')?>">
+                                </form>
+                            </td>
+                            <td>
+                                <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?>:
+                                    <?if($data['HISTORY']['order_label_file']){?>
+                                    <a href="<?=CFile::GetPath($data['HISTORY']['order_label_file'])?>" target="blank">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
+                                    </a>
+                                <?}else{?>
+                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
+                                <?}?>
+                                </p>
+
+                                <form method="post">
+                                    <input type="hidden" name="GET_EXTERNAL_LABEL" value="Y">
+                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                    <?$def = Option::get($module_id, 'label_type', 'one', '');?>
+                                    <select name="GET_EXTERNAL_LABEL_TYPE">
+                                        <option value="one"<?=($def == 'one') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v1</option>
+                                        <option value="many"<?=($def == 'many') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v2</option>
+                                    </select>
+                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_LABEL')?>">
+                                </form>
+                            </td>
+                            <td>
+                                <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_INVOICE')?>:
+                                    <?if($data['HISTORY']['order_invoice_file']){?>
+                                        <a href="<?=CFile::GetPath($data['HISTORY']['order_invoice_file'])?>" target="blank">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
+                                        </a>
+                                    <?}else{?>
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
+                                    <?}?>
+                                </p>
+
+                                <form method="post">
+                                    <input type="hidden" name="GET_EXTERNAL_INVOICE" value="Y">
+                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_INVOICE')?>">
+                                </form>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <br>
+                </div>
+            </div>
+        </div>
+        <div class="adm-list-table adm-list-table-without-header">
+        <div class="adm-detail-content-wrap">
+            <div class="adm-detail-content">
+                <p>
+                    <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_ID')?>: </b>
+                    <?=$data['HISTORY']['last']['result']['courier_order_id']?>
+                </p>
+                <?if(isset($data['HISTORY']['last']['result']['state']['description'])){?>
+                    <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_LABEL')?></b>:
+                        <?=$data['HISTORY']['last']['result']['state']['description']?></p>
+                <?}?><p>
+                    <?if(isset($data['HISTORY']['last']['result']['state']['status'])){?>
+                        <b><?=$data['HISTORY']['last']['result']['state']['status']?></b>
+                    <?}?>
+                    <?if(isset($data['HISTORY']['last']['result']['state']['timestamp']) &&
+                        strtotime($data['HISTORY']['last']['result']['state']['timestamp'])>100000)
+                    {?>
+                        [<?=\Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($data['HISTORY']['last']['result']['state']['timestamp']))->toString()?>]
+                    <?}?>
+                </p>
+            </div>
+        </div>
+        </div>
             <div class="adm-list-table adm-list-table-without-header">
                 <div class="adm-detail-content-wrap">
 
@@ -1153,7 +1320,11 @@ if(!$ID && $isOrdered){
                         </div>
                         <div class="adm-detail-content-item-block">
                             <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_INF_ID')?>:</b>
-                            <?=$yandexData['result']['request']['info']['operator_request_id']?><br><br>
+                            <?=$yandexData['result']['request']['info']['operator_request_id']?>
+                            <?$orderLink = '';?>
+                            <a href="#" onclick="BX.SidePanel.Instance.open('/bitrix/admin/sale_order_view.php?lang=<?=LANGUAGE_ID?>&ID=<?=$data['ORDER_ID']?>',{cacheable: false});return false;">
+                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_ORDER_LINK')?>
+                            </a><br><br>
                             <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_CM')?>:</b>
                             <?=$yandexData['result']['request']['info']['comment']?><br><br>
                             <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_PHONE')?>:</b>
@@ -1176,7 +1347,7 @@ if(!$ID && $isOrdered){
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_DOST_TITLE')?>
                         </div>
                         <div class="adm-detail-content-item-block">
-                            <b><?=Loc::getMessage("AWZ_YDELIVERY_INTERVAL_DOSTAVKI")?></b>
+                            <b><?=Loc::getMessage("AWZ_YDELIVERY_INTERVAL_DOSTAVKI")?></b>:
                             <?
                             $from = \Bitrix\Main\Type\DateTime::createFromTimestamp(
                                     $yandexData['result']['request']['destination']['interval']['from']
@@ -1190,7 +1361,7 @@ if(!$ID && $isOrdered){
                             ?>
                             <?if(!empty($yandexData['result']['request']['destination']['custom_location'])){?>
                                 <br><br>
-                                <b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES_DOSTAVKI")?></b>
+                                <b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES_DOSTAVKI")?></b>:
                                 <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?>
                             <?}?>
                             <?if(!empty($yandexData['result']['request']['destination']['custom_location']['latitude'])){?>
@@ -1215,7 +1386,7 @@ if(!$ID && $isOrdered){
                                                     <?=$yandexData['result']['request']['destination']['custom_location']['latitude']?>
                                                 ], {
                                                 balloonContent: '<div><b><?=Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_DOST_TITLE")?></b><br>' +
-                                                    '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b> <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?></div>'
+                                                    '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b>: <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?></div>'
                                             }, {
                                                 iconLayout: 'default#image',
                                                 iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
@@ -1234,7 +1405,7 @@ if(!$ID && $isOrdered){
                             $pickData = $pickDataRes['PRM'];
                                         ?>
                             <br><br>
-                                <b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES_DOSTAVKI")?></b> <?=Loc::getMessage("AWZ_YDELIVERY_PVZ")?><?=$pickData['id']?>
+                                <b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES_DOSTAVKI")?></b>: <?=Loc::getMessage("AWZ_YDELIVERY_PVZ")?>: <?=$pickData['id']?>
                                 <div class="awz-yd-bln-wrap-admin-detail">
                                     <?
                                     $resPost = Helper::getBaloonHtml($pickData['id'], true);
@@ -1260,7 +1431,7 @@ if(!$ID && $isOrdered){
                                             });
                                             var placemark = new ymaps.Placemark([<?=$pickData['position']['latitude']?>, <?=$pickData['position']['longitude']?>], {
                                                 balloonContent: '<div><b><?=Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_DOST_TITLE")?></b><br>' +
-                                                    '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b> <?=$pickData['address']['full_address']?></div>'
+                                                    '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b>: <?=$pickData['address']['full_address']?></div>'
                                             }, {
                                                 iconLayout: 'default#image',
                                                 iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
@@ -1284,6 +1455,9 @@ if(!$ID && $isOrdered){
                     <div class="adm-detail-content">
                         <div class="adm-detail-title">
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_HIST_TITLE')?>
+                        </div>
+                        <div class="adm-detail-description">
+                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_HIST_TITLE_DESC')?><br><br>
                         </div>
                         <div class="adm-detail-content-item-block">
                             <form method="post">

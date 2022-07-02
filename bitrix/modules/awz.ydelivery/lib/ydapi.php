@@ -160,6 +160,26 @@ class Ydapi {
     }
 
     /**
+     * Получение ярлыков
+     *
+     * @param array $data
+     * @return Result
+     */
+    public function getLabels(array $data){
+        return $this->send('api/b2b/platform/request/generate-labels', $data);
+    }
+
+    /**
+     * Получение акта
+     *
+     * @param array $data
+     * @return Result
+     */
+    public function getInvoice(array $data){
+        return $this->send('api/b2b/platform/request/get-handover-act', $data);
+    }
+
+    /**
      * Список предложений для параметров заказа
      *
      * @param array $data параметры заказа
@@ -232,7 +252,7 @@ class Ydapi {
             }
             $this->clearCacheParams();
         }
-
+        $httpClient = null;
         if(!$res){
             $httpClient = new HttpClient();
             $httpClient->disableSslVerification();
@@ -258,54 +278,63 @@ class Ydapi {
             );
         }else{
             try {
-				if($this->standartJson){
-					$json = json_decode($res, true);
-				}else{
-					$json = Json::decode($res);
-				}
-                /*
-                 * error -> array('code'=>'str', 'message'=>'str')
-                 * */
-                if($json['code'] && $json['message']){
-                    $result->addError(
-                        new Error($json['message'], $json['code'])
-                    );
-                }elseif($json['code'] && $json['details']['debug_message']){
-                    $result->addError(
-                        new Error($json['details']['debug_message'], $json['code'])
-                    );
-                }elseif(!empty($json['error']) && $json['error']['message']){
-                    $result->addError(
-                        new Error($json['error']['message'])
-                    );
-                    if(!empty($json['error']['details'])){
-                        foreach($json['error']['details'] as $err){
-                            $result->addError(
-                                new Error(is_array($err) ? implode('; ',$err) : $err)
-                            );
-                        }
-                    }
-                }elseif(!empty($json['error_details'])){
-                    if(is_array($json['error_details'])){
-                        foreach($json['error_details'] as $errText){
-                            $result->addError(
-                                new Error($errText)
-                            );
-                        }
+                if($httpClient && $httpClient->getHeaders()->get('content-type') == 'application/pdf'){
+                    $result->setData(array('result'=>$res));
+                }else{
+                    if($this->standartJson){
+                        $json = json_decode($res, true);
                     }else{
-                        $result->addError(
-                            new Error($json['error_details'])
-                        );
+                        $json = Json::decode($res);
                     }
+                    /*
+                     * error -> array('code'=>'str', 'message'=>'str')
+                     * */
+                    if(isset($json['error']) && $json['error']){
+                        $result->addError(
+                            new Error($json['error'])
+                        );
+                    }elseif(isset($json['code'],$json['message']) && $json['code'] && $json['message']){
+                        $result->addError(
+                            new Error($json['message'], $json['code'])
+                        );
+                    }elseif(isset($json['code'],$json['details']['debug_message']) && $json['code'] && $json['details']['debug_message']){
+                        $result->addError(
+                            new Error($json['details']['debug_message'], $json['code'])
+                        );
+                    }elseif(isset($json['error']['message']) && !empty($json['error']) && $json['error']['message']){
+                        $result->addError(
+                            new Error($json['error']['message'])
+                        );
+                        if(!empty($json['error']['details'])){
+                            foreach($json['error']['details'] as $err){
+                                $result->addError(
+                                    new Error(is_array($err) ? implode('; ',$err) : $err)
+                                );
+                            }
+                        }
+                    }elseif(isset($json['error_details']) && !empty($json['error_details'])){
+                        if(is_array($json['error_details'])){
+                            foreach($json['error_details'] as $errText){
+                                $result->addError(
+                                    new Error($errText)
+                                );
+                            }
+                        }else{
+                            $result->addError(
+                                new Error($json['error_details'])
+                            );
+                        }
+                    }
+                    $result->setData(array('result'=>$json));
                 }
-				$result->setData(array('result'=>$json));
+
                 /*if($type == 'get'){
                     $result->setData(array('result'=>$json));
                 }else{
                     $result->setData(array('result'=>$json, 'postData'=>Json::encode($data)));
                 }*/
 
-            }catch (ObjectException $ex){
+            }catch (\Exception  $ex){
                 $result->addError(
                     new Error($ex->getMessage(), $ex->getCode())
                 );

@@ -399,6 +399,8 @@ class Main {
 				$arFields[$val][] = $val;
 			}
 		}
+
+
 		
 		// создадим объект фильтра
 		$oFilter = new \CAdminFilter(
@@ -425,7 +427,9 @@ class Main {
 						$row = "find_".$field;
 						$val_n = $field;
 					}
-					$obField = $entity::getEntity()->getField($val_n);
+                    $obField = null;
+					if(strpos($val_n, '.')===false)
+					    $obField = $entity::getEntity()->getField($val_n);
 					
 					if($obField instanceof \Bitrix\Main\Entity\IntegerField){
 						if(!$type) $type = "INT";
@@ -533,8 +537,16 @@ class Main {
 				$validate = false;
 				$val_n = $val;
 			}
-			
-			$obField = $entity::getEntity()->getField($val_n);
+
+			if(strpos($row, '.')!==false){
+			    $row_key = str_replace('.', '_', $row);
+                global ${$row_key};
+                $tmp = ${$row_key};
+            }
+
+            $obField = null;
+			if(strpos($val_n, '.')===false)
+			    $obField = $entity::getEntity()->getField($val_n);
 			if($obField instanceof \Bitrix\Main\Entity\IntegerField){
 				$tmp = intval($tmp);
 			}elseif($obField instanceof \Bitrix\Main\Entity\StringField){

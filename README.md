@@ -26,6 +26,7 @@
 | `calcResult` `\Bitrix\Sale\Delivery\CalculationResult` | Объект расчета доставки
 
 должен вернуть [`result` => `\Bitrix\Main\Result`] в случае ошибки    
+[`disableWriteDate` => `bool`] отключить установку даты в свойство заказа
 изменение данных расчета через объект `\Bitrix\Sale\Delivery\CalculationResult`
 
 ```php
@@ -359,5 +360,42 @@ class handlersDelivery {
         }
     }
 
+}
+```
+
+**onBeforeShowListItems**    
+Вызывается после механизма обновления статусов модулем
+
+| Параметр | Описание |
+| --- | --- |
+| `params` `array()` | Конфигурация вывода списка |
+| `custom` `bool` | Флаг указывающий на кастомный вывод страницы|
+
+Должен вернуть [`params` => `array()`, `custom`=>`bool`] с новыми параметрами, либо флагом кастомного вызова
+
+```php
+//добавим отмену заказа в фильтр в списке заявок
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler('awz.ydelivery', 'onBeforeShowListItems', array('handlersDelivery','onBeforeShowListItems'));
+class handlersDelivery {
+
+    public static function onBeforeShowListItems(\Bitrix\Main\Event $event){
+        $params = $event->getParameter('params');
+        $params['FIND'][] = array(
+            "NAME"=>"ORD.CANCELED", "KEY"=>"ORD.CANCELED", "TITLE"=>"Заказ отменен", "GROUP"=>"ORD.CANCELED", "FILTER_TYPE"=>"=","TYPE"=>"LIST",
+            "VALUES"=> array(
+                'reference'=>array(
+                    'все заказы',
+                    'да',
+                    'нет'
+                ),
+                'reference_id'=>array('','Y','N')
+            )
+        );
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array('params'=>$params)
+        );
+    }
 }
 ```
