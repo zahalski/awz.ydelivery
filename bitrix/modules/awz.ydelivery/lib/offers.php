@@ -74,6 +74,11 @@ class OffersTable extends Entity\DataManager
                     'title'=>Loc::getMessage('AWZ_YDELIVERY_OFFERS_FIELDS_LAST_DATE')
                 )
             ),
+            new Entity\StringField('LAST_STATUS', array(
+                    'required' => false,
+                    'title'=>Loc::getMessage('AWZ_YDELIVERY_OFFERS_FIELDS_LAST_STATUS')
+                )
+            ),
             new Entity\ReferenceField('ORD', '\Bitrix\Sale\Internals\OrderTable',
                 array('=this.ORDER_ID' => 'ref.ID')
             ),

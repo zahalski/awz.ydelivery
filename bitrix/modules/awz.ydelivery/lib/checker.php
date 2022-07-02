@@ -156,6 +156,11 @@ class Checker {
                 if($ydRes->isSuccess()){
                     $ydData = $ydRes->getData();
 
+                    //$data['LAST_STATUS']
+                    foreach($ydData['result']['state_history'] as $statRow){
+                        if($statRow['status'])
+                            $data['LAST_STATUS'] = $statRow['status'];
+                    }
                     $lastStatusCode = '';
                     $upStatList = false;
                     foreach($ydData['result']['state_history'] as $statRow){
@@ -198,7 +203,8 @@ class Checker {
                 }
                 $arChange = array(
                     'HISTORY'=>$finUp,
-                    'HISTORY_FIN'=>$finalize
+                    'HISTORY_FIN'=>$finalize,
+                    'LAST_STATUS'=>$data['LAST_STATUS']
                 );
                 if(!$noUpdateDate){
                     $arChange['LAST_DATE'] = \Bitrix\Main\Type\DateTime::createFromTimestamp(time());

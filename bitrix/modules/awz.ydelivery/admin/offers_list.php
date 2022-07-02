@@ -12,6 +12,7 @@ use Bitrix\Main\EventResult;
 use Bitrix\Main\Localization\Loc;
 use \Awz\Ydelivery\Helper;
 use \Awz\Ydelivery\OffersTable;
+use Bitrix\Main\Config\Option;
 Loc::loadMessages(__FILE__);
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
@@ -20,7 +21,10 @@ if ($POST_RIGHT == "D")
 
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_TITLE"));
 $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");
-	
+
+global $STATUS_LIST;
+$STATUS_LIST = unserialize(Option::get($module_id, 'YD_STATUSLIST', '', ''));
+
 class MlifeRowListAdmin extends \Awz\Ydelivery\Main {
 	
 	public function __construct($params) {
@@ -29,13 +33,25 @@ class MlifeRowListAdmin extends \Awz\Ydelivery\Main {
 	
 	public function getMlifeRowListAdminCustomRow($row){
 
+        global $STATUS_LIST;
+
 	    $status = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EMPTY_STATUS');
+	    $status2 = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EMPTY_STATUS');
 
 	    if(!empty($row->arRes['HISTORY']['hist'])){
 	        $last = array_pop($row->arRes['HISTORY']['hist']);
             $status = $last['description'];
         }
         $row->AddViewField("HISTORY", $status);
+
+	    if(!empty($row->arRes['LAST_STATUS'])){
+            $status2 = '['.$row->arRes['LAST_STATUS'].']';
+            if(isset($STATUS_LIST[$row->arRes['LAST_STATUS']])){
+                $status2 .= ' - '.$STATUS_LIST[$row->arRes['LAST_STATUS']];
+            }
+        }
+        $row->AddViewField("LAST_STATUS", $status2);
+
         $row->AddViewField("ORD.STATUS.NAME", $row->arRes['AWZ_YDELIVERY_OFFERS_ORD_STATUS_NAME'],'FULL');
         $val = $row->arRes['HISTORY_FIN'] == 'Y' ? 'Y' : 'N';
         $row->AddViewField("HISTORY_FIN", Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_'.$val));
@@ -162,6 +178,16 @@ foreach($deliveryProfileList as $k=>$v){
     $deliveryValue['reference'][] = '['.$k.'] - '.$v;
 }
 
+
+$lastStatusValue = array(
+    'reference'=>array(Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DELIVERY_ALL_FILTER')),
+    'reference_id'=>array('')
+);
+foreach($STATUS_LIST as $k=>$v){
+    $lastStatusValue['reference_id'][] = $k;
+    $lastStatusValue['reference'][] = '['.$k.'] - '.$v;
+}
+
 $arParams = array(
 	"PRIMARY" => "ID",
 	"LANG_CODE" => "AWZ_YDELIVERY_OFFERS_",
@@ -173,7 +199,7 @@ $arParams = array(
         array("key"=>"labels2", "title"=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_LABEL_TS')." v2"),
         array("key"=>"invoice", "title"=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_INVOICE_T')),
     ),
-	"COLS" => array('ID','ORDER_ID','OFFER_ID','HISTORY_FIN','HISTORY','CREATE_DATE','LAST_DATE',
+	"COLS" => array('ID','ORDER_ID','OFFER_ID','HISTORY_FIN','HISTORY','CREATE_DATE','LAST_DATE','LAST_STATUS',
         'ORD_STATUS_NAME'=>
         array("id" => 'ORD.STATUS.NAME',
         "content" => Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_ORDER_FIELD_STATUS'),
@@ -192,6 +218,11 @@ $arParams = array(
                 ),
                 'reference_id'=>array('','Y','N')
             )
+        ),
+        array(
+            "NAME"=>"LAST_STATUS",
+            "KEY"=>"LAST_STATUS", "GROUP"=>"LAST_STATUS", "FILTER_TYPE"=>"=","TYPE"=>"LIST",
+            "VALUES"=> $lastStatusValue
         ),
         array(
             "NAME"=>"ORD.STATUS_ID","TITLE"=>Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_STATUS_FILTER'),

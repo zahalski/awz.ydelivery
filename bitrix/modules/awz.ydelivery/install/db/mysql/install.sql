@@ -6,6 +6,7 @@ create table if not exists b_awz_ydelivery_offer (
     HISTORY_FIN varchar(1) DEFAULT NULL,
     CREATE_DATE datetime NOT NULL,
     LAST_DATE datetime NOT NULL,
+    LAST_STATUS varchar(65) DEFAULT NULL,
 	primary key (ID),
 	unique IX_OFFER_ID (OFFER_ID),
 	index IX_ORDER_ID (ORDER_ID),
