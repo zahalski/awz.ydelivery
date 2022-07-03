@@ -19,64 +19,82 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 \Bitrix\Main\Loader::includeModule($module_id);
 
 $defStatus = array(
-    'CREATED_ERROR'=> GetMessage("AWZ_YDELIVERY_OSIBKA_BRONIROVANIE"),
-	'DRAFT'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_ZAGRUJEN"),
-	'CREATED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_PODTVERJDEN"),
-	'RESERVED'=> GetMessage("AWZ_YDELIVERY_ZAREZERVIROVANO_MEST"),
-	'EXPECTING_DELIVERY'=> GetMessage("AWZ_YDELIVERY_OJIDAETSA_POSTAVKA"),
-	'VALIDATING_ERROR'=> GetMessage("AWZ_YDELIVERY_NEOBHODIMO_PERESOZDA"),
-	'VALIDATING'=> GetMessage("AWZ_YDELIVERY_IDET_POISK_ISPOLNITE"),
-	'DELIVERY_PROCESSING_STARTED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_SOZDAN_V_SORTI"),
-	'DELIVERY_TRACK_RECEIVED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_SOZDAN_V_SISTE"),
-	'SORTING_CENTER_AT_START'=> GetMessage("AWZ_YDELIVERY_NA_SKLADE_SORTIROVOC"),
-	'SORTING_CENTER_PREPARED'=> GetMessage("AWZ_YDELIVERY_GOTOV_K_OTPRAVKE_V_S"),
-	'DELIVERY_AT_START'=> GetMessage("AWZ_YDELIVERY_NA_SKLADE_SLUJBY_DOS"),
-	'OUT_OF_STOCK'=> GetMessage("AWZ_YDELIVERY_NET_NA_SKLADE"),
-	'SENDER_WAIT_FULFILLMENT'=> GetMessage("AWZ_YDELIVERY_OJIDAETSA_V_SLUJBE_D"),
-	'READY_FOR_TRACK'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_PODGOTOVLEN_NA"),
-	'ON_THE_TRACK'=> GetMessage("AWZ_YDELIVERY_NA_MAGISTRALI"),
-	'DELIVERY_ARRIVED'=> GetMessage("AWZ_YDELIVERY_V_GORODE_POLUCATELA"),
-	'ORDERED'=> GetMessage("AWZ_YDELIVERY_POLQZOVATELQ_POLOJIL"),
-	'COURIER_ASSIGNED'=> GetMessage("AWZ_YDELIVERY_KURQER_NAZNACEN"),
-	'READY_FOR_DELIVERY'=> GetMessage("AWZ_YDELIVERY_GOTOVY_DOSTAVITQ_K"),
-	'DELIVERY_TRANSPORTATION_RECIPIENT'=> GetMessage("AWZ_YDELIVERY_POSYLKA_DOSTAVLAETSA"),
-	'DELIVERY_STORAGE_PERIOD_EXTENDED'=> GetMessage("AWZ_YDELIVERY_SROK_HRANENIA_ZAKAZA"),
-	'DELIVERY_STORAGE_PERIOD_EXPIRED'=> GetMessage("AWZ_YDELIVERY_SROK_HRANENIA_ZAKAZA1"),
-	'ORDER_CANCELLED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_OTMENEN"),
-	'DELIVERY_DELIVERED'=> GetMessage("AWZ_YDELIVERY_DOSTAVLEN"),
-	'PARTIALLY_DELIVERED'=> GetMessage("AWZ_YDELIVERY_DOSTAVLEN_CASTICNO"),
-	'DELIVERY_UPDATED'=> GetMessage("AWZ_YDELIVERY_DOSTAVKA_PERENESENA"),
-	'DELIVERY_UPDATED_BY_RECIPIENT'=> GetMessage("AWZ_YDELIVERY_DOSTAVKA_PERENESENA1"),
-	'DELIVERY_UPDATED_BY_DELIVERY'=> GetMessage("AWZ_YDELIVERY_DOSTAVKA_PERENESENA2"),
-	'DELIVERY_ATTEMPT_FAILED'=> GetMessage("AWZ_YDELIVERY_NEUDACNAA_POPYTKA_VR"),
-	'DELIVERY_CAN_NOT_BE_COMPLETED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_NE_MOJET_BYTQ"),
-	'CANCELLED_BY_RECIPIENT'=> GetMessage("AWZ_YDELIVERY_DOSTAVKA_OTMENENA_PO"),
-	'DELIVERY_REJECTED'=> GetMessage("AWZ_YDELIVERY_ZAAVKA_NA_DOSTAVKU_O"),
-	'DELIVERED_FINISH'=> GetMessage("AWZ_YDELIVERY_DOSTAVLEN_PODTVERJ"),
-	'RETURN_PREPARING'=> GetMessage("AWZ_YDELIVERY_GOTOVITSA_K_VOZVRATU"),
-	'SORTING_CENTER_RETURN_PREPARING'=> GetMessage("AWZ_YDELIVERY_GOTOVITSA_K_VOZVRATU1"),
-	'SORTING_CENTER_RETURN_ARRIVED'=> GetMessage("AWZ_YDELIVERY_VOZVRATNYY_ZAKAZ_NA"),
-	'SORTING_CENTER_RETURN_PREPARING_SENDER'=> GetMessage("AWZ_YDELIVERY_GOTOV_DLA_PEREDACI_M"),
-	'SORTING_CENTER_CANCELED'=> GetMessage("AWZ_YDELIVERY_OTMENEN_SORTIROVOCNY"),
-	'SORTING_CENTER_RETURN_TRANSFERRED'=> GetMessage("AWZ_YDELIVERY_VOZVRAT_NA_PUTI_K_MA"),
-	'RETURN_ARRIVED'=> GetMessage("AWZ_YDELIVERY_VODITELQ_PRIEHAL_V_T"),
-	'SORTING_CENTER_RETURN_RETURNED'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_VOZVRASEN_V_TO"),
-	'RETURNED_FINISH'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_ZAVERSEN"),
-	'CANCELLED'=> GetMessage("AWZ_YDELIVERY_OTMENA_PODTVERJDEN"),
-	'CANCEL_WITH_PAYMENT'=> GetMessage("AWZ_YDELIVERY_ZAKAZ_BYL_OTMENEN_KL"),
-	'DELIVERY_ARRIVED_PICKUP_POINT'=> GetMessage("AWZ_YDELIVERY_V_PUNKTE_SAMOVYVOZA"),
-	'SORTING_CENTER_ERROR'=> GetMessage("AWZ_YDELIVERY_OSIBKA_SOZDANIA_ZAKA"),
-	'LOST'=> GetMessage("AWZ_YDELIVERY_UTERAN"),
-	'UNEXPECTED'=> GetMessage("AWZ_YDELIVERY_STATUS_UTOCNAETSA"),
-	'CANCELLED_USER'=> GetMessage("AWZ_YDELIVERY_OTMENEN_POLQZOVATELE")
+    "CREATED_IN_PLATFORM" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM"),
+    "CREATED_IN_PLATFORM_DRAFT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM_DRAFT"),
+    "VALIDATING" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_VALIDATING"),
+    "CREATED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CREATED"),
+    "CREATED_DELIVERY_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CREATED_DELIVERY_PROCESSING_STARTED"),
+    "DELIVERY_TRACK_RECEIVED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRACK_RECEIVED"),
+    "SORTING_CENTER_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_PROCESSING_STARTED"),
+    "SORTING_CENTER_PROCESSING_STARTED_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_PROCESSING_STARTED_DELIVERY_LOADED"),
+    "DELIVERY_LOADED_DELIVERY_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_LOADED_DELIVERY_PROCESSING_STARTED"),
+    "DELIVERY_PROCESSING_STARTED_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_PROCESSING_STARTED_DELIVERY_LOADED"),
+    "SORTING_CENTER_CANCELED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_CANCELED"),
+    "RETURN_PREPARING" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_RETURN_PREPARING"),
+    "DELIVERY_TRACK_RECEIVED_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRACK_RECEIVED_DELIVERY_LOADED"),
+    "SORTING_CENTER_PROCESSING_STARTED_DELIVERY_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_PROCESSING_STARTED_DELIVERY_PROCESSING_STARTED"),
+    "DELIVERY_LOADED_DELIVERY_AT_START" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_LOADED_DELIVERY_AT_START"),
+    "SORTING_CENTER_PREPARED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_PREPARED"),
+    "SORTING_CENTER_TRANSMITTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_TRANSMITTED"),
+    "SORTING_CENTER_TRANSMITTED_DELIVERY_AT_START" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_TRANSMITTED_DELIVERY_AT_START"),
+    "DELIVERY_AT_START_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_DELIVERY_AT_START_SORT"),
+    "DELIVERY_AT_START_SORT_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_SORT_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DELIVERY_DELIVERED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_DELIVERED"),
+    "DELIVERED_FINISH" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERED_FINISH"),
+    "RETURN_PREPARING_DRAFT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_RETURN_PREPARING_DRAFT"),
+    "DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_RECIPIENT"),
+    "DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_AT_START_SORT"),
+    "ZAKAZ_GOTOVITSYA_K_OTPRAVKE_DELIVERY_AT_START_SORT_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_ZAKAZ_GOTOVITSYA_K_OTPRAVKE_DELIVERY_AT_START_SORT_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "ZAKAZ_PODTVERZHDEN_V_SORTIROVO_DELIVERY_PROCESSING_STARTED_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_ZAKAZ_PODTVERZHDEN_V_SORTIROVO_DELIVERY_PROCESSING_STARTED_DELIVERY_LOADED"),
+    "DELIVERY_PROCESSING_STARTED_DELIVERY_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_PROCESSING_STARTED_DELIVERY_PROCESSING_STARTED"),
+    "ON_THE_TRACK" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_ON_THE_TRACK"),
+    "DELIVERY_ARRIVED_PICKUP_POINT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_ARRIVED_PICKUP_POINT"),
+    "FINISHED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_FINISHED"),
+    "DELIVERY_TRANSMITTED_TO_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRANSMITTED_TO_RECIPIENT"),
+    "SORTING_CENTER_TRANSMITTED_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_TRANSMITTED_DELIVERY_AT_START_SORT"),
+    "DELIVERY_AT_START_SORT_DELIVERY_AT_START" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_SORT_DELIVERY_AT_START"),
+    "DELIVERY_AT_START_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "CANCELLED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CANCELLED"),
+    "RETURN_PREPARING_DELIVERY_PROCESSING_STARTED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_RETURN_PREPARING_DELIVERY_PROCESSING_STARTED"),
+    "CANCELLED_USER" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CANCELLED_USER"),
+    "CANCELED_IN_PLATFORM" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CANCELED_IN_PLATFORM"),
+    "DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_AT_START_SORT"),
+    "POSYLKA_DOSTAVLYAETSYA_KLIENTU_DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_POSYLKA_DOSTAVLYAETSYA_KLIENTU_DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_RECIPIENT"),
+    "DELIVERY_TRANSPORTATION" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRANSPORTATION"),
+    "SORTING_CENTER_RETURN_PREPARING" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_RETURN_PREPARING"),
+    "DELIVERY_STORAGE_PERIOD_EXTENDED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_STORAGE_PERIOD_EXTENDED"),
+    "DELIVERY_STORAGE_PERIOD_EXPIRED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_STORAGE_PERIOD_EXPIRED"),
+    "DELIVERY_UPDATED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED"),
+    "DELIVERY_UPDATED_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_DELIVERY_AT_START_SORT"),
+    "SORTING_CENTER_TRANSMITTED_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_SORTING_CENTER_TRANSMITTED_DELIVERY_LOADED"),
+    "DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_TRANSPORTATION_RECIPIENT_DELIVERY_UPDATED_BY_DELIVERY"),
+    "DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DOSTAVKA_PERENESENA_PO_PROSBE__DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DOSTAVKA_PERENESENA_PO_PROSBE__DELIVERY_UPDATED_BY_RECIPIENT_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DELIVERY_AT_START_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_DELIVERY_LOADED"),
+    "DELIVERY_LOADED_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_LOADED_DELIVERY_AT_START_SORT"),
+    "DELIVERY_UPDATED_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DELIVERY_ATTEMPT_FAILED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_ATTEMPT_FAILED"),
+    "DELIVERY_ATTEMPT_FAILED_DELIVERY_TRANSPORTATION_RECIPIENT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_ATTEMPT_FAILED_DELIVERY_TRANSPORTATION_RECIPIENT"),
+    "DELIVERY_AT_START_SORT_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_AT_START_SORT_DELIVERY_UPDATED_BY_DELIVERY"),
+    "DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START_SORT" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START_SORT"),
+    "DELIVERY_LOADED_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_LOADED_DELIVERY_UPDATED_BY_DELIVERY"),
+    "DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_LOADED" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_LOADED"),
+    "ZAKAZ_DOBAVLEN_V_TEKUSHCHUYU_O_DELIVERY_LOADED_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_ZAKAZ_DOBAVLEN_V_TEKUSHCHUYU_O_DELIVERY_LOADED_DELIVERY_UPDATED_BY_DELIVERY"),
+    "DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START"),
+    "DELIVERY_ATTEMPT_FAILED_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_ATTEMPT_FAILED_DELIVERY_UPDATED_BY_DELIVERY")
 );
 
 $statusList = unserialize(Option::get($module_id, 'YD_STATUSLIST', '', ''));
+if(isset($statusList['DRAFT'])) { //old dublicates statuses
+    $statusList = array();
+}
 //$statusList = array();
 if(empty($statusList)) {
     $statusList = $defStatus;
     Option::set($module_id, 'YD_STATUSLIST', serialize($defStatus), '');
 }
+
 $deliveryProfileList = \Awz\Ydelivery\Helper::getActiveProfileIds();
 
 $payYandexMethods = \Awz\Ydelivery\Helper::getYandexPayMethods();
@@ -91,32 +109,51 @@ while($payResult = $paySystemResult->fetch()){
     //echo'<pre>';print_r($payResult);echo'</pre>';
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQUEST["Update"]) > 0 && check_bitrix_sessid())
-{
-    $sendRunAgent = false;
-    if($_REQUEST['DELETE_PVZ']=='Y'){
-        \Awz\Ydelivery\PvzTable::deleteAll();
-        CAdminMessage::ShowMessage(array('TYPE'=>'OK',
-            'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS1')));
-        $sendRunAgent = true;
-    }
-    if($_REQUEST['UPDATE_PVZ']=='Y'){
-        \Awz\Ydelivery\Checker::agentGetPickpoints(true);
-        CAdminMessage::ShowMessage(array('TYPE'=>'OK',
-            'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS2')));
-        $sendRunAgent = true;
-    }
-    //DELETE_AFTER_RESP
-    //print_r($_REQUEST);
-    //die();
+$startProfile = intval($_REQUEST['profile']);
+$startCode = trim($_REQUEST['code']);
 
-    //if(!$sendRunAgent){
+$minMode = ($startProfile && $startCode);
+//print_r(check_bitrix_sessid());
+if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQUEST["Update"]) > 0 && (check_bitrix_sessid() || $minMode))
+{
+    if($minMode){
+
+        foreach($statusList as $k=>$v){
+            if($startCode != $k) continue;
+            foreach($deliveryProfileList as $profileId=>$profileName){
+                if($startProfile != $profileId) continue;
+                $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
+                Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
+                $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
+                Option::set($module_id, $key, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
+            }
+        }
+    }else{
+        $sendRunAgent = false;
+        if($_REQUEST['DELETE_PVZ']=='Y'){
+            \Awz\Ydelivery\PvzTable::deleteAll();
+            CAdminMessage::ShowMessage(array('TYPE'=>'OK',
+                'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS1')));
+            $sendRunAgent = true;
+        }
+        if($_REQUEST['UPDATE_PVZ']=='Y'){
+            \Awz\Ydelivery\Checker::agentGetPickpoints(true);
+            CAdminMessage::ShowMessage(array('TYPE'=>'OK',
+                'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS2')));
+            $sendRunAgent = true;
+        }
+        //DELETE_AFTER_RESP
+        //print_r($_REQUEST);
+        //die();
+
+        //if(!$sendRunAgent){
 
         Option::set($module_id, "DELETE_AFTER_RESP", trim($_REQUEST["DELETE_AFTER_RESP"]), "");
         Option::set($module_id, "BAR_CODE_TEMPLATE", trim($_REQUEST["BAR_CODE_TEMPLATE"]), "");
         Option::set($module_id, "UPDATE_PVZ_BG", trim($_REQUEST["UPDATE_PVZ_BG"]), "");
         Option::set($module_id, "SEARCH_EXT", trim($_REQUEST["SEARCH_EXT"]), "");
         Option::set($module_id, "MAP_ADDRESS", trim($_REQUEST["MAP_ADDRESS"]), "");
+        Option::set($module_id, "CHECKER_FIN_DSBL", serialize($_REQUEST["CHECKER_FIN_DSBL"]), "");
 
         foreach($statusList as $k=>$v){
             foreach($deliveryProfileList as $profileId=>$profileName){
@@ -136,15 +173,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
                 Option::set($module_id, "CHECKER_INTERVAL_".$profileId, trim($_REQUEST["CHECKER_INTERVAL_".$profileId]), "");
                 Option::set($module_id, "CHECKER_COUNT_".$profileId, trim($_REQUEST["CHECKER_COUNT_".$profileId]), "");
                 Option::set($module_id, "CHECKER_FIN_".$profileId, serialize($_REQUEST["CHECKER_FIN_".$profileId]), "");
-                Option::set($module_id, "PARAMS_STATUS_FROM_".$profileId.'_'.$k, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
-                Option::set($module_id, "PARAMS_STATUS_TO_".$profileId.'_'.$k, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
+                $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
+                Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
+                $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
+                Option::set($module_id, $key, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
             }
         }
-    //}else{
-    //    CAdminMessage::ShowMessage(array('TYPE'=>'ERR',
-    //        'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS3')));
-    //}
-
+        //}else{
+        //    CAdminMessage::ShowMessage(array('TYPE'=>'ERR',
+        //        'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS3')));
+        //}
+    }
 }
 
 
@@ -157,15 +196,20 @@ while($d = $statusOb->fetch()){
     $statusAr2[$d['ID']] = $d;
 }
 
+
+
 $aTabs = array();
-$aTabs[] = array(
-    "DIV" => "edit1",
-    "TAB" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT1'),
-    "ICON" => "vote_settings",
-    "TITLE" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT1')
-);
+if(!$minMode) {
+    $aTabs[] = array(
+        "DIV" => "edit1",
+        "TAB" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT1'),
+        "ICON" => "vote_settings",
+        "TITLE" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT1')
+    );
+}
 $cnt = 1;
 foreach($deliveryProfileList as $profileId=>$profileName){
+    if($minMode && $profileId!=$startProfile) continue;
     $cnt++;
     $aTabs[] = array(
         "DIV" => "edit".$cnt,
@@ -175,19 +219,25 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     );
 }
 $cnt++;
-$aTabs[] = array(
-    "DIV" => "edit".$cnt,
-    "TAB" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT3'),
-    "ICON" => "vote_settings",
-    "TITLE" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT3')
-);
+if(!$minMode) {
+    $aTabs[] = array(
+        "DIV" => "edit" . $cnt,
+        "TAB" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT3'),
+        "ICON" => "vote_settings",
+        "TITLE" => Loc::getMessage('AWZ_YDELIVERY_OPT_SECT3')
+    );
+}
+
+$val_stat_disabled = Option::get($module_id, "CHECKER_FIN_DSBL", "", '');
+$val_stat_disabled = unserialize($val_stat_disabled);
+if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
 
 $tabControl = new \CAdminTabControl("tabControl", $aTabs);
 $tabControl->Begin();
 ?>
 <style>.adm-workarea option:checked {background-color: rgb(206, 206, 206);}</style>
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=htmlspecialcharsbx($module_id)?>&lang=<?=LANGUAGE_ID?>&mid_menu=1" id="FORMACTION">
-
+    <?if(!$minMode) {?>
 <?
 $tabControl->BeginNextTab();
 ?>
@@ -211,6 +261,23 @@ $tabControl->BeginNextTab();
             #SEC# - <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_BARCODE_TEMPLATE_MACROS7')?><br>
             #ORDER# - <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_BARCODE_TEMPLATE_MACROS8')?>
             </p>
+        </td>
+    </tr>
+    <tr>
+        <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_DSBL_STATUS')?></td>
+        <td>
+            <?
+
+            ?>
+            <select name="CHECKER_FIN_DSBL[]" multiple="multiple" size="20" style="max-width:1200px;">
+                <?
+                foreach($statusList as $k=>$stat){
+                    $selected = '';
+                    if(in_array($k,$val_stat_disabled)) $selected = ' selected="selected"';
+                    echo '<option value="'.$k.'"'.$selected.'>['.$k.'] - '.$stat.'</option>';
+                }
+                ?>
+            </select>
         </td>
     </tr>
     <tr>
@@ -276,17 +343,18 @@ $tabControl->BeginNextTab();
             </a>
         </td>
     </tr>
-
+<?}?>
 
     <?
 foreach($deliveryProfileList as $profileId=>$profileName){
+    if($minMode && $profileId!=$startProfile) continue;
     $tabControl->BeginNextTab();
 
     $pvzList = \Awz\Ydelivery\Helper::getActiveProfileIds(\Awz\Ydelivery\Helper::DOST_TYPE_PVZ);
     $isPvz = isset($pvzList[$profileId]) ? true : false;
 
     ?>
-
+<?if(!$minMode){?>
     <tr class="heading">
         <td colspan="2">
             <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROFILE_PROP')?>
@@ -434,10 +502,13 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             <?
             $val = Option::get($module_id, "CHECKER_FIN_".$profileId, "", '');
             $val = unserialize($val);
+            if(!is_array($val)) $val = array();
+
             ?>
-            <select name="CHECKER_FIN_<?=$profileId?>[]" multiple="multiple">
+            <select name="CHECKER_FIN_<?=$profileId?>[]" multiple="multiple" size="20" style="max-width:1200px;">
                 <?
                 foreach($statusList as $k=>$stat){
+                    if(in_array($k,$val_stat_disabled)) continue;
                     $selected = '';
                     if(in_array($k,$val)) $selected = ' selected="selected"';
                     echo '<option value="'.$k.'"'.$selected.'>['.$k.'] - '.$stat.'</option>';
@@ -449,57 +520,126 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     <?
 
     foreach($statusList as $k=>$v){
+        if(in_array($k,$val_stat_disabled)) continue;
         ?>
-        <tr class="heading"><td colspan="2"><?=$k?>: <?=$v?></td></tr>
-        <tr>
-            <td>
-                <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_FROM')?>
-            </td>
-            <td>
-                <?$val = Option::get($module_id, 'PARAMS_STATUS_FROM_'.$profileId.'_'.$k, '', '');
-                $val = unserialize($val);
-                ?>
-                <select name="PARAMS_STATUS_FROM_<?=$profileId?>_<?=$k?>[]" multiple="multiple">
+        <tr class="heading"><td colspan="2"><?=$k?>: <br><?=$v?></td></tr>
+            <tr>
+                <td>
+                    <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_FROM')?>
+                </td>
+                <td>
                     <?
-                    foreach($statusAr as $stat){
-                        $selected = '';
-                        if(in_array($stat['ID'],$val)) $selected = ' selected="selected"';
-                        echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
-                    }
+                    $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$profileId.'_'.$k);
+
+                    $val = Option::get($module_id, $key, '', '');
+                    $val = unserialize($val);
+                    if(!is_array($val)) $val = array();
                     ?>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_TO')?></td>
-            <td>
-                <?$val = Option::get($module_id, 'PARAMS_STATUS_TO_'.$profileId.'_'.$k, '', '');?>
-                <select name="PARAMS_STATUS_TO_<?=$profileId?>_<?=$k?>">
+                    <select name="PARAMS_STATUS_FROM_<?=$profileId?>_<?=$k?>[]" multiple="multiple">
+                        <?
+                        foreach($statusAr as $stat){
+                            $selected = '';
+                            if(in_array($stat['ID'],$val)) $selected = ' selected="selected"';
+                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_TO')?></td>
+                <td>
                     <?
-                    foreach($statusAr2 as $stat){
-                        $selected = '';
-                        if($stat['ID'] == $val) $selected = ' selected="selected"';
-                        echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
-                    }
-                    ?>
-                </select>
-            </td>
-        </tr>
+                    $key = 'md5_'.md5('PARAMS_STATUS_TO_'.$profileId.'_'.$k);
+                    $val = Option::get($module_id, $key, '', '');?>
+                    <select name="PARAMS_STATUS_TO_<?=$profileId?>_<?=$k?>">
+                        <?
+                        foreach($statusAr2 as $stat){
+                            $selected = '';
+                            if($stat['ID'] == $val) $selected = ' selected="selected"';
+                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
+
+
         <?
     }
     ?>
+<?}else{?>
+        <?
 
+        foreach($statusList as $k=>$v){
+            if(in_array($k,$val_stat_disabled)) continue;
+            if($startCode && ($startCode != $k)) continue;
+            ?>
+            <tr class="heading"><td colspan="2"><?=$k?>: <br><?=$v?></td></tr>
+            <tr>
+                <td>
+                    <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_FROM')?>
+                </td>
+                <td>
+                    <?
+                    $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$profileId.'_'.$k);
+
+                    $val = Option::get($module_id, $key, '', '');
+                    $val = unserialize($val);
+                    if(!is_array($val)) $val = array();
+                    ?>
+                    <select name="PARAMS_STATUS_FROM_<?=$profileId?>_<?=$k?>[]" multiple="multiple">
+                        <?
+                        foreach($statusAr as $stat){
+                            $selected = '';
+                            if(in_array($stat['ID'],$val)) $selected = ' selected="selected"';
+                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_TO')?></td>
+                <td>
+                    <?
+                    $key = 'md5_'.md5('PARAMS_STATUS_TO_'.$profileId.'_'.$k);
+                    $val = Option::get($module_id, $key, '', '');?>
+                    <select name="PARAMS_STATUS_TO_<?=$profileId?>_<?=$k?>">
+                        <?
+                        foreach($statusAr2 as $stat){
+                            $selected = '';
+                            if($stat['ID'] == $val) $selected = ' selected="selected"';
+                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
+
+
+            <?
+        }
+        ?>
+    <?}?>
         <?
 }
     ?>
-
+<?if(!$minMode) {?>
     <?
     $tabControl->BeginNextTab();
     require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");
+    ?>
+<?}?>
+    <?
     $tabControl->Buttons();
     ?>
     <input <?if ($MODULE_RIGHT<"W") echo "disabled" ?> type="submit" class="adm-btn-green" name="Update" value="<?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_BTN_SAVE')?>" />
     <input type="hidden" name="Update" value="Y" />
+    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+    <input type="hidden" name="profile" value="<?=$startProfile?>">
+    <input type="hidden" name="code" value="<?=$startCode?>">
     <?$tabControl->End();
     ?>
 </form>

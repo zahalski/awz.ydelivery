@@ -13,6 +13,7 @@ use Bitrix\Main\Localization\Loc;
 use \Awz\Ydelivery\Helper;
 use \Awz\Ydelivery\OffersTable;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\Page\Asset;
 Loc::loadMessages(__FILE__);
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
@@ -21,9 +22,17 @@ if ($POST_RIGHT == "D")
 
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_TITLE"));
 $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");
+Asset::getInstance()->addString('<style>.adm-filter-main-table {width: 100%!important;}</style>');
 
 global $STATUS_LIST;
 $STATUS_LIST = unserialize(Option::get($module_id, 'YD_STATUSLIST', '', ''));
+
+$val_stat_disabled = Option::get($module_id, "CHECKER_FIN_DSBL", "", '');
+$val_stat_disabled = unserialize($val_stat_disabled);
+if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
+foreach($val_stat_disabled as $code){
+    unset($STATUS_LIST[$code]);
+}
 
 class MlifeRowListAdmin extends \Awz\Ydelivery\Main {
 	
@@ -301,3 +310,4 @@ if(!$customPrint) {
     $adminCustom = new MlifeRowListAdmin($arParams);
     $adminCustom->defaultInterface();
 }
+

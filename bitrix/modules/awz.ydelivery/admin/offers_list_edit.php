@@ -32,6 +32,11 @@ Asset::getInstance()->addString('<script src="//api-maps.yandex.ru/2.1/?lang=ru_
 $ID = intval($_REQUEST['id']);
 $ORDER_ID = intval($_REQUEST['ORDER_ID']);
 
+
+$val_stat_disabled = Option::get($module_id, "CHECKER_FIN_DSBL", "", '');
+$val_stat_disabled = unserialize($val_stat_disabled);
+if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
+
 $isOrdered = OffersTable::getList(array('select'=>array('ID'),'filter'=>array('=ORDER_ID'=>$ORDER_ID)))->fetch();
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
@@ -1121,6 +1126,15 @@ if(!$ID && $isOrdered){
     }
 
     if($yandexRes->isSuccess()){
+
+        $order = \Bitrix\Sale\Order::load($data['ORDER_ID']);
+        $curProfile = Helper::getProfileId($order);
+        $val_stat_all = Option::get($module_id, "CHECKER_FIN_".$curProfile, "", '');
+        $val_stat_all = unserialize($val_stat_all);
+        if(!is_array($val_stat_all)) $val_stat_all = array();
+
+        $config = Helper::getConfigByProfileId($curProfile);
+
         $yandexData = $yandexRes->getData();
         $data['HISTORY']['last'] = $yandexData;
         if(!$data['HISTORY']['last_history_date']) {
@@ -1131,6 +1145,9 @@ if(!$ID && $isOrdered){
         <div class="adm-list-table-layout">
 
             <div class="adm-list-table-top">
+                <?if(isset($config['MAIN']['TEST_MODE']) && $config['MAIN']['TEST_MODE']=='Y'){?>
+                    <b style="color:red;font-weight:bold;">TEST</b>
+                <?}?>
                 <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage("AWZ_YDELIVERY_ZAAVKA")?><?=$yandexData['result']['request_id']?></b>
             </div>
         <div class="adm-list-table adm-list-table-without-header">
@@ -1452,12 +1469,24 @@ if(!$ID && $isOrdered){
 
 
 
+                    <?
+                    $statusOb = \CSaleStatus::GetList();
+                    $statusAr = array('ALL'=>array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_VSE_STATUSY"),"ID"=>"ALL"));
+                    while($d = $statusOb->fetch()){
+                        $statusAr[$d['ID']] = $d;
+                    }
+                    ?>
+
                     <div class="adm-detail-content">
                         <div class="adm-detail-title">
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_HIST_TITLE')?>
                         </div>
                         <div class="adm-detail-description">
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_HIST_TITLE_DESC')?><br><br>
+                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_COUNT_RESP',array(
+                                    '#CN#'=>intval($data['HISTORY']['count_resp']),
+                                    '#LIMIT#'=>intval(Option::get($module_id, 'CHECKER_COUNT_'.$curProfile, '0', '')),
+                            ))?><br><br>
                         </div>
                         <div class="adm-detail-content-item-block">
                             <form method="post">
@@ -1485,6 +1514,18 @@ if(!$ID && $isOrdered){
                                 <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
                                         <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH3')?>
                                     </div></th>
+                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE')?>
+                                    </div>
+                                </th>
+                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT')?>
+                                    </div>
+                                </th>
+                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_5')?>
+                                    </div>
+                                </th>
                             </tr>
                             <?foreach($data['HISTORY']['hist'] as $item){?>
                                 <tr class="adm-list-table-row">
@@ -1496,6 +1537,82 @@ if(!$ID && $isOrdered){
                                             $date = \Bitrix\Main\Type\DateTime::createFromTimestamp($item['timestamp']);
                                             ?>
                                             <?=$date->toString()?>
+                                        <?}?>
+                                    </td>
+                                    <td class="adm-list-table-cell">
+                                        <?
+                                        if(isset($item['status_m'])){
+                                            ?><?=$item['status_m']?><br>
+                                            <?=(isset($val_stat_all[$item['status_m']]) ? $val_stat_all[$item['status_m']] : '')?><?
+                                        }else{?>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
+                                        <?}?>
+                                    </td>
+                                    <td class="adm-list-table-cell">
+                                    <?if(isset($item['status_m'])){?>
+                                        <?if(in_array($item['status_m'], $val_stat_disabled)){?>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_DSBL')?>
+                                        <?}else{?>
+                                            <?
+                                            $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$curProfile.'_'.$item['status_m']);
+
+                                            $val = Option::get($module_id, $key, '', '');
+                                            $val = unserialize($val);
+                                            if(!is_array($val)) $val = array();
+                                            if(empty($val)){
+                                                ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_1')?><?
+                                            }else{
+                                                ?>
+                                                <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2')?></b>:
+                                                <?
+                                                $statNames = array();
+                                                foreach($val as $codeBxStat){
+                                                    $statNames[] = '['.$statusAr[$codeBxStat]['ID'].'] '.$statusAr[$codeBxStat]['NAME'];
+                                                }
+                                                ?>
+                                                <?=implode('; ',$statNames)?>
+                                                <?
+                                            }
+                                            ?>
+                                            <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?></b>
+                                            <?
+                                            $key2 = 'md5_'.md5('PARAMS_STATUS_TO_'.$curProfile.'_'.$item['status_m']);
+                                            $val2 = Option::get($module_id, $key2, '', '');
+                                            if($val2){
+                                                if($val2 == 'DISABLE'){
+                                                    $val2 = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_4');
+                                                }else{
+                                                    $val2 = '['.$statusAr[$val2]['ID'].'] '.$statusAr[$val2]['NAME'];
+                                                }
+
+                                                ?><?=$val2?><?
+                                            }else{
+                                                ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_3')?><?
+                                            }
+                                            ?>
+                                            <br><a href="#" onclick="BX.SidePanel.Instance.open('/bitrix/admin/settings.php?mid=awz.ydelivery&lang=ru&profile=<?=$curProfile?>&code=<?=$item['status_m']?>',{cacheable: false});return false;">
+                                                настройки</a>
+                                        <?}?>
+                                    <?}else{?>
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
+                                    <?}?>
+                                    </td>
+                                    <td class="adm-list-table-cell">
+                                        <?if(!empty($data['HISTORY']['setstatus'])){?>
+                                            <?foreach($data['HISTORY']['setstatus'] as $ks=>$dt){
+                                                if(!isset($dt[2])) continue;
+                                                if($dt[2] != $item['status_m']) continue;
+                                                ?>
+                                                <?if(isset($dt[3])){?>
+                                                    <b style="color:red;"><?=$dt[3]?></b>
+                                                <?}?>
+                                                <b><?=\Bitrix\Main\Type\DateTime::createFromTimestamp($dt[0])->toString()?></b>
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?>
+                                                <?
+                                                $statusPr = '['.$statusAr[$dt[1]]['ID'].'] '.$statusAr[$dt[1]]['NAME'];
+                                                echo $statusPr;
+                                                ?><br><br>
+                                            <?}?>
                                         <?}?>
                                     </td>
                                 </tr>
@@ -1517,7 +1634,8 @@ if(!$ID && $isOrdered){
                                 <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ERR_TITLE')?>
                             </div>
                             <div class="adm-detail-content-item-block">
-                                <?foreach($data['HISTORY']['errors'] as $err){?>
+                                <?foreach($data['HISTORY']['errors'] as $cn=>$err){?>
+                                    <b>error<?=($cn+1)?>:</b>
                                     <?=is_array($err) ? implode('; ', $err) : $err?><br><br>
                                 <?}?>
                             </div>

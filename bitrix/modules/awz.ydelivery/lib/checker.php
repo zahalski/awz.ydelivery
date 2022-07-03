@@ -59,6 +59,51 @@ class Checker {
     }
 
     /**
+     * перевод статусов яндекса в не дублирующие статусы модуля
+     * (костыль с добавлением предыдущего статуса)
+     *
+     * @param $histStatus
+     * @return array
+     */
+    public static function unDoubleStatus($histStatus){
+        $dublicateStatusList = array(
+            'DELIVERY_PROCESSING_STARTED',
+            'DELIVERY_LOADED',
+            'DELIVERY_AT_START',
+            'DRAFT',
+            'DELIVERY_TRANSPORTATION_RECIPIENT',
+            'DELIVERY_AT_START_SORT',
+            'DELIVERY_UPDATED_BY_RECIPIENT',
+            'DELIVERY_UPDATED_BY_DELIVERY'
+        );
+
+        $statList = array();
+        $prevStatus = array();
+        foreach($histStatus as $stat){
+            if(isset($statList[$stat['status']]) || in_array($stat['status'], $dublicateStatusList)){
+                $statusCode = $prevStatus['status'].'_'.$stat['status'];
+                $statusMess = $prevStatus['description'].', '.$stat['description'];
+                if(isset($statList[$statusCode])){
+                    $statusCode = strtoupper(Helper::translit($prevStatus['description'])).'_'.$statusCode;
+                    $statusMess = $prevStatus['description'].', '.$statusMess;
+                }
+                $statList[$statusCode] = $stat;
+                $statList[$statusCode]['hash'] = md5(serialize($stat));
+                $statList[$statusCode]['status_m'] = $statusCode;
+                $statList[$statusCode]['status_d'] = $statusMess;
+            }else{
+                $statList[$stat['status']] = $stat;
+                $statList[$stat['status']]['hash'] = md5(serialize($stat));
+                $statList[$stat['status']]['status_m'] = $stat['status'];
+                $statList[$stat['status']]['status_d'] = $stat['description'];
+
+            }
+            $prevStatus = $stat;
+        }
+        return $statList;
+    }
+
+    /**
      * @throws \Bitrix\Main\NotImplementedException
      * @throws \Bitrix\Main\ArgumentNullException
      * @throws \Bitrix\Main\LoaderException
@@ -113,6 +158,7 @@ class Checker {
                 '',''
                 )
             );
+            if(!is_array($opt_CHECKER_FIN)) $opt_CHECKER_FIN = array();
 
             $filter = array(
                 "!=HISTORY_FIN"=>'Y',
@@ -131,6 +177,10 @@ class Checker {
                     'order'=>array('ID'=>'DESC')
                 )
             );
+
+            $val_stat_disabled = Option::get(Handler::MODULE_ID, "CHECKER_FIN_DSBL", "", '');
+            $val_stat_disabled = unserialize($val_stat_disabled);
+            if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
 
             while($data = $r->fetch()){
 
@@ -157,19 +207,32 @@ class Checker {
                     $ydData = $ydRes->getData();
 
                     //$data['LAST_STATUS']
-                    foreach($ydData['result']['state_history'] as $statRow){
-                        if($statRow['status'])
-                            $data['LAST_STATUS'] = $statRow['status'];
+
+                    $undStatus = self::unDoubleStatus($ydData['result']['state_history']);
+
+                    foreach($undStatus as $statRow){
+                        if(in_array($statRow['status_m'], $val_stat_disabled)) continue;
+                        if($statRow['status_m'])
+                            $data['LAST_STATUS'] = $statRow['status_m'];
                     }
                     $lastStatusCode = '';
                     $upStatList = false;
-                    foreach($ydData['result']['state_history'] as $statRow){
-                        $lastStatusCode = $statRow['status'];
+                    foreach($undStatus as $statRow){
+
+                        if(in_array($statRow['status_m'], $val_stat_disabled)) {
+                            $hash = $statRow['hash'];
+                            if(!isset($finUp['hist'][$hash])) {
+                                $finUp['hist'][$hash] = $statRow;
+                            }
+                            continue;
+                        }
+
+                        $lastStatusCode = $statRow['status_m'];
                         if($lastStatusCode && !isset($statusList[$lastStatusCode])){
-                            $statusList[$lastStatusCode] = $statRow['description'];
+                            $statusList[$lastStatusCode] = $statRow['status_d'];
                             $upStatList = true;
                         }
-                        $hash = md5(serialize($statRow));
+                        $hash = $statRow['hash'];
                         if(!isset($finUp['hist'][$hash])){
                             $finUp['hist'][$hash] = $statRow;
                             $noUpdateDate = true;
@@ -219,7 +282,7 @@ class Checker {
                     $newStatus = false;
                     $opt = Option::get(
                         Handler::MODULE_ID,
-                        'PARAMS_STATUS_TO_'.$profileId.'_'.$lStatus,
+                        'md5_'.md5('PARAMS_STATUS_TO_'.$profileId.'_'.$lStatus),
                         '', ''
                     );
                     if(!$opt) {
@@ -232,7 +295,7 @@ class Checker {
                     $ordStatus = $data['ORD_STATUS'];
                     $optOrd = Option::get(
                         Handler::MODULE_ID,
-                        'PARAMS_STATUS_FROM_'.$profileId.'_'.$lStatus,
+                        'md5_'.md5('PARAMS_STATUS_FROM_'.$profileId.'_'.$lStatus),
                         '', ''
                     );
                     $optOrd = unserialize($optOrd);
@@ -290,14 +353,21 @@ class Checker {
                             $order->setField('STATUS_ID', $newStatus);
                             $result = $order->save();
                             /* @var $result \Bitrix\Sale\Result */
+                            if(!isset($finUp['setstatus'])){
+                                $finUp['setstatus'] = array();
+                            }
                             if(!$result->isSuccess()){
                                 $finUp['errors'][] = $result->getErrorMessages();
+                                $finUp['setstatus'][] = array(
+                                    time(), $newStatus,
+                                    $finUp['lastStatusCode'], 'error:'.count($finUp['errors'])
+                                );
                                 $chekerUpdateErr = $result->getErrorMessages();
                             }else{
-                                if(!isset($finUp['setstatus'])){
-                                    $finUp['setstatus'] = array();
-                                }
-                                $finUp['setstatus'][] = array(time(), $newStatus);
+                                $finUp['setstatus'][] = array(
+                                    time(), $newStatus,
+                                    $finUp['lastStatusCode']
+                                );
                                 $chekerUpdate = array(time(), $newStatus);
                             }
                             OffersTable::update(
