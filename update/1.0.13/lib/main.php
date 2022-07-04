@@ -154,11 +154,13 @@ class Main {
 		
 		if($_REQUEST['action_target']=='selected')
 		{
+            $filter = $this->getFilter();
+            if($_REQUEST['del_filter'] == 'Y') $filter = array();
 			$rsData = $entity::getList(
 				array(
 					'order' => $orderAr,
 					'select' => array($this->getParam("PRIMARY")),
-					'filter' => $this->getFilter()
+					'filter' => $filter
 				)
 			);
 			while($arRes = $rsData->Fetch())
@@ -251,11 +253,13 @@ class Main {
 //print_r($this->getAdminList()->GetVisibleHeaderColumns());
             //print_r($this->getFilter());
 			$colsVisible = $this->getAdminList()->GetVisibleHeaderColumns();
+			$filter = $this->getFilter();
+			if($_REQUEST['del_filter'] == 'Y') $filter = array();
 			$res = $entity::getList(
 				array(
 					'select' => $colsVisible,
 					'order' => $this->getParam("ORDER"),
-					'filter' => $this->getFilter()
+					'filter' => $filter
 				)
 			);
 			$ob = new \CAdminResult($res, $this->getParam("TABLEID"));
