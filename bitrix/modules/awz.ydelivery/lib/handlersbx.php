@@ -97,6 +97,7 @@ class handlersBx {
                 )
             );
         }else{
+			$pointId = false;
             $errorText = '';
             $setPoints = false;
             if($request->get('AWZ_YD_POINT_ID')){
@@ -114,6 +115,7 @@ class handlersBx {
                     }
                     if($prop->getValue()){
                         $setPoints = true;
+						$pointId = $prop->getValue();
                     }
                 }elseif($prop->getField('CODE') == Helper::getPropAddress($checkMyDeliveryPvz)){
                     $propAddress = $prop;

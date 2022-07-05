@@ -299,6 +299,15 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         ))));
 
         $pointId = false;
+		
+		foreach($props as $prop){
+			if($prop->getField('CODE') == Helper::getPropPvzCode($this->getId())){
+				if($prop->getValue()){
+					$pointId = $prop->getValue();
+				}
+			}
+		}
+		
         $pointHtml = '';
         $request = Context::getCurrent()->getRequest();
         if($request->get('AWZ_YD_POINT_ID')){

@@ -354,8 +354,8 @@ if(!window.awz_yd_modal){
 
                             window.awz_yd_modal.map.geoObjects.add(window.awz_yd_modal.objectManager);
 
-                            window.awz_yd_modal.map.setBounds(window.awz_yd_modal.map.geoObjects.getBounds());
-                            window.awz_yd_modal.map.setZoom(window.awz_yd_modal.map.getZoom()-1);
+                            window.awz_yd_modal.map.setBounds(window.awz_yd_modal.map.geoObjects.getBounds(), {checkZoomRange:true});
+                            //window.awz_yd_modal.map.setZoom(window.awz_yd_modal.map.getZoom()-1);
                         });
                     }else if(resp.status === 'error'){
                         var msg = '';
