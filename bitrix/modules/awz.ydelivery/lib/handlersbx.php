@@ -103,6 +103,19 @@ class handlersBx {
             if($request->get('AWZ_YD_POINT_ID')){
                 $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
             }
+            if(!$pointId && (Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$checkMyDeliveryPvz, 'N', '')=='Y')){
+                $rawInput = file_get_contents('php://input');
+                if($rawInput && strpos($rawInput,'{')!==false){
+                    try{
+                        $postData = \Bitrix\Main\Web\Json::decode($rawInput);
+                        if(isset($postData['order']['delivery']['outlet']['code'])){
+                            $pointId = $postData['order']['delivery']['outlet']['code'];
+                        }
+                    }catch (\Exception $e){
+
+                    }
+                }
+            }
 
             /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
             $checkIsProp = false;

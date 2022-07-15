@@ -162,6 +162,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
                     Option::set($module_id, "PAY_LINK_".$profileId.'_'.mb_strtoupper($payId), serialize($_REQUEST["PAY_LINK_".$profileId.'_'.mb_strtoupper($payId)]), "");
                 }
 
+                Option::set($module_id, "YM_TRADING_ON_".$profileId, trim($_REQUEST["YM_TRADING_ON_".$profileId]), "");
+
                 Option::set($module_id, "PVZ_CODE_".$profileId, trim($_REQUEST["PVZ_CODE_".$profileId]), "");
                 Option::set($module_id, "PVZ_ADDRESS_CORD_".$profileId, trim($_REQUEST["PVZ_ADDRESS_CORD_".$profileId]), "");
                 Option::set($module_id, "DATE_CODE_".$profileId, trim($_REQUEST["DATE_CODE_".$profileId]), "");
@@ -363,6 +365,14 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     </tr>
 
 <?if($isPvz){?>
+    <?if(\Bitrix\Main\Loader::includeModule('yandex.market')){?>
+    <tr>
+        <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_YM_TRADING_ON')?></td>
+        <td>
+            <?$val = Option::get($module_id, "YM_TRADING_ON_".$profileId, "N","");?>
+            <input type="checkbox" value="Y" name="YM_TRADING_ON_<?=$profileId?>" <?if ($val=="Y") echo "checked";?>></td>
+    </tr>
+    <?}?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ')?></td>
         <td>
@@ -386,6 +396,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             <p><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ_ADR_TMPL_DESC')?></p>
         </td>
     </tr>
+
 <?}else{?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ_ADR_CORD')?></td>
@@ -411,6 +422,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         </td>
     </tr>
     <?if($isPvz){?>
+
     <tr>
         <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PAY_CHANGE_HIDE')?></td>
         <td>

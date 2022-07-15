@@ -196,7 +196,16 @@ class OffersTable extends Entity\DataManager
             /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
             foreach($propertyCollection as $prop){
                 if($prop->getField('CODE') == Helper::getPropPvzCode($checkMyDeliveryPvz)){
-                    $prepareData['destination']['platform_station']['platform_id'] = $prop->getValue();
+                    $platformId = $prop->getValue();
+                    if(\Bitrix\Main\Config\Option::get(Handler::MODULE_ID, "SEARCH_EXT", "N","") == 'Y'){
+                        $extRes = PvzExtTable::getList(array(
+                            'select'=>array('PVZ_ID'),
+                            'filter'=>array('=EXT_ID'=>$platformId),
+                            'limit'=>1
+                        ))->fetch();
+                        if($extRes) $platformId = $extRes['PVZ_ID'];
+                    }
+                    $prepareData['destination']['platform_station']['platform_id'] = $platformId;
                 }
             }
 

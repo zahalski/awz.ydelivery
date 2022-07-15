@@ -125,7 +125,9 @@ if(!$ID && $isOrdered){
             if($_REQUEST['order']['delivery_cost']){
                 $prepareData['billing_info']['delivery_cost'] =
                     round($_REQUEST['order']['delivery_cost'], 2)*100;
-            }
+            }else{
+				unset($prepareData['billing_info']['delivery_cost']);
+			}
             $prepareData['items'] = array();
             foreach($_REQUEST['product'] as $key=>$product){
                 $prepareData['items'][$key] = array();
@@ -157,9 +159,7 @@ if(!$ID && $isOrdered){
                 }
             }
 
-            if($_REQUEST['info']['comment']){
-                $prepareData['info']['comment'] = trim($_REQUEST['info']['comment']);
-            }
+            $prepareData['info']['comment'] = trim($_REQUEST['info']['comment']);
             if($_REQUEST['info']['order_new']){
                 $prepareData['info']['operator_request_id'] = trim($_REQUEST['info']['order_new']);
             }
@@ -167,16 +167,23 @@ if(!$ID && $isOrdered){
             $prepareData['recipient_info']['first_name'] = trim($_REQUEST['info']['first_name']);
             if($_REQUEST['info']['email']){
                 $prepareData['recipient_info']['email'] = trim($_REQUEST['info']['email']);
+            }else{
+                unset($prepareData['recipient_info']['email']);
             }
             if($profileAddress){
                 if($_REQUEST['info']['address_cord']){
                     $cord = explode(',',$_REQUEST['info']['address_cord']);
                     $prepareData['destination']['custom_location']['latitude'] = doubleval($cord[0]);
                     $prepareData['destination']['custom_location']['longitude'] = doubleval($cord[1]);
+                }else{
+                    unset($prepareData['destination']['custom_location']['latitude']);
+                    unset($prepareData['destination']['custom_location']['longitude']);
                 }
                 if($_REQUEST['info']['address_kv']){
                     $prepareData['destination']['custom_location']['details']['room'] =
                         trim($_REQUEST['info']['address_kv']);
+                }else{
+                    unset($prepareData['destination']['custom_location']['details']['room']);
                 }
                 $prepareData['destination']['custom_location']['details']['full_address'] =
                     trim($_REQUEST['info']['address']);
@@ -186,6 +193,8 @@ if(!$ID && $isOrdered){
                         'from'=>strtotime($_REQUEST['info']['date_dost']),
                         'to'=>strtotime($_REQUEST['info']['date_dost'])+86400,
                     );
+                }else{
+                    unset($prepareData['destination']['interval']);
                 }
             }
             if($profilePvz){
@@ -208,6 +217,8 @@ if(!$ID && $isOrdered){
                         'from'=>strtotime($_REQUEST['info']['date_dost']),
                         'to'=>strtotime($_REQUEST['info']['date_dost']),
                     );
+                }else{
+                    unset($prepareData['destination']['interval']);
                 }
             }
 

@@ -137,9 +137,50 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         $result = new \Bitrix\Sale\Delivery\CalculationResult();
 
         $weight = $shipment->getWeight();
-        if(!$weight) $weight = $config['MAIN']['WEIGHT_DEFAULT'];
-
         $order = $shipment->getCollection()->getOrder();
+        $items = Helper::getItems($order);
+        //echo'<pre>';print_r($items);echo'</pre>';
+        if(!$weight) {
+            $weight = 0;
+            foreach($items as $item){
+                $weight += $item['physical_dims']['weight_gross'] * $item['count'];
+            }
+        }
+
+        $maxWd = 0;
+        $allWd = 0;
+        foreach($items as $item){
+            if(!isset($item['physical_dims']['dx'], $item['physical_dims']['dy'], $item['physical_dims']['dz'])){
+                continue;
+            }
+            if($item['physical_dims']['dx'] > $maxWd) $maxWd = $item['physical_dims']['dx'];
+            if($item['physical_dims']['dy'] > $maxWd) $maxWd = $item['physical_dims']['dy'];
+            if($item['physical_dims']['dz'] > $maxWd) $maxWd = $item['physical_dims']['dz'];
+            $allWd_ = $item['physical_dims']['dx'] + $item['physical_dims']['dy'] + $item['physical_dims']['dz'];
+            if($allWd_ > $allWd) $allWd = $allWd_;
+        }
+
+        $disableTerminal = false;
+        if($weight>20000) $disableTerminal = true;
+
+        if($maxWd>40 || $allWd>118){
+            $disableTerminal = true;
+        }
+
+        /*
+         * Вес заказа при доставке до двери или до ПВЗ не должен превышать 30 кг.
+         * При необходимости вы можете обсудить особые условия с вашим менеджером.
+         * Сумма длин всех сторон товара при доставке до двери или до ПВЗ не должна превышать 300 см.
+         * При этом длина одной стороны — не более 110 см.
+         * При заказе до постамата ограничения в габаритах — 40×38×40 см.
+         * При этом общая длина сторон не должна превышать 118 см.
+         */
+
+        if($allWd>300 || $maxWd>110 || $weight>30000){
+            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD')));
+            return $result;
+        }
+
         $props = $order->getPropertyCollection();
         $locationCode = $props->getDeliveryLocation()->getValue();
         if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {
@@ -298,7 +339,8 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             'address'=>$locationName,
             'geo_id'=>$locationGeoId,
             'profile_id'=>$this->getId(),
-            's_id'=>bitrix_sessid()
+            's_id'=>bitrix_sessid(),
+            'terminal'=>$disableTerminal ? 'N' : 'Y'
         ))));
 
         $pointId = false;
@@ -316,6 +358,21 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         if($request->get('AWZ_YD_POINT_ID')){
             $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
         }
+
+        if(!$pointId && (\Bitrix\Main\Config\Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$this->getId(), 'N', '')=='Y')){
+            $rawInput = file_get_contents('php://input');
+            if($rawInput && strpos($rawInput,'{')!==false){
+                try{
+                    $postData = \Bitrix\Main\Web\Json::decode($rawInput);
+                    if(isset($postData['order']['delivery']['outlet']['code'])){
+                        $pointId = $postData['order']['delivery']['outlet']['code'];
+                    }
+                }catch (\Exception $e){
+
+                }
+            }
+        }
+
         if($pointId){
             $blnRes = Helper::getBaloonHtml($pointId, true);
             if($blnRes->isSuccess()){

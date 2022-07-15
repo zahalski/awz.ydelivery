@@ -126,9 +126,34 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         $result = new \Bitrix\Sale\Delivery\CalculationResult();
 
         $weight = $shipment->getWeight();
-        if(!$weight) $weight = $config['MAIN']['WEIGHT_DEFAULT'];
-
         $order = $shipment->getCollection()->getOrder();
+        $items = Helper::getItems($order);
+        //echo'<pre>';print_r($items);echo'</pre>';
+        if(!$weight) {
+            $weight = 0;
+            foreach($items as $item){
+                $weight += $item['physical_dims']['weight_gross'] * $item['count'];
+            }
+        }
+
+        $maxWd = 0;
+        $allWd = 0;
+        foreach($items as $item){
+            if(!isset($item['physical_dims']['dx'], $item['physical_dims']['dy'], $item['physical_dims']['dz'])){
+                continue;
+            }
+            if($item['physical_dims']['dx'] > $maxWd) $maxWd = $item['physical_dims']['dx'];
+            if($item['physical_dims']['dy'] > $maxWd) $maxWd = $item['physical_dims']['dy'];
+            if($item['physical_dims']['dz'] > $maxWd) $maxWd = $item['physical_dims']['dz'];
+            $allWd_ = $item['physical_dims']['dx'] + $item['physical_dims']['dy'] + $item['physical_dims']['dz'];
+            if($allWd_ > $allWd) $allWd = $allWd_;
+        }
+
+        if($allWd>300 || $maxWd>110 || $weight>30000){
+            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD')));
+            return $result;
+        }
+
         $props = $order->getPropertyCollection();
         $locationCode = $props->getDeliveryLocation()->getValue();
         if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {

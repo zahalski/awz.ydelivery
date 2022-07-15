@@ -19,4 +19,5 @@ $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_ERR_COST"] = "Произошла ошибк�
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF"] = "Нет графика доставки";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_BTN_OPEN"] = "Выберите пункт выдачи";
 $MESS["AWZ_YDELIVERY_D"] = "д.";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD"] = "Превышены допустимые параметры веса или размеров";
 ?>

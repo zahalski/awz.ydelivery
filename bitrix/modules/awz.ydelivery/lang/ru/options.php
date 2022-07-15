@@ -102,6 +102,7 @@ $MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LINK_ON"] = "Включить поиск ПВЗ
 $MESS["AWZ_YDELIVERY_OPT_MAP_ADRESS"] = "Включить строку поиска адреса на Яндекс Карте (обязателен ключ API в настройках модуля fileman)";
 $MESS["AWZ_YDELIVERY_OPT_DSBL_STATUS"] = "Отключить статусы в логистической платформе";
 $MESS["AWZ_YDELIVERY_OPT_DSBL_STATUS_INFO"] = "Отключен настройками";
+$MESS["AWZ_YDELIVERY_OPT_L_YM_TRADING_ON"] = "Включить обработку ПВЗ из json запроса модуля yandex.market (должны быть загружены внешние коды пвз яндекс маркета)";
 
 $MESS["AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM"] = "Заказ создан в логистической платформе";
 $MESS["AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM_DRAFT"] = "Заказ создан в логистической платформе, Заказ создан";

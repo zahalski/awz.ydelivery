@@ -17,4 +17,5 @@ $MESS["AWZ_YDELIVERY_PROFILE_STANDART_ERR_REGION"] = "Не указан реги
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_ERR_COST"] = "Произошла ошибка при расчете стоимости доставки";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_ERR_NOGRAF"] = "Нет графика доставки";
 $MESS["AWZ_YDELIVERY_D"] = "д.";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD"] = "Превышены допустимые параметры веса или размеров";
 ?>

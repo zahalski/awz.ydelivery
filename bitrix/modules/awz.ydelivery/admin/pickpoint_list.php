@@ -45,34 +45,36 @@ if($profileId){
 
     $props = $order->getPropertyCollection();
     $locationCode = $props->getDeliveryLocation()->getValue();
-    if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
-        $locationCode = $loc['CODE'];
+    if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {
+        if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+            $locationCode = $loc['CODE'];
+        }
     }
     $locationName = '';
     $locationGeoId = '';
-
-    $res = \Bitrix\Sale\Location\LocationTable::getList(array(
-        'filter' => array(
-            '=CODE' => $locationCode,
-            '=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
-            '=PARENTS.TYPE.NAME.LANGUAGE_ID' => LANGUAGE_ID,
-        ),
-        'select' => array(
-            'I_ID' => 'PARENTS.ID',
-            'I_NAME_LANG' => 'PARENTS.NAME.NAME',
-            'I_TYPE_CODE' => 'PARENTS.TYPE.CODE',
-            'I_TYPE_NAME_LANG' => 'PARENTS.TYPE.NAME.NAME',
-        ),
-        'order' => array(
-            'PARENTS.DEPTH_LEVEL' => 'asc'
-        )
-    ));
-    while($item = $res->fetch())
-    {
-        if($locationName){
-            $locationName .= ', '.$item['I_NAME_LANG'];
-        }else{
-            $locationName = $item['I_NAME_LANG'];
+    if($locationCode) {
+        $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+            'filter' => array(
+                '=CODE' => $locationCode,
+                '=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
+                '=PARENTS.TYPE.NAME.LANGUAGE_ID' => LANGUAGE_ID,
+            ),
+            'select' => array(
+                'I_ID' => 'PARENTS.ID',
+                'I_NAME_LANG' => 'PARENTS.NAME.NAME',
+                'I_TYPE_CODE' => 'PARENTS.TYPE.CODE',
+                'I_TYPE_NAME_LANG' => 'PARENTS.TYPE.NAME.NAME',
+            ),
+            'order' => array(
+                'PARENTS.DEPTH_LEVEL' => 'asc'
+            )
+        ));
+        while ($item = $res->fetch()) {
+            if ($locationName) {
+                $locationName .= ', ' . $item['I_NAME_LANG'];
+            } else {
+                $locationName = $item['I_NAME_LANG'];
+            }
         }
     }
     if(!$locationName){

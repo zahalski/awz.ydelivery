@@ -325,6 +325,8 @@ class Helper {
 
         $disable_assessed_unit_price = true;
 
+        $productsIds = array();
+
         foreach($basket as $basketItem){
 
             $artCode = $basketItem->getProductId();
@@ -338,6 +340,7 @@ class Helper {
                 $predefined = $deliveryConfig['MAIN']['PRED_DEFAULT'] ? $deliveryConfig['MAIN']['PRED_DEFAULT'] : 10;
             }
 
+            $productsIds[intval($basketItem->getProductId())] = count($arFinItems);
             $arFinItems[] = array(
                 "count"          	=> intval($basketItem->getQuantity()),
                 "name"           	=> $basketItem->getField('NAME'),
@@ -354,6 +357,26 @@ class Helper {
                 "place_barcode"  => self::generateBarCode($order)
             );
 
+        }
+
+        if(!empty($productsIds)){
+            $r = \Bitrix\Catalog\ProductTable::getList(array(
+                'select'=>array('ID','WEIGHT','WIDTH','LENGTH','HEIGHT'),
+                'filter'=>array('=ID'=>array_keys($productsIds))
+            ));
+            while($data = $r->fetch()){
+                $keyProd = $productsIds[intval($data['ID'])];
+                if($data['WEIGHT']){
+                    $arFinItems[$keyProd]['physical_dims']['weight_gross'] = intval($data['WEIGHT']);
+                }
+                if($data['WIDTH'] && $data['LENGTH'] && $data['HEIGHT']){
+                    $predefined = round($data['WIDTH']*$data['LENGTH']*$data['HEIGHT']*0.001);
+                    $arFinItems[$keyProd]['physical_dims']['predefined_volume'] = intval($predefined);
+                    $arFinItems[$keyProd]['physical_dims']['dx'] = intval(round($data['WIDTH']/10));
+                    $arFinItems[$keyProd]['physical_dims']['dy'] = intval(round($data['LENGTH']/10));
+                    $arFinItems[$keyProd]['physical_dims']['dz'] = intval(round($data['HEIGHT']/10));
+                }
+            }
         }
 
         $event = new Event(

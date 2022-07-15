@@ -23,7 +23,7 @@ class pickPoints extends Controller
             'list' => array(
                 'prefilters' => array(
                     new Scope(Scope::AJAX),
-                    new Sign(array('address','geo_id','profile_id','page','order','user','s_id'))
+                    new Sign(array('address','geo_id','profile_id','page','order','user','s_id','terminal'))
                 )
             ),
             'baloon' => array(
@@ -138,7 +138,7 @@ class pickPoints extends Controller
         return $resultData['html'];
     }
 
-    public function listAction($address = '', $geo_id = '', $profile_id = '', $page = '')
+    public function listAction($address = '', $geo_id = '', $profile_id = '', $page = '', $terminal='')
     {
 
         if(!$profile_id){
@@ -172,6 +172,7 @@ class pickPoints extends Controller
         $items = array();
 
         foreach($pickpoints['result']['points'] as $point){
+            if($terminal == 'N' && $point['type']=='terminal') continue;
             $items[] = array(
                 'id'=>$point['id'],
                 'position'=>$point['position'],
@@ -195,6 +196,7 @@ class pickPoints extends Controller
             'profile_id' => $profile_id,
             'items' => $items,
             'from_cache'=>$api->getLastResponse() ? 0 : 1,
+            'terminal'=>$terminal
         );
     }
 }
