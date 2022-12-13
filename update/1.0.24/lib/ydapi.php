@@ -311,7 +311,7 @@ class Ydapi {
         $url = $this->isTest() ? self::SANDBOX_URL : self::URL;
         $url .= '/'.$method;
 
-        $cacheStaticKey = md5(serialize(array($url,$method,$data,$type)));
+        $cacheStaticKey = md5(serialize(array($url,$method,$data,$type,$this->getToken())));
         if(isset(self::$staticCache[$cacheStaticKey])) return self::$staticCache[$cacheStaticKey];
 
         $res = null;
