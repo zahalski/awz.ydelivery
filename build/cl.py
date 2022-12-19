@@ -5,12 +5,11 @@ from build.tools import *
 conf = get_config()
 
 change_log = {}
-ver = '1.0.0'
+ver = '1000.0.0'
 ver_list = [f'{int(x):04}' for x in ver.split(".")]
 ver_key_str = '.'.join(ver_list)
 change_log[ver_key_str] = []
 change_log[ver_key_str].append('## История версий')
-
 
 if not ("readme_file" in conf):
     raise Exception("README.MD file not found in conf.json")
@@ -39,8 +38,7 @@ for name in os.listdir(updates_path):
         if change_log[ver_key_str][-1][-5] == ';':
             change_log[ver_key_str][-1] = change_log[ver_key_str][-1][:-5]+'.    '
 
-
-sorted_change_log = dict(sorted(change_log.items()))
+sorted_change_log = dict(sorted(change_log.items(), reverse = True))
 
 all_rows = []
 find_cl = False
