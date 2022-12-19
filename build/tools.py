@@ -133,7 +133,7 @@ def set_last_hash(updates_path, version):
             json_data = json.load(file)
     command = 'git rev-parse HEAD'
     run = subprocess.run(command, capture_output=True)
-    json_start = json_data
+    json_start = json_data.copy()
     json_data[version] = run.stdout.decode().strip()
     with open(mark_path, "w") as outfile:
         json.dump(json_data, outfile)

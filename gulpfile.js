@@ -15,7 +15,8 @@ gulpfile.task('up', () => {
 gulpfile.task('build', () => {
     return gulpfile.src('/').pipe(shell([
             'python cp1251.py',
-            'python updater.py'
+            'python updater.py',
+            'python cl.py'
         ],
         {cwd: __dirname+'/build'}));
 });
