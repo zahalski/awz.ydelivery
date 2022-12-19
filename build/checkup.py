@@ -9,20 +9,18 @@ module_path = os.path.abspath(conf['module_path'])
 files = get_changed(updates_path, '1.0.26')
 last_version = get_module_version(module_path)
 
-print(files)
-print(last_version)
-
 #добавление папки с обновлением
 new_version_path = os.path.abspath(os.path.join(updates_path, last_version))
 if not os.path.isdir(new_version_path):
     os.makedirs(new_version_path)
-    pass
+    print("created path", new_version_path)
 
 #добавление файла с описанием обновления
 new_version_desc = os.path.join(new_version_path, 'description.ru')
 if not os.path.isfile(new_version_desc):
     with open(new_version_desc, "w", encoding='utf-8') as outfile:
         outfile.write("- обновление "+last_version)
+        print("created file", "description.ru")
 
 # сколько папок в пути к модулю
 module_paths = split_path(module_path)
@@ -47,5 +45,7 @@ for file_updated_path in files:
                 continue
             if not os.path.isfile(temp_path) and not os.path.isdir(temp_path):
                 os.makedirs(temp_path)
+                print("created path", temp_path)
         dist_path = os.path.abspath(os.path.join(new_version_path, *file_copy_path))
         shutil.copy(file_path, dist_path)
+        print("copied file", os.path.join(last_version, *file_copy_path))

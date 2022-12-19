@@ -6,6 +6,12 @@
 const gulpfile = require('gulp');
 const shell = require('gulp-shell');
 
+gulpfile.task('up', () => {
+    return gulpfile.src('/').pipe(shell([
+            'python checkup.py'
+        ],
+        {cwd: __dirname+'/build'}));
+});
 gulpfile.task('build', () => {
     return gulpfile.src('/').pipe(shell([
             'python cp1251.py',
@@ -19,7 +25,7 @@ gulpfile.task('lang', () => {
         ],
         {cwd: __dirname+'/tests'}));
 });
-gulpfile.task('lang-dep', () => {
+gulpfile.task('lang-d', () => {
     return gulpfile.src('/').pipe(shell([
             'python lang.py --dep'
         ],

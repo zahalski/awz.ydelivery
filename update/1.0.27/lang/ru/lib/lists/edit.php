@@ -1,0 +1,5 @@
+<?php
+$MESS["AWZ_YDELIVERY_ADMIN_OL_DOWNLOAD"] = "скачать";
+$MESS["AWZ_YDELIVERY_ADMIN_OL_EMPTY_STATUS"] = "ожидается получение статуса";
+$MESS["AWZ_YDELIVERY_ADMIN_OL_Y"] = "Да";
+$MESS["AWZ_YDELIVERY_ADMIN_OL_N"] = "Нет";
