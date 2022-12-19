@@ -1,11 +1,14 @@
-import os
-from tools import *
+import sys
+sys.path.append("../")
+from build.tools import *
 
-module_path = os.path.abspath('../bitrix/modules/awz.ydelivery/')
-updates_path = os.path.abspath('../update/')
+conf = get_config()
+module_path = os.path.abspath(conf['module_path'])
+updates_path = os.path.abspath(conf['updates_path'])
 version = get_module_version(module_path)
 
 if version:
-    zip_name = os.path.abspath('../dist/update/'+version+'.zip')
+    zip_name = os.path.abspath(conf['output_path'] + 'update/' + version + '.zip')
     updater_path = os.path.join(updates_path, version)
     build_main(updater_path, zip_name, version)
+    set_last_hash(updates_path, version)

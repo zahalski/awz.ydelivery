@@ -27,7 +27,7 @@ function convertCsvString($str=''){
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
 if ($POST_RIGHT == "D")
-    $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+    $APPLICATION->AuthForm(Loc::getMessage("ACCESS_DENIED"));
 
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_EXT_EDIT_TITLE"));
 
@@ -151,7 +151,7 @@ $tabControl->BeginNextTab();
     </tr>
 
     <tr>
-        <td><?=GetMessage("AWZ_YDELIVERY_ADMIN_EXT_FILE")?>:</td>
+        <td><?=Loc::getMessage("AWZ_YDELIVERY_ADMIN_EXT_FILE")?>:</td>
         <td>
             <?$val = $_REQUEST['filecsv'];?>
             <?CAdminFileDialog::ShowScript(array(

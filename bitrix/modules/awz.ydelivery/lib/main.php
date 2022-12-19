@@ -476,8 +476,8 @@ class Main {
 						}else{
 							$values = array(
 								"reference" => array(
-									Loc::getMessage("MLIFE_ADMIN_LIST_SELECT_Y"),
-									Loc::getMessage("MLIFE_ADMIN_LIST_SELECT_N"),
+									Loc::getMessage("AWZ_ADMIN_LIST_SELECT_Y"),
+									Loc::getMessage("AWZ_ADMIN_LIST_SELECT_N"),
 								),
 								"reference_id" => array(
 									"Y",
@@ -486,7 +486,7 @@ class Main {
 							);
 						}
 						?>
-						<?echo SelectBoxFromArray($row, $values, ${$row}, Loc::getMessage("MLIFE_ADMIN_LIST_SELECT_EMPTY"), "");?>
+						<?echo SelectBoxFromArray($row, $values, ${$row}, Loc::getMessage("AWZ_ADMIN_LIST_SELECT_EMPTY"), "");?>
 						<?
 					}elseif($type=="LIST"){
 						$values = array();
@@ -500,9 +500,9 @@ class Main {
                         if($field['MULTIPLE']=='Y'){
                             //print_r($_REQUEST);
                             //die();
-                            echo SelectBoxMFromArray($row_key.'[]', $values, $tmp_key, Loc::getMessage("MLIFE_ADMIN_LIST_SELECT_EMPTY"));
+                            echo SelectBoxMFromArray($row_key.'[]', $values, $tmp_key, Loc::getMessage("AWZ_ADMIN_LIST_SELECT_EMPTY"));
                         }else{
-                            echo SelectBoxFromArray($row, $values, ${$row}, Loc::getMessage("MLIFE_ADMIN_LIST_SELECT_EMPTY"), "");
+                            echo SelectBoxFromArray($row, $values, ${$row}, Loc::getMessage("AWZ_ADMIN_LIST_SELECT_EMPTY"), "");
                         }
                         ?>
 					<?

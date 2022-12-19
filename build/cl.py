@@ -1,5 +1,8 @@
-import os
-from tools import *
+import sys
+sys.path.append("../")
+from build.tools import *
+
+conf = get_config()
 
 change_log = {}
 ver = '1.0.0'
@@ -8,9 +11,15 @@ ver_key_str = '.'.join(ver_list)
 change_log[ver_key_str] = []
 change_log[ver_key_str].append('## История версий')
 
-updates_path = os.path.abspath('../update/')
-readme_file = os.path.abspath('../README.md')
+
+if not ("readme_file" in conf):
+    raise Exception("README.MD file not found in conf.json")
+
+updates_path = os.path.abspath(conf["updates_path"])
+readme_file = os.path.abspath(conf["readme_file"])
 for name in os.listdir(updates_path):
+    if name[-5:] == '.json':
+        continue
     with open(os.path.join(updates_path, name, 'description.ru'), 'r', encoding='utf-8') as fr:
         ver = str(name)
         ver_list = [f'{int(x):04}' for x in ver.split(".")]
@@ -41,6 +50,7 @@ with open(readme_file, 'r', encoding='utf-8') as fr:
             all_rows.append(line)
             if '<!-- cl-start -->' in line:
                 find_cl = True
+                print("add change log after <!-- cl-start -->")
         else:
             if '<!-- cl-end -->' in line:
                 for i in sorted_change_log:

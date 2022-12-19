@@ -6,6 +6,8 @@ use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\OffersTable;
 use Awz\Ydelivery\Helper;
 
+Loc::loadMessages(__FILE__);
+
 class Edit extends \Awz\Ydelivery\Main {
 
     public function __construct($params) {
@@ -35,7 +37,8 @@ class Edit extends \Awz\Ydelivery\Main {
 
         $row->AddViewField("ORD.STATUS.NAME", $row->arRes['AWZ_YDELIVERY_OFFERS_ORD_STATUS_NAME'],'FULL');
         $val = $row->arRes['HISTORY_FIN'] == 'Y' ? 'Y' : 'N';
-        $row->AddViewField("HISTORY_FIN", Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_'.$val));
+        $valMsg = $row->arRes['HISTORY_FIN'] == 'Y' ? Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_Y') : Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_N');
+        $row->AddViewField("HISTORY_FIN", $valMsg);
         $row->AddViewField("OFFER_ID", '<a href="/bitrix/admin/awz_ydelivery_offers_list_edit.php?lang='.LANGUAGE_ID.'&id='.$row->arRes['ID'].'">'.$row->arRes['OFFER_ID'].'</a>');
         $row->AddViewField("ORDER_ID", '<a href="/bitrix/admin/sale_order_view.php?lang='.LANGUAGE_ID.'&ID='.$row->arRes['ORDER_ID'].'">'.$row->arRes['ORDER_ID'].'</a>');
 

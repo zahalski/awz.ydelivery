@@ -19,7 +19,7 @@ Loc::loadMessages(__FILE__);
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
 if ($POST_RIGHT == "D")
-    $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+    $APPLICATION->AuthForm(Loc::getMessage("ACCESS_DENIED"));
 
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE"));
 $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");

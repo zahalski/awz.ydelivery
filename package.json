@@ -1,6 +1,6 @@
 {
   "name": "awz.ydelivery",
-  "version": "1.0.4",
+  "version": "1.0.27",
   "description": "Интеграция с логистической платформой Яндекс Доставка для Cms Bitrix",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/zahalski/awz.ydelivery.git"
   },
   "author": "Andrew Zahalski",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/zahalski/awz.ydelivery/issues"
   },
@@ -21,5 +21,12 @@
   },
   "dependencies": {
     "gulp-shell": "^0.8.0"
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "keywords": [
+    "bitrix"
+  ]
 }

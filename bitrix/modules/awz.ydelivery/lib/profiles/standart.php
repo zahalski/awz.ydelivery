@@ -314,12 +314,12 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                         $fromDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($fromDay>0){
                             $result->setPeriodFrom($fromDay);
-                            $result->setPeriodDescription($fromDay.' '.GetMessage("AWZ_YDELIVERY_D"));
+                            $result->setPeriodDescription($fromDay.' '.Loc::getMessage("AWZ_YDELIVERY_D"));
                         }
                         $toDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($toDay>0 && $toDay!=$fromDay){
                             $result->setPeriodTo($toDay);
-                            $result->setPeriodDescription($fromDay.'-'.$toDay.' '.GetMessage("AWZ_YDELIVERY_D"));
+                            $result->setPeriodDescription($fromDay.'-'.$toDay.' '.Loc::getMessage("AWZ_YDELIVERY_D"));
                         }
 
                         break;

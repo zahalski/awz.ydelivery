@@ -4,6 +4,8 @@ import shutil
 import zipfile
 import tempfile
 import re
+import json
+import subprocess
 
 
 def add_zip(arch, add_folder, mode, root_zip_folder=''):
@@ -83,3 +85,73 @@ def get_module_version(module_path, encoding_file='utf-8'):
                     print(e)
                     version = False
     return version
+
+
+def get_config():
+    conf_file = 'conf.json'
+    full_path = os.path.join('../', 'build', conf_file)
+    if os.path.exists(full_path):
+        with open(full_path, 'r') as file:
+            json_data = json.load(file)
+            require_key = [
+                'module_path',
+                'updates_path',
+                'output_path',
+                'lang_prefix',
+                'git_path'
+            ]
+            for key in require_key:
+                if not (key in json_data):
+                    raise Exception(key+" is required key in "+conf_file)
+            return json_data
+    return False
+
+
+def get_changed(updates_path, prepare_version):
+    mark_path = os.path.join(updates_path, 'marked_hashes.json')
+    json_data = {}
+    if os.path.exists(mark_path):
+        with open(mark_path, 'r') as file:
+            json_data = json.load(file)
+    if prepare_version in json_data:
+        command = 'git diff --name-only '+json_data[prepare_version]
+        run = subprocess.run(command, capture_output=True)
+        return [str(path) for path in run.stdout.decode().strip().split("\n")]
+    else:
+        return []
+
+
+def set_last_hash(updates_path, version):
+    """
+    запись хеша контрольной точки текущей версии
+    для последующей проверки изменений файлов при билде следующей версии
+    """
+    mark_path = os.path.join(updates_path, 'marked_hashes.json')
+    json_data = {}
+    if os.path.exists(mark_path):
+        with open(mark_path, 'r') as file:
+            json_data = json.load(file)
+    command = 'git rev-parse HEAD'
+    run = subprocess.run(command, capture_output=True)
+    json_start = json_data
+    json_data[version] = run.stdout.decode().strip()
+    with open(mark_path, "w") as outfile:
+        json.dump(json_data, outfile)
+    if version in json_start:
+        if json_start[version] == json_data[version]:
+            print("hash", json_data[version], "for version", version, "not updated", sep=" ")
+        else:
+            print("update hash", json_data[version], "for version", version, sep=" ")
+    else:
+        print("new hash", json_data[version], "for version", version, sep=" ")
+
+
+def split_path(path, dirs=()):
+    if path == '':
+        return dirs
+    temp_dir = os.path.split(path)
+    if len(temp_dir) == 1:
+        return dirs
+    elif temp_dir[1] == '':
+        return (temp_dir[0],)+dirs
+    return split_path(temp_dir[0], temp_dir[1:]+dirs)

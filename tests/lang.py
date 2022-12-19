@@ -1,20 +1,37 @@
 import sys
-sys.path.append("../build/")
-from tools import *
+sys.path.append("../")
+from build.tools import *
 import re
 
-module_path = os.path.abspath('../bitrix/modules/awz.ydelivery/')
+args = sys.argv
+modes = set()
+if len(args) == 1:
+    modes.add('--dep')
+    modes.add('--unknown')
+    modes.add('--notfound')
+    #modes.add('--nousage')
+else:
+    for _ in args[1:]:
+        modes.add(_)
+
+conf = get_config()
+
+module_path = os.path.abspath(conf["module_path"])
 version = get_module_version(module_path)
 
-lang_prefix = 'AWZ_YDELIVERY_'
+if isinstance(conf["lang_prefix"], str):
+    lang_prefix = set(conf["lang_prefix"],)
+else:
+    lang_prefix = set(conf["lang_prefix"])
 
 deprecated_uncheck = [
     os.path.join('install', 'unstep.php')
 ]
-disabled_lang = (
-    'AWZ_PARTNER_NAME', 'AWZ_PARTNER_URI',
-    'ACCESS_DENIED'
-)
+if "disabled_lang" in conf:
+    disabled_lang = set(conf["disabled_lang"])
+else:
+    disabled_lang = set()
+
 
 def get_all_files(path, uncheck_dir=[]):
     files = set()
@@ -46,24 +63,48 @@ if version:
                     result = re.findall(r'\$MESS\s?\[(?:"|\')([A-z0-9_]+)', line)
                     if len(result):
                         lang_values.add(*result)
+        set_values = set()
+        prepare_line = [" "]
         with open(_, 'r', encoding='utf-8') as fv:
+            cn_line = 0
             for line in fv:
+                cn_line += 1
                 dep_check = True
                 for check_path in deprecated_uncheck:
                     if check_path in _:
                         dep_check = False
                 if dep_check:
-                    result = re.findall(r'GetMessage\s?\((?:\((?:"|\')|"|\')([A-z0-9_]+)', line)
+                    result_prev = re.findall(r'GetMessage\s?\($', prepare_line[-1].strip())
+                    if len(result_prev):
+                        result = re.findall(r'^(?:"|\'|)([A-z0-9_]+|)', line.strip())
+                    else:
+                        result = re.findall(r'GetMessage\s?\((?:\((?:"|\')|"|\'|)([A-z0-9_]+)(?:"|\'|\\\'|\\"|)', line.strip())
                     if len(result):
                         for ln in result:
-                            print('deprecated', ln, _)
-                result = re.findall(r'Loc::getMessage\s?\((?:\((?:"|\')|"|\')([A-z0-9_]+)', line)
+                            if "--dep" in modes:
+                                print('deprecated', ln, _)
+                result_prev = re.findall(r'Loc::getMessage\s?\($', prepare_line[-1].strip())
+                if len(result_prev):
+                    result = re.findall(r'^(?:"|\'|)([A-z0-9_]+|)', line.strip())
+                else:
+                    result = re.findall(r'Loc::getMessage\s?\((?:\((?:"|\')|"|\'|)([A-z0-9_]+)(?:"|\'|\\\'|\\"|)', line.strip())
                 if len(result):
                     for ln in result:
+                        set_values.add(ln)
                         if not ln in disabled_lang:
-                            if not lang_prefix in ln:
-                                 print('unknown code', ln, 'in file', _)
+                            check = False
+                            for _lang in lang_prefix:
+                                if _lang in ln:
+                                    check = True
+                            if (check == False) and ("--unknown" in modes):
+                                print('unknown code', ln, 'in file', _, 'line', cn_line)
                             if ln in lang_values:
                                 pass
                             else:
-                                print('not found', ln, 'in lang file', lang_file)
+                                if "--notfound" in modes:
+                                    print('not found', ln, 'in lang file', lang_file, 'line', cn_line)
+                prepare_line = [line]
+        no_usage = lang_values - set_values
+        if len(no_usage) and "--nousage" in modes:
+                for ln in no_usage:
+                    print('unusage lang', ln, 'in lang file', lang_file)

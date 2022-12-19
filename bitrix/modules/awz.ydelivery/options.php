@@ -209,8 +209,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
 
 
 $statusOb = \CSaleStatus::GetList();
-$statusAr = array(array("NAME"=>GetMessage("AWZ_YDELIVERY_VSE_STATUSY"),"ID"=>"ALL"));
-$statusAr2 = array(array("NAME"=>GetMessage("AWZ_YDELIVERY_OTKLUCITQ"),"ID"=>"DISABLE"));
+$statusAr = array(array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_VSE_STATUSY"),"ID"=>"ALL"));
+$statusAr2 = array(array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_OTKLUCITQ"),"ID"=>"DISABLE"));
 while($d = $statusOb->fetch()){
     $statusAr[$d['ID']] = $d;
     $statusAr2[$d['ID']] = $d;
@@ -383,7 +383,7 @@ $tabControl->BeginNextTab();
                 <input type="checkbox" value="Y" name="UPDATE_GRAFIK_DEL" <?if ($val=="Y") echo "checked";?>></td>
         </tr>
         <tr>
-            <td><?=GetMessage("AWZ_YDELIVERY_OPT_GRAFIK_FILE")?>:</td>
+            <td><?=Loc::getMessage("AWZ_YDELIVERY_OPT_GRAFIK_FILE")?>:</td>
             <td>
                 <?$val = $_REQUEST['GRAFIK_FILE'];?>
                 <?CAdminFileDialog::ShowScript(array(
