@@ -6,7 +6,7 @@ conf = get_config()
 updates_path = os.path.abspath(conf['updates_path'])
 module_path = os.path.abspath(conf['module_path'])
 
-files = get_changed(updates_path, '1.0.26')
+files = get_changed(updates_path, '1.0.27')
 last_version = get_module_version(module_path)
 
 #добавление папки с обновлением
