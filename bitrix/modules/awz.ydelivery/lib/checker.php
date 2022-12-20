@@ -327,8 +327,16 @@ class Checker {
                         foreach ($event->getResults() as $evenResult) {
                             if ($evenResult->getType() == EventResult::SUCCESS) {
                                 $r = $evenResult->getParameters();
-                                if(isset($r['newOrdStatus']) && $r['newOrdStatus']){
+                                if(isset($r['newOrdStatus'])){
                                     $newStatus = $r['newOrdStatus'];
+                                }
+                                if(isset($r['lastDate'])){
+                                    OffersTable::update(
+                                        array('ID'=>$data['ID']),
+                                        array(
+                                            'LAST_DATE'=>$r['lastDate']
+                                        )
+                                    );
                                 }
                                 if(isset($r['result']) && ($r['result'] instanceof \Bitrix\Main\Result)){
                                     if(!$r['result']->isSuccess()) {

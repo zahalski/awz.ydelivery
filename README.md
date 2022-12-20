@@ -327,6 +327,36 @@ class handlersDelivery {
 
 ```
 
+```php
+//для изменения даты следующей проверки и отмены смены статуса модулем
+
+$eventManager = \Bitrix\Main\EventManager::getInstance();
+$eventManager->addEventHandler(
+    'awz.ydelivery', 'onBeforeStatusUpdate', 
+    array('handlersDelivery','onBeforeStatusUpdate')
+);
+
+class handlersDelivery {
+
+    public static function onBeforeStatusUpdate(\Bitrix\Main\Event $event){
+        $checkDate = '01.01.2023';
+        $result = new \Bitrix\Main\Result();
+        $result->addError(new \Bitrix\Main\Error('запрещено менять статус до '.$checkDate));
+        
+        return new \Bitrix\Main\EventResult(
+            \Bitrix\Main\EventResult::SUCCESS,
+            array(
+                'lastDate'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($checkDate)),
+                'newOrdStatus'=>false, 
+                'result'=>$result
+            )
+        );
+    }
+
+}
+
+```
+
 **onOfterStatusUpdate**    
 Вызывается после механизма обновления статусов модулем
 
