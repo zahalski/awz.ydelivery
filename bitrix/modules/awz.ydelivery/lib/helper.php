@@ -130,8 +130,8 @@ class Helper {
      */
     public static function getPropPvzCode($profileId){
         return Option::get(Handler::MODULE_ID,
-                           'PVZ_CODE_'.$profileId,
-                           'AWZ_YD_POINT_ID', '');
+            'PVZ_CODE_'.$profileId,
+            'AWZ_YD_POINT_ID', '');
     }
 
 
@@ -145,8 +145,8 @@ class Helper {
      */
     public static function getPropDateCode($profileId){
         return Option::get(Handler::MODULE_ID,
-                           'DATE_CODE_'.$profileId,
-                           '', '');
+            'DATE_CODE_'.$profileId,
+            '', '');
     }
 
 
@@ -160,8 +160,8 @@ class Helper {
      */
     public static function getPropAddress($profileId){
         return Option::get(Handler::MODULE_ID,
-                           'PVZ_ADDRESS_'.$profileId,
-                           '', '');
+            'PVZ_ADDRESS_'.$profileId,
+            '', '');
     }
 
     /**
@@ -174,8 +174,8 @@ class Helper {
      */
     public static function getPropAddressCord($profileId){
         $prop = Option::get(Handler::MODULE_ID,
-                           'PVZ_ADDRESS_CORD_'.$profileId,
-                           '', '');
+            'PVZ_ADDRESS_CORD_'.$profileId,
+            '', '');
         if(!$prop) return array();
         return explode(',', $prop);
     }
@@ -191,8 +191,8 @@ class Helper {
      */
     public static function getStatusAutoCreate($profileId){
         return Option::get(Handler::MODULE_ID,
-                           'OFFERS_ORDER_STATUS_'.$profileId,
-                           '', '');
+            'OFFERS_ORDER_STATUS_'.$profileId,
+            '', '');
     }
 
 
@@ -479,35 +479,35 @@ class Helper {
                 if($type == self::DOST_TYPE_ALL || $type == self::DOST_TYPE_PVZ){
                     $className = '\\'.$classNames[0];
                     $params = \Bitrix\Sale\Delivery\Services\Manager::getById($delivery->getId());
-					//bug php 7.3 main 20.200.300, sale 20.5.43
-					$bug = false;
-					if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
-						$params = DeliveryManager::getById($order->getField('DELIVERY_ID'));
-						$bug = true;
-					}
+                    //bug php 7.3 main 20.200.300, sale 20.5.43
+                    $bug = false;
+                    if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
+                        $params = DeliveryManager::getById($order->getField('DELIVERY_ID'));
+                        $bug = true;
+                    }
                     if($params['CLASS_NAME'] == $className){
-						if($bug){
-							$checkMyDelivery = $order->getField('DELIVERY_ID');
-						}else{
-							$checkMyDelivery = $delivery->getId();
-						}
+                        if($bug){
+                            $checkMyDelivery = $order->getField('DELIVERY_ID');
+                        }else{
+                            $checkMyDelivery = $delivery->getId();
+                        }
                     }
                 }
                 if($type == self::DOST_TYPE_ALL || $type == self::DOST_TYPE_ADR) {
                     $className = '\\' . $classNames[1];
                     $params = \Bitrix\Sale\Delivery\Services\Manager::getById($delivery->getId());
-					//bug php 7.3 main 20.200.300, sale 20.5.43
-					$bug = false;
-					if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
-						$params = DeliveryManager::getById($order->getField('DELIVERY_ID'));
-						$bug = true;
-					}
+                    //bug php 7.3 main 20.200.300, sale 20.5.43
+                    $bug = false;
+                    if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
+                        $params = DeliveryManager::getById($order->getField('DELIVERY_ID'));
+                        $bug = true;
+                    }
                     if($params['CLASS_NAME'] == $className){
-						if($bug){
-							$checkMyDelivery = $order->getField('DELIVERY_ID');
-						}else{
-							$checkMyDelivery = $delivery->getId();
-						}
+                        if($bug){
+                            $checkMyDelivery = $order->getField('DELIVERY_ID');
+                        }else{
+                            $checkMyDelivery = $delivery->getId();
+                        }
                     }
                 }
             }
@@ -763,12 +763,13 @@ class Helper {
             return $pointId;
         }
 
-        $cacheDir = '/awz/ydelivery_geo_candidate/';
+        $cacheDir = '/awz/ydelivery_geo_candidate/'.$geoId.'/';
+        $cacheId = md5(serialize(array($geoId, $config)));
         $ttl = intval($config['MAIN']['CACHE_TTL_POINTS2']);
         if(!$ttl) $ttl = 604800;
         $obCache = Cache::createInstance();
         $res = array();
-        if($obCache->initCache($ttl, md5(serialize($geoId, $config)), $cacheDir)){
+        if($obCache->initCache($ttl, $cacheId, $cacheDir)){
             $res = $obCache->getVars();
         }
 
@@ -792,11 +793,12 @@ class Helper {
         }
 
         if($error && ($pointId == $res['point_id'])){
-            $obCache->clean(md5(serialize($geoId, $config)), $cacheDir);
+            $obCache->clean($cacheId, $cacheDir);
             return "";
         }
 
         if($updateCache){
+            $obCache->clean($cacheId, $cacheDir);
             if($obCache->startDataCache()){
                 $obCache->endDataCache($res);
             }
