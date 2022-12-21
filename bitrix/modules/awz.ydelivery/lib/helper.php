@@ -5,6 +5,7 @@ use Bitrix\Main\ArgumentException;
 use Bitrix\Main\ArgumentNullException;
 use Bitrix\Main\ArgumentOutOfRangeException;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\Data\Cache;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
 use Bitrix\Main\LoaderException;
@@ -743,6 +744,65 @@ class Helper {
         );
 
         return str_replace(array_keys($templateData),array_values($templateData),$template);
+
+    }
+
+    /**
+     * Возвращает ид ПВЗ с минимальным сроком доставки
+     *
+     * @param $geoId int гео ид яндекса
+     * @param $config array конфиг службы доставки
+     * @param $pointId string идентификатор точки
+     * @param $minDays int дни доставки
+     * @param $error bool ошибка расчета сроков
+     * @return string
+     */
+    public static function getPointIdFromGeoId($geoId, $config, $pointId="", $minDays=0, $error=false){
+
+        if($config['MAIN']['SET_PVZ_AUTO_EXPERIMENTAL']!='Y'){
+            return $pointId;
+        }
+
+        $cacheDir = '/awz/ydelivery_geo_candidate/';
+        $ttl = intval($config['MAIN']['CACHE_TTL_POINTS2']);
+        if(!$ttl) $ttl = 604800;
+        $obCache = Cache::createInstance();
+        $res = array();
+        if($obCache->initCache($ttl, md5(serialize($geoId, $config)), $cacheDir)){
+            $res = $obCache->getVars();
+        }
+
+        if(!$pointId) {
+            if(isset($res['point_id'])) return $res['point_id'];
+            return "";
+        }
+
+        $updateCache = false;
+        if(empty($res)){
+            $res['srok'] = $minDays;
+            $res['point_id'] = $pointId;
+            $updateCache = true;
+        }elseif(($res['point_id'] == $pointId) && ($minDays != $res['srok'])){
+            $res['srok'] = $minDays;
+            $updateCache = true;
+        }elseif($minDays < $res['srok']){
+            $res['srok'] = $minDays;
+            $res['point_id'] = $pointId;
+            $updateCache = true;
+        }
+
+        if($error && ($pointId == $res['point_id'])){
+            $obCache->clean(md5(serialize($geoId, $config)), $cacheDir);
+            return "";
+        }
+
+        if($updateCache){
+            if($obCache->startDataCache()){
+                $obCache->endDataCache($res);
+            }
+        }
+
+        return $res['point_id'];
 
     }
 

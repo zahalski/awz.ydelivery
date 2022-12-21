@@ -130,6 +130,36 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_SROK_FROM_STARTDAY'),
                         "DEFAULT" => 'N'
                     ),
+                    'CACHE_TTL_GEOID' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_GEOID'),
+                        "DEFAULT" => '2592000'
+                    ),
+                    'CACHE_TTL_COST' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_COST'),
+                        "DEFAULT" => '604800'
+                    ),
+                    'CACHE_TTL_SROK' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_SROK'),
+                        "DEFAULT" => '3600'
+                    ),
+                    'CACHE_TTL_POINTS' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_POINTS'),
+                        "DEFAULT" => '3600'
+                    ),
+                    'CACHE_TTL_POINTS2' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_POINTS2'),
+                        "DEFAULT" => '604800'
+                    ),
+                    'SET_PVZ_AUTO_EXPERIMENTAL' => array(
+                        'TYPE' => 'Y/N',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SET_PVZ_AUTO_EXPERIMENTAL'),
+                        "DEFAULT" => 'N'
+                    ),
                 )
             )
         );
@@ -322,24 +352,29 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             )
         );
 
+        if(!$locationGeoId){
+            $ttl = intval($config['MAIN']['CACHE_TTL_GEOID']);
+            if(!$ttl) $ttl = 2592000;
+            $api->setCacheParams(md5(serialize(array($config, $locationName, 'geo_id'))), $ttl);
+            $geoIdResult = $api->geo_id($locationName);
+            if($geoIdResult->isSuccess()){
+                $geoIdData = $geoIdResult->getData();
+                if(isset($geoIdData['result']['variants'][0]['geo_id'])){
+                    $locationGeoId = $geoIdData['result']['variants'][0]['geo_id'];
+                }
+            }else{
+                $api->cleanCache();
+            }
+        }
+
         if(isset($pointData['PVZ_ID'])){
             $data['destination']['platform_station_id'] = $pointData['PVZ_ID'];
         }else{
             $data['destination']['address'] = $locationName;
-            if(!$locationGeoId){
-                $api->setCacheParams(md5(serialize(array($locationName, 'geo_id'))), 86400);
-                $geoIdResult = $api->geo_id($locationName);
-                if($geoIdResult->isSuccess()){
-                    $geoIdData = $geoIdResult->getData();
-                    if(isset($geoIdData['result']['variants'][0]['geo_id'])){
-                        $locationGeoId = $geoIdData['result']['variants'][0]['geo_id'];
-                    }
-                }else{
-                    $api->cleanCache();
-                }
-            }
             if($locationGeoId){
-                $api->setCacheParams(md5(serialize(array($data, $config, $locationGeoId, 'pickpoints'))), 86400);
+                $ttl = intval($config['MAIN']['CACHE_TTL_POINTS2']);
+                if(!$ttl) $ttl = 604800;
+                $api->setCacheParams(md5(serialize(array($data, $config, $locationGeoId, 'pickpoints'))), $ttl);
                 $pickpointsResult = $api->getPickpoints(array('geo_id'=>intval($locationGeoId)));
                 if($pickpointsResult->isSuccess()){
                     $pickpoints = $pickpointsResult->getData();
@@ -347,11 +382,18 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         foreach($pickpoints['result']['points'] as $point){
                             if(!in_array($point['type'],array('terminal','pickup_point'))) continue;
                             $data['destination'] = array('platform_station_id'=>$point['id']);
-                            break;
+                            if($point['type']=='pickup_point'){
+                                break;
+                            }
                         }
                     }
                 }else{
                     $api->cleanCache();
+                }
+
+                $pvzCandidate = Helper::getPointIdFromGeoId($locationGeoId, $config);
+                if($pvzCandidate){
+                    $data['destination'] = array('platform_station_id'=>$pvzCandidate);
                 }
             }
 
@@ -363,7 +405,9 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             $data['source'] = array('address'=>$config['MAIN']['STORE_ADRESS']);
         }
 
-        $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), 86400);
+        $ttl = intval($config['MAIN']['CACHE_TTL_COST']);
+        if(!$ttl) $ttl = 604800;
+        $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), $ttl);
         $r = $api->calc($data);
 
         if($r->isSuccess()){
@@ -395,8 +439,9 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 
         $calkData = $r->getData();
         if($calkData['result']['pricing_total']){
-
-            $api->setCacheParams(md5(serialize(array($pointData, $data, $config, 'grafik'))), 3600);
+            $ttl = intval($config['MAIN']['CACHE_TTL_SROK']);
+            if(!$ttl) $ttl = 3600;
+            $api->setCacheParams(md5(serialize(array($pointData, $data, $config, 'grafik'))), $ttl);
             if(isset($pointData['PVZ_ID'])){
                 $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'self_pickup_id'=>$pointData['PVZ_ID']));
             }else{
@@ -406,6 +451,10 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 $api->cleanCache();
             }
             //print_r($r->getData());
+            if(!$r->isSuccess()){
+                if($locationGeoId && isset($pointData['PVZ_ID']))
+                    Helper::getPointIdFromGeoId($locationGeoId, $config, (string) $pointData['PVZ_ID'], 0, true);
+            }
             if($r->isSuccess()){
                 $grafikData = $r->getData();
                 if(isset($grafikData['result']['offers']) && !empty($grafikData['result']['offers'])){
@@ -422,6 +471,8 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         if($fromDay>0){
                             $result->setPeriodFrom($fromDay);
                             $result->setPeriodDescription($fromDay.' '.Loc::getMessage("AWZ_YDELIVERY_D"));
+                            if($locationGeoId && isset($pointData['PVZ_ID']))
+                                Helper::getPointIdFromGeoId($locationGeoId, $config, (string) $pointData['PVZ_ID'], $fromDay);
                         }
                         $toDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($toDay>0 && $toDay!=$fromDay){
@@ -432,6 +483,8 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         break;
                     }
                 }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
+                    if($locationGeoId && isset($pointData['PVZ_ID']))
+                        Helper::getPointIdFromGeoId($locationGeoId, $config, (string) $pointData['PVZ_ID'], 0, true);
                     $result->addError(
                         new \Bitrix\Main\Error(
                             Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF')

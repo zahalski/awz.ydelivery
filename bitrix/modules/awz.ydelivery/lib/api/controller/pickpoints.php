@@ -156,7 +156,11 @@ class pickPoints extends Controller
 
         $api = Helper::getApiByProfileId($profile_id);
 
-        $api->setCacheParams(md5(serialize(array($address, $geo_id, $profile_id))), 86400);
+        $config = Helper::getConfigByProfileId($profile_id);
+        $ttl = intval($config['MAIN']['CACHE_TTL_POINTS']);
+        if(!$ttl) $ttl = 86400;
+
+        $api->setCacheParams(md5(serialize(array($address, $geo_id, $profile_id))), $ttl);
         $pickpointsResult = $api->getPickpoints(array('geo_id'=>intval($geo_id)));
         if(!$pickpointsResult->isSuccess()){
             $this->addErrors($pickpointsResult->getErrors());

@@ -22,4 +22,10 @@ $MESS["AWZ_YDELIVERY_D"] = "д.";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD"] = "Превышены допустимые параметры веса или размеров";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_SETT_SROK_FROM_STARTDAY"] = "Считать срок доставки от начала дня (0:00)";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_ADD_HOUR"] = "Количество часов, которое добавлять к интервалу доставки в заявке (например, 01.01.2023 00:00:00 + N часов)";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_GEOID"] = "Время действия кеша в секундах для получения geo_id";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_COST"] = "Время действия кеша в секундах для получения стоимости доставки";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_SROK"] = "Время действия кеша в секундах для получения срока доставки";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_POINTS"] = "Время действия кеша в секундах для получения списка ПВЗ";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_POINTS2"] = "Время действия кеша в секундах для получения списка ПВЗ (для расчета по умолчанию)";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_SET_PVZ_AUTO_EXPERIMENTAL"] = "Включить экспериментальный алгоритм запоминания ПВЗ с минимальным сроком доставки (для расчета до выбора ПВЗ)";
 ?>
