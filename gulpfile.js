@@ -9,6 +9,7 @@ const shell = require('gulp-shell');
 gulpfile.task('up', () => {
     return gulpfile.src('/').pipe(shell([
             'python checkup.py'
+            //'python checkup.py 1.0.30'
         ],
         {cwd: __dirname+'/build'}));
 });
