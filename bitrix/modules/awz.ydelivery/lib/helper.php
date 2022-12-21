@@ -798,12 +798,12 @@ class Helper {
         }
 
         if($updateCache){
-            /*$obCache->clean($cacheId, $cacheDir);
+            $obCache->clean($cacheId, $cacheDir);
 
             $obCache = Cache::createInstance();
             if($obCache->initCache($ttl, $cacheId, $cacheDir)){
                 $res = $obCache->getVars();
-            }*/
+            }
 
             if($obCache->startDataCache()){
                 $obCache->endDataCache($res);
