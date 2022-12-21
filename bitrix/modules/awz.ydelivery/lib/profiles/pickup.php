@@ -441,9 +441,18 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         if($calkData['result']['pricing_total']){
             $ttl = intval($config['MAIN']['CACHE_TTL_SROK']);
             if(!$ttl) $ttl = 3600;
+            $pvzCandidate = Helper::getPointIdFromGeoId($locationGeoId, $config);
+            if(!$pvzCandidate && isset($data['destination']['platform_station_id'])){
+                $pvzCandidate = $data['destination']['platform_station_id'];
+            }
+            if($pvzCandidate && !isset($pointData['PVZ_ID'])){
+                $pointData = PvzTable::getPvz($pvzCandidate);
+            }
             $api->setCacheParams(md5(serialize(array($pointData, $data, $config, 'grafik'))), $ttl);
             if(isset($pointData['PVZ_ID'])){
                 $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'self_pickup_id'=>$pointData['PVZ_ID']));
+            }elseif($pvzCandidate){
+                $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'self_pickup_id'=>$pvzCandidate));
             }else{
                 $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'full_address'=>$locationName));
             }
