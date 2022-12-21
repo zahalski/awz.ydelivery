@@ -126,8 +126,8 @@ if(!$ID && $isOrdered){
                 $prepareData['billing_info']['delivery_cost'] =
                     round($_REQUEST['order']['delivery_cost'], 2)*100;
             }else{
-				unset($prepareData['billing_info']['delivery_cost']);
-			}
+                unset($prepareData['billing_info']['delivery_cost']);
+            }
             $prepareData['items'] = array();
             foreach($_REQUEST['product'] as $key=>$product){
                 $prepareData['items'][$key] = array();
@@ -353,10 +353,10 @@ if(!$ID && $isOrdered){
     //echo'<pre>';print_r($arOffers);echo'</pre>';
 
     ?>
-<style>
-    .debug_prepareData, .debug_offersRes, .debug_LastResponse {display:block;border:1px solid #000000;padding:10px;margin:10px;}
-    .debug_yandex {display:none;}
-</style>
+    <style>
+        .debug_prepareData, .debug_offersRes, .debug_LastResponse {display:block;border:1px solid #000000;padding:10px;margin:10px;}
+        .debug_yandex {display:none;}
+    </style>
     <script>
         $(document).on('click','.debug_yandex_show',function(e){
             e.preventDefault();
@@ -373,115 +373,115 @@ if(!$ID && $isOrdered){
     </script>
     <?if(!empty($arOffers)){?>
 
-    <div class="adm-list-table-layout">
-        <div class="adm-list-table-top">
-            <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST')?></b>
-        </div>
-
-        <div class="adm-list-table adm-list-table-without-header">
-            <div class="adm-detail-content-wrap">
-
-                <div class="adm-detail-content">
-                    <div class="adm-list-table-wrap">
-                        <table class="awz-yandex-items adm-list-table">
-                            <tr class="adm-list-table-header">
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH1')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH2')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH3')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH4')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH5')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell">
-                                    <div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH6')?>
-                                    </div>
-                                </th>
-                            </tr>
-                            <?foreach($arOffers as $offer){?>
-                                <?
-                                $activeClass = '';
-                                if($autoOfferId == $offer['offer_id']){
-                                    $activeClass = ' adm-list-row-active';
-                                }
-                                ?>
-                            <tr class="adm-list-table-row<?=$activeClass?>">
-                                <td class="adm-list-table-cell">
-                                    <?$date = \Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($offer['expires_at']));
-                                    ?><?=$date->toString()?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <?=$offer['offer_details']['pricing_total']?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <?=$offer['offer_details']['pricing']?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <?
-                                    $dateFrom = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                            strtotime($offer['offer_details']['delivery_interval']['min'])
-                                    );
-                                    $dateTo = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                            strtotime($offer['offer_details']['delivery_interval']['max'])
-                                    );
-                                    ?>
-                                    <?=$dateFrom->toString()?> - <?=$dateTo->toString()?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <?
-                                    $dateFrom = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                            strtotime($offer['offer_details']['pickup_interval']['min'])
-                                    );
-                                    $dateTo = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                            strtotime($offer['offer_details']['pickup_interval']['max'])
-                                    );
-                                    ?>
-                                    <?=$dateFrom->toString()?> - <?=$dateTo->toString()?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <form method="post">
-                                        <input type="hidden" name="action" value="send_offer">
-                                        <input type="hidden" name="offer" value="<?=$offer['offer_id']?>">
-                                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                                        <input type="submit" class="adm-btn-save" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH6')?>">
-                                    </form>
-                                </td>
-                            </tr>
-                            <?}?>
-                        </table>
-                    </div>
-                </div>
-
-                <br>
-                <div class="adm-detail-content">
-                    <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_COST_DOST')?></b>:
-                    <?=$order->getDeliveryPrice()?> <?=$order->getCurrency()?>
-                </div>
-                <br>
-
+        <div class="adm-list-table-layout">
+            <div class="adm-list-table-top">
+                <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST')?></b>
             </div>
-        </div>
 
-    </div>
+            <div class="adm-list-table adm-list-table-without-header">
+                <div class="adm-detail-content-wrap">
+
+                    <div class="adm-detail-content">
+                        <div class="adm-list-table-wrap">
+                            <table class="awz-yandex-items adm-list-table">
+                                <tr class="adm-list-table-header">
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH1')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH2')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH3')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH4')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH5')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell">
+                                        <div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH6')?>
+                                        </div>
+                                    </th>
+                                </tr>
+                                <?foreach($arOffers as $offer){?>
+                                    <?
+                                    $activeClass = '';
+                                    if($autoOfferId == $offer['offer_id']){
+                                        $activeClass = ' adm-list-row-active';
+                                    }
+                                    ?>
+                                    <tr class="adm-list-table-row<?=$activeClass?>">
+                                        <td class="adm-list-table-cell">
+                                            <?$date = \Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($offer['expires_at']));
+                                            ?><?=$date->toString()?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <?=$offer['offer_details']['pricing_total']?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <?=$offer['offer_details']['pricing']?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <?
+                                            $dateFrom = \Bitrix\Main\Type\DateTime::createFromTimestamp(
+                                                strtotime($offer['offer_details']['delivery_interval']['min'])
+                                            );
+                                            $dateTo = \Bitrix\Main\Type\DateTime::createFromTimestamp(
+                                                strtotime($offer['offer_details']['delivery_interval']['max'])
+                                            );
+                                            ?>
+                                            <?=$dateFrom->toString()?> - <?=$dateTo->toString()?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <?
+                                            $dateFrom = \Bitrix\Main\Type\DateTime::createFromTimestamp(
+                                                strtotime($offer['offer_details']['pickup_interval']['min'])
+                                            );
+                                            $dateTo = \Bitrix\Main\Type\DateTime::createFromTimestamp(
+                                                strtotime($offer['offer_details']['pickup_interval']['max'])
+                                            );
+                                            ?>
+                                            <?=$dateFrom->toString()?> - <?=$dateTo->toString()?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <form method="post">
+                                                <input type="hidden" name="action" value="send_offer">
+                                                <input type="hidden" name="offer" value="<?=$offer['offer_id']?>">
+                                                <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                                <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                                <input type="submit" class="adm-btn-save" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_TH6')?>">
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?}?>
+                            </table>
+                        </div>
+                    </div>
+
+                    <br>
+                    <div class="adm-detail-content">
+                        <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_OFR_LIST_COST_DOST')?></b>:
+                        <?=$order->getDeliveryPrice()?> <?=$order->getCurrency()?>
+                    </div>
+                    <br>
+
+                </div>
+            </div>
+
+        </div>
 
     <?php }?>
     <form method="post">
@@ -734,52 +734,52 @@ if(!$ID && $isOrdered){
                                     </td>
                                 </tr>
                                 <?if($profileAddress){?>
-                                <tr>
-                                    <td width="50%" class="adm-detail-content-cell-l">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR_CORD')?>
-                                    </td>
-                                    <td class="adm-detail-content-cell-r">
-                                        <?
-                                        $val = '';
-                                        if(isset($prepareAutoData['destination']['custom_location']['latitude']))
-                                            $val = $prepareAutoData['destination']['custom_location']['latitude'].','.$prepareAutoData['destination']['custom_location']['longitude'];
-                                        if(isset($_REQUEST['info']['address_cord'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_cord']));
-                                        ?>
-                                        <input type="text" cols="30" rows="5" name="info[address_cord]" value="<?=$val?>"><br>
-                                        <span style="color:red;">
+                                    <tr>
+                                        <td width="50%" class="adm-detail-content-cell-l">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR_CORD')?>
+                                        </td>
+                                        <td class="adm-detail-content-cell-r">
+                                            <?
+                                            $val = '';
+                                            if(isset($prepareAutoData['destination']['custom_location']['latitude']))
+                                                $val = $prepareAutoData['destination']['custom_location']['latitude'].','.$prepareAutoData['destination']['custom_location']['longitude'];
+                                            if(isset($_REQUEST['info']['address_cord'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_cord']));
+                                            ?>
+                                            <input type="text" cols="30" rows="5" name="info[address_cord]" value="<?=$val?>"><br>
+                                            <span style="color:red;">
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR_CORD_DESC')?>
                                         </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="50%" class="adm-detail-content-cell-l">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR')?>
-                                    </td>
-                                    <td class="adm-detail-content-cell-r">
-                                        <?
-                                        $val = '';
-                                        if(isset($prepareAutoData['destination']['custom_location']['details']['full_address']))
-                                            $val = $prepareAutoData['destination']['custom_location']['details']['full_address'];
-                                        if(isset($_REQUEST['info']['address'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address']));
-                                        ?>
-                                        <textarea cols="30" rows="5" name="info[address]"><?=$val?></textarea>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="50%" class="adm-detail-content-cell-l">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR')?>
+                                        </td>
+                                        <td class="adm-detail-content-cell-r">
+                                            <?
+                                            $val = '';
+                                            if(isset($prepareAutoData['destination']['custom_location']['details']['full_address']))
+                                                $val = $prepareAutoData['destination']['custom_location']['details']['full_address'];
+                                            if(isset($_REQUEST['info']['address'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address']));
+                                            ?>
+                                            <textarea cols="30" rows="5" name="info[address]"><?=$val?></textarea>
+                                        </td>
+                                    </tr>
 
-                                <tr>
-                                    <td width="50%" class="adm-detail-content-cell-l">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR2')?>
-                                    </td>
-                                    <td class="adm-detail-content-cell-r">
-                                        <?
-                                        $val = '';
-                                        if(isset($prepareAutoData['destination']['custom_location']['details']['room']))
-                                            $val = $prepareAutoData['destination']['custom_location']['details']['room'];
-                                        if(isset($_REQUEST['info']['address_kv'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_kv']));
-                                        ?>
-                                        <input type="text" name="info[address_kv]" value="<?=$val?>">
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td width="50%" class="adm-detail-content-cell-l">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR2')?>
+                                        </td>
+                                        <td class="adm-detail-content-cell-r">
+                                            <?
+                                            $val = '';
+                                            if(isset($prepareAutoData['destination']['custom_location']['details']['room']))
+                                                $val = $prepareAutoData['destination']['custom_location']['details']['room'];
+                                            if(isset($_REQUEST['info']['address_kv'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_kv']));
+                                            ?>
+                                            <input type="text" name="info[address_kv]" value="<?=$val?>">
+                                        </td>
+                                    </tr>
                                 <?}else{?>
                                     <tr>
                                         <td width="50%" class="adm-detail-content-cell-l">
@@ -797,15 +797,15 @@ if(!$ID && $isOrdered){
                                                 <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_BTN')?>
                                             </a>
                                             <div class="awz-yd-bln-wrap-admin-detail">
-                                            <?
-                                            $resPost = Helper::getBaloonHtml($val, true);
-                                            if($resPost->isSuccess()){
-                                                $dataPost = $resPost->getData();
-                                                echo $dataPost['html'];
-                                            }else{
-                                                echo '<p style="color:red;">'.implode('; ',$resPost->getErrorMessages()).'</p>';
-                                            }
-                                            ?>
+                                                <?
+                                                $resPost = Helper::getBaloonHtml($val, true);
+                                                if($resPost->isSuccess()){
+                                                    $dataPost = $resPost->getData();
+                                                    echo $dataPost['html'];
+                                                }else{
+                                                    echo '<p style="color:red;">'.implode('; ',$resPost->getErrorMessages()).'</p>';
+                                                }
+                                                ?>
                                             </div>
                                             <?
                                             $signer = new \Bitrix\Main\Security\Sign\Signer();
@@ -907,85 +907,85 @@ if(!$ID && $isOrdered){
                         <div class="adm-list-table-wrap">
                             <table class="adm-detail-content-table">
                                 <tbody>
-                                    <tr>
-                                        <td width="50%" class="adm-detail-content-cell-l">
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_DOST_SUMM')?>
-                                        </td>
-                                        <td class="adm-detail-content-cell-r">
-                                            <?
-                                            $val = '';
-                                            if(isset($prepareAutoData['billing_info']['delivery_cost']))
-                                                $val = $prepareAutoData['billing_info']['delivery_cost']/100;
-                                            if(isset($_REQUEST['order']['delivery_cost']))
-                                                $val = round($_REQUEST['order']['delivery_cost'], 2);
-                                            ?>
-                                            <input type="text" name="order[delivery_cost]" value="<?=$val?>">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td width="50%" class="adm-detail-content-cell-l">
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_TITLE2')?>
-                                        </td>
-                                        <td class="adm-detail-content-cell-r">
-                                            <?
-                                            $valAr = array();
-                                            $valAr = Helper::getYandexPaymentIdFromOrder($order, $curProfile);
-                                            /*if(!empty($valAr)){
-                                                $val = $valAr[0];
-                                            }*/
-                                            $val = '';
-                                            if(isset($prepareAutoData['billing_info']['payment_method']))
-                                                $val = $prepareAutoData['billing_info']['payment_method'];
-                                            $methods = Helper::getYandexPayMethods();
+                                <tr>
+                                    <td width="50%" class="adm-detail-content-cell-l">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_DOST_SUMM')?>
+                                    </td>
+                                    <td class="adm-detail-content-cell-r">
+                                        <?
+                                        $val = '';
+                                        if(isset($prepareAutoData['billing_info']['delivery_cost']))
+                                            $val = $prepareAutoData['billing_info']['delivery_cost']/100;
+                                        if(isset($_REQUEST['order']['delivery_cost']))
+                                            $val = round($_REQUEST['order']['delivery_cost'], 2);
+                                        ?>
+                                        <input type="text" name="order[delivery_cost]" value="<?=$val?>">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" class="adm-detail-content-cell-l">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_TITLE2')?>
+                                    </td>
+                                    <td class="adm-detail-content-cell-r">
+                                        <?
+                                        $valAr = array();
+                                        $valAr = Helper::getYandexPaymentIdFromOrder($order, $curProfile);
+                                        /*if(!empty($valAr)){
+                                            $val = $valAr[0];
+                                        }*/
+                                        $val = '';
+                                        if(isset($prepareAutoData['billing_info']['payment_method']))
+                                            $val = $prepareAutoData['billing_info']['payment_method'];
+                                        $methods = Helper::getYandexPayMethods();
 
-                                            if(isset($_REQUEST['order']['payment_method']))
-                                                $val = htmlspecialcharsEx(trim($_REQUEST['order']['payment_method']));
+                                        if(isset($_REQUEST['order']['payment_method']))
+                                            $val = htmlspecialcharsEx(trim($_REQUEST['order']['payment_method']));
 
-                                            ?>
-                                            <?if(count($valAr)>1){?>
-                                                <p style="color:red;">
-                                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_ERR_DLIST')?>
-                                                </p>
+                                        ?>
+                                        <?if(count($valAr)>1){?>
+                                            <p style="color:red;">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PAY_ERR_DLIST')?>
+                                            </p>
+                                        <?}?>
+                                        <select name="order[payment_method]">
+                                            <?foreach($methods as $code=>$name){
+                                                $selected = '';
+                                                if($code == $val) $selected = ' selected="selected"';
+
+                                                ?>
+                                                <option value="<?=$code?>"<?=$selected?>><?=$name?></option>
                                             <?}?>
-                                            <select name="order[payment_method]">
-                                                <?foreach($methods as $code=>$name){
-                                                    $selected = '';
-                                                    if($code == $val) $selected = ' selected="selected"';
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" class="adm-detail-content-cell-l">
+                                        <?=Loc::getMessage('AWZ_YDELIVERY_MILE_POLISY')?>
+                                    </td>
+                                    <td class="adm-detail-content-cell-r">
+                                        <?
+                                        $val = '';
+                                        if($profileAddress){
+                                            $methods = Helper::getYandexLastMilePolicy(Helper::DOST_TYPE_ADR);
+                                        }else{
+                                            $methods = Helper::getYandexLastMilePolicy(Helper::DOST_TYPE_PVZ);
+                                        }
+                                        if(isset($prepareAutoData['last_mile_policy']))
+                                            $val = $prepareAutoData['last_mile_policy'];
+                                        if(isset($_REQUEST['order']['last_mile_policy'])) $val = htmlspecialcharsEx(trim($_REQUEST['order']['last_mile_policy']));
 
-                                                    ?>
-                                                    <option value="<?=$code?>"<?=$selected?>><?=$name?></option>
-                                                <?}?>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td width="50%" class="adm-detail-content-cell-l">
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_MILE_POLISY')?>
-                                        </td>
-                                        <td class="adm-detail-content-cell-r">
-                                            <?
-                                            $val = '';
-                                            if($profileAddress){
-                                                $methods = Helper::getYandexLastMilePolicy(Helper::DOST_TYPE_ADR);
-                                            }else{
-                                                $methods = Helper::getYandexLastMilePolicy(Helper::DOST_TYPE_PVZ);
-                                            }
-                                            if(isset($prepareAutoData['last_mile_policy']))
-                                                $val = $prepareAutoData['last_mile_policy'];
-                                            if(isset($_REQUEST['order']['last_mile_policy'])) $val = htmlspecialcharsEx(trim($_REQUEST['order']['last_mile_policy']));
+                                        ?>
+                                        <select name="order[last_mile_policy]">
+                                            <?foreach($methods as $code=>$name){
+                                                $selected = '';
+                                                if($code == $val) $selected = ' selected="selected"';
 
-                                            ?>
-                                            <select name="order[last_mile_policy]">
-                                                <?foreach($methods as $code=>$name){
-                                                    $selected = '';
-                                                    if($code == $val) $selected = ' selected="selected"';
-
-                                                    ?>
-                                                    <option value="<?=$code?>"<?=$selected?>><?=$name?></option>
-                                                <?}?>
-                                            </select>
-                                        </td>
-                                    </tr>
+                                                ?>
+                                                <option value="<?=$code?>"<?=$selected?>><?=$name?></option>
+                                            <?}?>
+                                        </select>
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1034,7 +1034,7 @@ if(!$ID && $isOrdered){
                 }else{
                     //array("MESSAGE"=>"", "TYPE"=>("ERROR"|"OK"|"PROGRESS"), "DETAILS"=>"", "HTML"=>true)
                     CAdminMessage::ShowMessage(array(
-                            'TYPE'=>'ERROR',
+                        'TYPE'=>'ERROR',
                         'MESSAGE'=>implode("; ",$resultCansel->getErrorMessages())
                     ));
                 }
@@ -1057,7 +1057,7 @@ if(!$ID && $isOrdered){
                 CAdminMessage::ShowMessage(array('TYPE'=>'OK', 'MESSAGE'=>$dataCansel['result']['description']));
             }else{
                 CAdminMessage::ShowMessage(array(
-                        'TYPE'=>'ERROR',
+                    'TYPE'=>'ERROR',
                     'MESSAGE'=>implode("; ",$resultCansel->getErrorMessages())
                 ));
             }
@@ -1110,8 +1110,8 @@ if(!$ID && $isOrdered){
         $labelType = $_REQUEST['GET_EXTERNAL_LABEL_TYPE'] == 'one' ? 'one': 'many';
         Option::set($module_id, 'label_type', $labelType, '');
         $resLabel = $api->getLabels(array(
-            'generate_type'=>$labelType,
-            'request_ids'=>array($data['OFFER_ID'])
+                'generate_type'=>$labelType,
+                'request_ids'=>array($data['OFFER_ID'])
             )
         );
         if($resLabel->isSuccess()){
@@ -1145,17 +1145,20 @@ if(!$ID && $isOrdered){
     if(!$data){
         $yandexRes = new \Bitrix\Main\Result();
         $yandexRes->addError(
-                new \Bitrix\Main\Error(
-                        Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ERR_ID')
-                )
+            new \Bitrix\Main\Error(
+                Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ERR_ID')
+            )
         );
     }
 
     if(!$yandexRes){
         $config = Helper::getConfigFromOrderId($data['ORDER_ID']);
-        $api = Helper::getApiFromConfig($config);
+        $api = null;
+        if(!empty($config)){
+            $api = Helper::getApiFromConfig($config);
+        }
 
-        if($_REQUEST['UPDATE_EXTERNAL_DATA']!='Y' && !empty($data['HISTORY']['last'])){
+        if(!$api || ($_REQUEST['UPDATE_EXTERNAL_DATA']!='Y' && !empty($data['HISTORY']['last']))){
             $yandexRes = new \Bitrix\Main\Result();
             $yandexRes->setData($data['HISTORY']['last']);
         }else{
@@ -1171,7 +1174,8 @@ if(!$ID && $isOrdered){
         $val_stat_all = unserialize($val_stat_all);
         if(!is_array($val_stat_all)) $val_stat_all = array();
 
-        $config = Helper::getConfigByProfileId($curProfile);
+        if($curProfile)
+            $config = Helper::getConfigByProfileId($curProfile);
 
         $yandexData = $yandexRes->getData();
         $data['HISTORY']['last'] = $yandexData;
@@ -1188,96 +1192,96 @@ if(!$ID && $isOrdered){
                 <?}?>
                 <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage("AWZ_YDELIVERY_ZAAVKA")?><?=$yandexData['result']['request_id']?></b>
             </div>
-        <div class="adm-list-table adm-list-table-without-header">
-            <div class="adm-detail-content-wrap">
-                <div class="adm-detail-content">
-                    <table style="width:100%;">
-                        <tr>
-                            <td>
-                                <?if($data['HISTORY']['last_history_time']){?>
-                                    <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_UP_LABEL')?></b>:
-                                        <?=\Bitrix\Main\Type\DateTime::createFromTimestamp($data['HISTORY']['last_history_time'])->toString()?></p>
-                                <?}?>
-
-
-                                <form method="post">
-                                    <input type="hidden" name="UPDATE_EXTERNAL_DATA" value="Y">
-                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_UPDATE')?>">
-                                </form>
-                            </td>
-                            <td>
-                                <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?>:
-                                    <?if($data['HISTORY']['order_label_file']){?>
-                                    <a href="<?=CFile::GetPath($data['HISTORY']['order_label_file'])?>" target="blank">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
-                                    </a>
-                                <?}else{?>
-                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
-                                <?}?>
-                                </p>
-
-                                <form method="post">
-                                    <input type="hidden" name="GET_EXTERNAL_LABEL" value="Y">
-                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                                    <?$def = Option::get($module_id, 'label_type', 'one', '');?>
-                                    <select name="GET_EXTERNAL_LABEL_TYPE">
-                                        <option value="one"<?=($def == 'one') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v1</option>
-                                        <option value="many"<?=($def == 'many') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v2</option>
-                                    </select>
-                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_LABEL')?>">
-                                </form>
-                            </td>
-                            <td>
-                                <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_INVOICE')?>:
-                                    <?if($data['HISTORY']['order_invoice_file']){?>
-                                        <a href="<?=CFile::GetPath($data['HISTORY']['order_invoice_file'])?>" target="blank">
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
-                                        </a>
-                                    <?}else{?>
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
+            <div class="adm-list-table adm-list-table-without-header">
+                <div class="adm-detail-content-wrap">
+                    <div class="adm-detail-content">
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <?if($data['HISTORY']['last_history_time']){?>
+                                        <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_UP_LABEL')?></b>:
+                                            <?=\Bitrix\Main\Type\DateTime::createFromTimestamp($data['HISTORY']['last_history_time'])->toString()?></p>
                                     <?}?>
-                                </p>
 
-                                <form method="post">
-                                    <input type="hidden" name="GET_EXTERNAL_INVOICE" value="Y">
-                                    <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                                    <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                                    <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_INVOICE')?>">
-                                </form>
-                            </td>
-                        </tr>
-                    </table>
 
-                    <br>
+                                    <form method="post">
+                                        <input type="hidden" name="UPDATE_EXTERNAL_DATA" value="Y">
+                                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                        <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_UPDATE')?>">
+                                    </form>
+                                </td>
+                                <td>
+                                    <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?>:
+                                        <?if($data['HISTORY']['order_label_file']){?>
+                                            <a href="<?=CFile::GetPath($data['HISTORY']['order_label_file'])?>" target="blank">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
+                                            </a>
+                                        <?}else{?>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
+                                        <?}?>
+                                    </p>
+
+                                    <form method="post">
+                                        <input type="hidden" name="GET_EXTERNAL_LABEL" value="Y">
+                                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                        <?$def = Option::get($module_id, 'label_type', 'one', '');?>
+                                        <select name="GET_EXTERNAL_LABEL_TYPE">
+                                            <option value="one"<?=($def == 'one') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v1</option>
+                                            <option value="many"<?=($def == 'many') ? ' selected="selected"' : ''?>><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL')?> v2</option>
+                                        </select>
+                                        <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_LABEL')?>">
+                                    </form>
+                                </td>
+                                <td>
+                                    <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_INVOICE')?>:
+                                        <?if($data['HISTORY']['order_invoice_file']){?>
+                                            <a href="<?=CFile::GetPath($data['HISTORY']['order_invoice_file'])?>" target="blank">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_DOWNLOAD')?>
+                                            </a>
+                                        <?}else{?>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_LABEL_NO_CREATE')?>
+                                        <?}?>
+                                    </p>
+
+                                    <form method="post">
+                                        <input type="hidden" name="GET_EXTERNAL_INVOICE" value="Y">
+                                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                                        <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_INVOICE')?>">
+                                    </form>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <br>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="adm-list-table adm-list-table-without-header">
-        <div class="adm-detail-content-wrap">
-            <div class="adm-detail-content">
-                <p>
-                    <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_ID')?>: </b>
-                    <?=$data['HISTORY']['last']['result']['courier_order_id']?>
-                </p>
-                <?if(isset($data['HISTORY']['last']['result']['state']['description'])){?>
-                    <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_LABEL')?></b>:
-                        <?=$data['HISTORY']['last']['result']['state']['description']?></p>
-                <?}?><p>
-                    <?if(isset($data['HISTORY']['last']['result']['state']['status'])){?>
-                        <b><?=$data['HISTORY']['last']['result']['state']['status']?></b>
-                    <?}?>
-                    <?if(isset($data['HISTORY']['last']['result']['state']['timestamp']) &&
-                        strtotime($data['HISTORY']['last']['result']['state']['timestamp'])>100000)
-                    {?>
-                        [<?=\Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($data['HISTORY']['last']['result']['state']['timestamp']))->toString()?>]
-                    <?}?>
-                </p>
+            <div class="adm-list-table adm-list-table-without-header">
+                <div class="adm-detail-content-wrap">
+                    <div class="adm-detail-content">
+                        <p>
+                            <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_ID')?>: </b>
+                            <?=$data['HISTORY']['last']['result']['courier_order_id']?>
+                        </p>
+                        <?if(isset($data['HISTORY']['last']['result']['state']['description'])){?>
+                            <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_STAT_LABEL')?></b>:
+                                <?=$data['HISTORY']['last']['result']['state']['description']?></p>
+                        <?}?><p>
+                            <?if(isset($data['HISTORY']['last']['result']['state']['status'])){?>
+                                <b><?=$data['HISTORY']['last']['result']['state']['status']?></b>
+                            <?}?>
+                            <?if(isset($data['HISTORY']['last']['result']['state']['timestamp']) &&
+                                strtotime($data['HISTORY']['last']['result']['state']['timestamp'])>100000)
+                            {?>
+                                [<?=\Bitrix\Main\Type\DateTime::createFromTimestamp(strtotime($data['HISTORY']['last']['result']['state']['timestamp']))->toString()?>]
+                            <?}?>
+                        </p>
+                    </div>
+                </div>
             </div>
-        </div>
-        </div>
             <div class="adm-list-table adm-list-table-without-header">
                 <div class="adm-detail-content-wrap">
 
@@ -1286,53 +1290,53 @@ if(!$ID && $isOrdered){
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CREATE_DESC')?>
                         </div>
                         <div class="adm-list-table-wrap">
-                        <table class="awz-yandex-items adm-list-table">
-                            <tr class="adm-list-table-header">
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PLACE_TH1')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH3_MIN')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH1_MIN')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH1_MIN2')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH4_MIN')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH4_MIN2')?>
-                                    </div>
-                                </th>
-                            </tr>
-                            <?foreach($yandexData['result']['request']['items'] as $item){?>
-                            <tr class="adm-list-table-row">
-                                <td class="adm-list-table-cell"><?=$item['barcode']?></td>
-                                <td class="adm-list-table-cell"><?=$item['article']?></td>
-                                <td class="adm-list-table-cell"><?=$item['name']?></td>
-                                <td class="adm-list-table-cell"><?=$item['count']?></td>
-                                <td class="adm-list-table-cell">
-                                    <?=($item['billing_details']['unit_price']/100)?> <?=$item['billing_details']['currency']?>
-                                </td>
-                                <td class="adm-list-table-cell">
-                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN')?>:
-                                    <?=$item['physical_dims']['predefined_volume']?>
-                                    (<?=$item['physical_dims']['dz']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dx']?>)
-                                    <br>
-                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN2')?>:
-                                    <?=$item['physical_dims']['weight_gross']?>
-                                </td>
-                            </tr>
-                            <?}?>
-                        </table>
+                            <table class="awz-yandex-items adm-list-table">
+                                <tr class="adm-list-table-header">
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PLACE_TH1')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH3_MIN')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH1_MIN')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH1_MIN2')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH4_MIN')?>
+                                        </div>
+                                    </th>
+                                    <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH4_MIN2')?>
+                                        </div>
+                                    </th>
+                                </tr>
+                                <?foreach($yandexData['result']['request']['items'] as $item){?>
+                                    <tr class="adm-list-table-row">
+                                        <td class="adm-list-table-cell"><?=$item['barcode']?></td>
+                                        <td class="adm-list-table-cell"><?=$item['article']?></td>
+                                        <td class="adm-list-table-cell"><?=$item['name']?></td>
+                                        <td class="adm-list-table-cell"><?=$item['count']?></td>
+                                        <td class="adm-list-table-cell">
+                                            <?=($item['billing_details']['unit_price']/100)?> <?=$item['billing_details']['currency']?>
+                                        </td>
+                                        <td class="adm-list-table-cell">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN')?>:
+                                            <?=$item['physical_dims']['predefined_volume']?>
+                                            (<?=$item['physical_dims']['dz']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dx']?>)
+                                            <br>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN2')?>:
+                                            <?=$item['physical_dims']['weight_gross']?>
+                                        </td>
+                                    </tr>
+                                <?}?>
+                            </table>
                         </div>
                     </div>
 
@@ -1340,7 +1344,7 @@ if(!$ID && $isOrdered){
                         <div class="adm-detail-title">
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PLACE_TITLE')?>
                         </div>
-                            <div class="adm-list-table-wrap">
+                        <div class="adm-list-table-wrap">
                             <table class="awz-yandex-items adm-list-table">
                                 <tr class="adm-list-table-header">
                                     <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
@@ -1378,7 +1382,7 @@ if(!$ID && $isOrdered){
                             <?=$yandexData['result']['request']['info']['operator_request_id']?>
                             <?$orderLink = '';?>
                             <a href="#" onclick="BX.SidePanel.Instance.open('/bitrix/admin/sale_order_view.php?lang=<?=LANGUAGE_ID?>&ID=<?=$data['ORDER_ID']?>',{cacheable: false});return false;">
-                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_ORDER_LINK')?>
+                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_BTN_ORDER_LINK')?>
                             </a><br><br>
                             <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_CM')?>:</b>
                             <?=$yandexData['result']['request']['info']['comment']?><br><br>
@@ -1405,10 +1409,10 @@ if(!$ID && $isOrdered){
                             <b><?=Loc::getMessage("AWZ_YDELIVERY_INTERVAL_DOSTAVKI")?></b>:
                             <?
                             $from = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                    $yandexData['result']['request']['destination']['interval']['from']
+                                $yandexData['result']['request']['destination']['interval']['from']
                             );
                             $to = \Bitrix\Main\Type\DateTime::createFromTimestamp(
-                                    $yandexData['result']['request']['destination']['interval']['to']
+                                $yandexData['result']['request']['destination']['interval']['to']
                             );
                             echo $from->toString();
                             echo ' - ';
@@ -1420,7 +1424,7 @@ if(!$ID && $isOrdered){
                                 <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?>
                             <?}?>
                             <?if(!empty($yandexData['result']['request']['destination']['custom_location']['latitude'])){?>
-                                <br><br>
+                            <br><br>
                                 <div id="awz-ydelivery-map-detail" style="width:100%;height:300px;"></div>
                                 <script>
                                     $(document).ready(function(){
@@ -1440,25 +1444,25 @@ if(!$ID && $isOrdered){
                                                     <?=$yandexData['result']['request']['destination']['custom_location']['longitude']?>,
                                                     <?=$yandexData['result']['request']['destination']['custom_location']['latitude']?>
                                                 ], {
-                                                balloonContent: '<div><b><?=Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_DOST_TITLE")?></b><br>' +
-                                                    '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b>: <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?></div>'
-                                            }, {
-                                                iconLayout: 'default#image',
-                                                iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
-                                                iconImageSize: [32, 42],
-                                                iconImageOffset: [-16, -42],
-                                                preset: 'islands#blackClusterIcons'
-                                            });
+                                                    balloonContent: '<div><b><?=Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_DOST_TITLE")?></b><br>' +
+                                                        '<b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES")?></b>: <?=$yandexData['result']['request']['destination']['custom_location']['details']['full_address']?></div>'
+                                                }, {
+                                                    iconLayout: 'default#image',
+                                                    iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
+                                                    iconImageSize: [32, 42],
+                                                    iconImageOffset: [-16, -42],
+                                                    preset: 'islands#blackClusterIcons'
+                                                });
                                             map.geoObjects.add(placemark);
                                         });
                                     });
                                 </script>
                             <?}elseif($yandexData['result']['request']['destination']['platform_station']['platform_id']){?>
-                                    <?
-                                    $pickDataRes = PvzTable::getPvz($yandexData['result']['request']['destination']['platform_station']['platform_id']);
-                                    if($pickDataRes){
+                            <?
+                            $pickDataRes = PvzTable::getPvz($yandexData['result']['request']['destination']['platform_station']['platform_id']);
+                            if($pickDataRes){
                             $pickData = $pickDataRes['PRM'];
-                                        ?>
+                            ?>
                             <br><br>
                                 <b><?=Loc::getMessage("AWZ_YDELIVERY_ADRES_DOSTAVKI")?></b>: <?=Loc::getMessage("AWZ_YDELIVERY_PVZ")?>: <?=$pickData['id']?>
                                 <div class="awz-yd-bln-wrap-admin-detail">
@@ -1498,8 +1502,8 @@ if(!$ID && $isOrdered){
                                         });
                                     });
                                 </script>
-                                        <?
-                                    }
+                                <?
+                            }
                                 ?>
                             <?}?>
                         </div>
@@ -1522,8 +1526,8 @@ if(!$ID && $isOrdered){
                         <div class="adm-detail-description">
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_HIST_TITLE_DESC')?><br><br>
                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_COUNT_RESP',array(
-                                    '#CN#'=>intval($data['HISTORY']['count_resp']),
-                                    '#LIMIT#'=>intval(Option::get($module_id, 'CHECKER_COUNT_'.$curProfile, '0', '')),
+                                '#CN#'=>intval($data['HISTORY']['count_resp']),
+                                '#LIMIT#'=>intval(Option::get($module_id, 'CHECKER_COUNT_'.$curProfile, '0', '')),
                             ))?><br><br>
                         </div>
                         <div class="adm-detail-content-item-block">
@@ -1540,127 +1544,127 @@ if(!$ID && $isOrdered){
                             </form>
                         </div>
                         <?if(!empty($data['HISTORY']['hist'])){?>
-                        <div class="adm-list-table-wrap">
-                        <table class="awz-yandex-items adm-list-table">
-                            <tr class="adm-list-table-header">
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH1')?>
-                                    </div></th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH2')?>
-                                    </div></th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH3')?>
-                                    </div></th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT')?>
-                                    </div>
-                                </th>
-                                <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_5')?>
-                                    </div>
-                                </th>
-                            </tr>
-                            <?foreach($data['HISTORY']['hist'] as $item){?>
-                                <tr class="adm-list-table-row">
-                                    <td class="adm-list-table-cell"><?=$item['status']?></td>
-                                    <td class="adm-list-table-cell"><?=$item['description']?></td>
-                                    <td class="adm-list-table-cell">
-                                        <?
-                                        if($item['timestamp']){
-                                            $date = \Bitrix\Main\Type\DateTime::createFromTimestamp($item['timestamp']);
-                                            ?>
-                                            <?=$date->toString()?>
-                                        <?}?>
-                                    </td>
-                                    <td class="adm-list-table-cell">
-                                        <?
-                                        if(isset($item['status_m'])){
-                                            ?><?=$item['status_m']?><br>
-                                            <?=(isset($val_stat_all[$item['status_m']]) ? $val_stat_all[$item['status_m']] : '')?><?
-                                        }else{?>
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
-                                        <?}?>
-                                    </td>
-                                    <td class="adm-list-table-cell">
-                                    <?if(isset($item['status_m'])){?>
-                                        <?if(in_array($item['status_m'], $val_stat_disabled)){?>
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_DSBL')?>
-                                        <?}else{?>
-                                            <?
-                                            $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$curProfile.'_'.$item['status_m']);
-
-                                            $val = Option::get($module_id, $key, '', '');
-                                            $val = unserialize($val);
-                                            if(!is_array($val)) $val = array();
-                                            if(empty($val)){
-                                                ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_1')?><?
-                                            }else{
-                                                ?>
-                                                <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2')?></b>:
+                            <div class="adm-list-table-wrap">
+                                <table class="awz-yandex-items adm-list-table">
+                                    <tr class="adm-list-table-header">
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH1')?>
+                                            </div></th>
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH2')?>
+                                            </div></th>
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_AGN_TH3')?>
+                                            </div></th>
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE')?>
+                                            </div>
+                                        </th>
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT')?>
+                                            </div>
+                                        </th>
+                                        <th class="adm-list-table-cell"><div class="adm-list-table-cell-inner">
+                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_5')?>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                    <?foreach($data['HISTORY']['hist'] as $item){?>
+                                        <tr class="adm-list-table-row">
+                                            <td class="adm-list-table-cell"><?=$item['status']?></td>
+                                            <td class="adm-list-table-cell"><?=$item['description']?></td>
+                                            <td class="adm-list-table-cell">
                                                 <?
-                                                $statNames = array();
-                                                foreach($val as $codeBxStat){
-                                                    $statNames[] = '['.$statusAr[$codeBxStat]['ID'].'] '.$statusAr[$codeBxStat]['NAME'];
-                                                }
-                                                ?>
-                                                <?=implode('; ',$statNames)?>
-                                                <?
-                                            }
-                                            ?>
-                                            <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?></b>
-                                            <?
-                                            $key2 = 'md5_'.md5('PARAMS_STATUS_TO_'.$curProfile.'_'.$item['status_m']);
-                                            $val2 = Option::get($module_id, $key2, '', '');
-                                            if($val2){
-                                                if($val2 == 'DISABLE'){
-                                                    $val2 = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_4');
-                                                }else{
-                                                    $val2 = '['.$statusAr[$val2]['ID'].'] '.$statusAr[$val2]['NAME'];
-                                                }
-
-                                                ?><?=$val2?><?
-                                            }else{
-                                                ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_3')?><?
-                                            }
-                                            ?>
-                                            <br><a href="#" onclick="BX.SidePanel.Instance.open('/bitrix/admin/settings.php?mid=awz.ydelivery&lang=ru&profile=<?=$curProfile?>&code=<?=$item['status_m']?>',{cacheable: false});return false;">
-                                                настройки</a>
-                                        <?}?>
-                                    <?}else{?>
-                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
-                                    <?}?>
-                                    </td>
-                                    <td class="adm-list-table-cell">
-                                        <?if(!empty($data['HISTORY']['setstatus'])){?>
-                                            <?foreach($data['HISTORY']['setstatus'] as $ks=>$dt){
-                                                if(!isset($dt[2])) continue;
-                                                if($dt[2] != $item['status_m']) continue;
-                                                ?>
-                                                <?if(isset($dt[3])){?>
-                                                    <b style="color:red;"><?=$dt[3]?></b>
+                                                if($item['timestamp']){
+                                                    $date = \Bitrix\Main\Type\DateTime::createFromTimestamp($item['timestamp']);
+                                                    ?>
+                                                    <?=$date->toString()?>
                                                 <?}?>
-                                                <b><?=\Bitrix\Main\Type\DateTime::createFromTimestamp($dt[0])->toString()?></b>
-                                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?>
+                                            </td>
+                                            <td class="adm-list-table-cell">
                                                 <?
-                                                $statusPr = '['.$statusAr[$dt[1]]['ID'].'] '.$statusAr[$dt[1]]['NAME'];
-                                                echo $statusPr;
-                                                ?><br><br>
-                                            <?}?>
-                                        <?}?>
-                                    </td>
-                                </tr>
-                            <?}?>
-                        </table>
-                        </div>
+                                                if(isset($item['status_m'])){
+                                                    ?><?=$item['status_m']?><br>
+                                                    <?=(isset($val_stat_all[$item['status_m']]) ? $val_stat_all[$item['status_m']] : '')?><?
+                                                }else{?>
+                                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
+                                                <?}?>
+                                            </td>
+                                            <td class="adm-list-table-cell">
+                                                <?if(isset($item['status_m'])){?>
+                                                    <?if(in_array($item['status_m'], $val_stat_disabled)){?>
+                                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_DSBL')?>
+                                                    <?}else{?>
+                                                        <?
+                                                        $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$curProfile.'_'.$item['status_m']);
+
+                                                        $val = Option::get($module_id, $key, '', '');
+                                                        $val = unserialize($val);
+                                                        if(!is_array($val)) $val = array();
+                                                        if(empty($val)){
+                                                            ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_1')?><?
+                                                        }else{
+                                                            ?>
+                                                            <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2')?></b>:
+                                                            <?
+                                                            $statNames = array();
+                                                            foreach($val as $codeBxStat){
+                                                                $statNames[] = '['.$statusAr[$codeBxStat]['ID'].'] '.$statusAr[$codeBxStat]['NAME'];
+                                                            }
+                                                            ?>
+                                                            <?=implode('; ',$statNames)?>
+                                                            <?
+                                                        }
+                                                        ?>
+                                                        <b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?></b>
+                                                        <?
+                                                        $key2 = 'md5_'.md5('PARAMS_STATUS_TO_'.$curProfile.'_'.$item['status_m']);
+                                                        $val2 = Option::get($module_id, $key2, '', '');
+                                                        if($val2){
+                                                            if($val2 == 'DISABLE'){
+                                                                $val2 = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_4');
+                                                            }else{
+                                                                $val2 = '['.$statusAr[$val2]['ID'].'] '.$statusAr[$val2]['NAME'];
+                                                            }
+
+                                                            ?><?=$val2?><?
+                                                        }else{
+                                                            ?><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_3')?><?
+                                                        }
+                                                        ?>
+                                                        <br><a href="#" onclick="BX.SidePanel.Instance.open('/bitrix/admin/settings.php?mid=awz.ydelivery&lang=ru&profile=<?=$curProfile?>&code=<?=$item['status_m']?>',{cacheable: false});return false;">
+                                                            настройки</a>
+                                                    <?}?>
+                                                <?}else{?>
+                                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_ERR_EMPSTAT')?>
+                                                <?}?>
+                                            </td>
+                                            <td class="adm-list-table-cell">
+                                                <?if(!empty($data['HISTORY']['setstatus'])){?>
+                                                    <?foreach($data['HISTORY']['setstatus'] as $ks=>$dt){
+                                                        if(!isset($dt[2])) continue;
+                                                        if($dt[2] != $item['status_m']) continue;
+                                                        ?>
+                                                        <?if(isset($dt[3])){?>
+                                                            <b style="color:red;"><?=$dt[3]?></b>
+                                                        <?}?>
+                                                        <b><?=\Bitrix\Main\Type\DateTime::createFromTimestamp($dt[0])->toString()?></b>
+                                                        <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_2_V')?>
+                                                        <?
+                                                        $statusPr = '['.$statusAr[$dt[1]]['ID'].'] '.$statusAr[$dt[1]]['NAME'];
+                                                        echo $statusPr;
+                                                        ?><br><br>
+                                                    <?}?>
+                                                <?}?>
+                                            </td>
+                                        </tr>
+                                    <?}?>
+                                </table>
+                            </div>
                         <?}else{?>
-                        <div class="adm-detail-content-item-block">
-                            <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_EMPTY')?></p>
-                        </div>
+                            <div class="adm-detail-content-item-block">
+                                <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_EMPTY')?></p>
+                            </div>
                         <?}?>
                     </div>
 
@@ -1701,58 +1705,58 @@ if(!$ID && $isOrdered){
 
     ?>
     <?if($data){?>
-    <div class="adm-list-table-layout">
-        <div class="adm-list-table-top">
-            <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS')?> <?=$data['OFFER_ID']?></b>
-        </div>
-        <div class="adm-list-table adm-list-table-without-header">
-            <div class="adm-detail-content-wrap">
-                <div class="adm-detail-content">
-                    <form method="post">
-                        <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_MESS1')?></p>
-                        <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_MESS2')?></b></p>
-                        <input type="text" name="OFFER_ID_CONFIRM" value=""><br><br>
-                        <input type="hidden" name="CANSEL" value="Y">
-                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                        <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_BTN')?>">
+        <div class="adm-list-table-layout">
+            <div class="adm-list-table-top">
+                <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS')?> <?=$data['OFFER_ID']?></b>
+            </div>
+            <div class="adm-list-table adm-list-table-without-header">
+                <div class="adm-detail-content-wrap">
+                    <div class="adm-detail-content">
+                        <form method="post">
+                            <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_MESS1')?></p>
+                            <p><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_MESS2')?></b></p>
+                            <input type="text" name="OFFER_ID_CONFIRM" value=""><br><br>
+                            <input type="hidden" name="CANSEL" value="Y">
+                            <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                            <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                            <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_CANS_BTN')?>">
 
-                        <br><br>
-                    </form>
+                            <br><br>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="adm-list-table-layout">
-        <div class="adm-list-table-top">
-            <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_DEL')?> <?=$data['OFFER_ID']?></b>
-        </div>
-        <div class="adm-list-table adm-list-table-without-header">
-            <div class="adm-detail-content-wrap">
-                <div class="adm-detail-content">
-                    <form method="post">
-                        <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_BTN_CONF')?></p>
-                        <?if(Option::get($module_id, "DELETE_AFTER_RESP", "N","") == 'Y'){?>
-                            <p style="color:red;"><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT')?></b>
-                                <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_MESS1')?></p>
-                        <?}else{?>
-                            <p style="color:red;"><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT')?></b>
-                                 <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_MESS2')?></p>
-                        <?}?>
+        <div class="adm-list-table-layout">
+            <div class="adm-list-table-top">
+                <b style="font-size:18px;line-height:30px;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_DEL')?> <?=$data['OFFER_ID']?></b>
+            </div>
+            <div class="adm-list-table adm-list-table-without-header">
+                <div class="adm-detail-content-wrap">
+                    <div class="adm-detail-content">
+                        <form method="post">
+                            <p><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_BTN_CONF')?></p>
+                            <?if(Option::get($module_id, "DELETE_AFTER_RESP", "N","") == 'Y'){?>
+                                <p style="color:red;"><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT')?></b>
+                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_MESS1')?></p>
+                            <?}else{?>
+                                <p style="color:red;"><b><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT')?></b>
+                                    <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_MESS2')?></p>
+                            <?}?>
 
-                        <input type="text" name="OFFER_ID_CONFIRM" value=""><br><br>
-                        <input type="hidden" name="DELETE" value="Y">
-                        <input type="hidden" name="DELETE_AFTER_RESP" value="<?=Option::get($module_id, "DELETE_AFTER_RESP", "N","")?>">
-                        <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
-                        <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
-                        <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_BTN')?>">
+                            <input type="text" name="OFFER_ID_CONFIRM" value=""><br><br>
+                            <input type="hidden" name="DELETE" value="Y">
+                            <input type="hidden" name="DELETE_AFTER_RESP" value="<?=Option::get($module_id, "DELETE_AFTER_RESP", "N","")?>">
+                            <input type="hidden" name="IFRAME_TYPE" value="<?=$_REQUEST['IFRAME_TYPE']?>">
+                            <input type="hidden" name="IFRAME" value="<?=$_REQUEST['IFRAME']?>">
+                            <input type="submit" class="adm-btn-active" value="<?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ATT_BTN')?>">
 
-                        <br><br>
-                    </form>
+                            <br><br>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     <?}?>
     <?php
 

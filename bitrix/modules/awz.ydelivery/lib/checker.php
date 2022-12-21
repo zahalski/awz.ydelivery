@@ -192,6 +192,13 @@ class Checker {
                 $order = Order::load($data['ORDER_ID']);
                 if(!$order) continue;
 
+                if(!Helper::getProfileId($order)) {
+                    OffersTable::update(
+                        array('ID'=>$data['ID']),
+                        array('HISTORY_FIN'=>'Y')
+                    );
+                    continue;
+                }
 
                 if(Helper::getProfileId($order) != $profileId) continue;
 
