@@ -1,5 +1,6 @@
 if(!window.awz_yd_modal){
     window.awz_yd_modal = {
+        initType: '',
         last_items: [],
         lastSign: '',
         objectManager: null,
@@ -52,8 +53,97 @@ if(!window.awz_yd_modal){
             $('.awz-yd-modal-content').remove();
             $('.awz-yd-modal-content-bg').remove();
             $('.awz-yd-close').remove();
+            if(this.initType == 'address'){
+                try{
+                    var cords = $('#AWZ_YD_CORD').val();
+                    if(cords){
+                        //console.log(cords.split(','));
+                        ymaps.geocode(cords.split(',')).then(function (res) {
+                            var firstGeoObject = res.geoObjects.get(0);
+                            var adressLine = '';
+                            if(firstGeoObject.getThoroughfare()) {
+                                if(adressLine) adressLine += ', ';
+                                adressLine += firstGeoObject.getThoroughfare();
+                            }
+                            if(firstGeoObject.getPremise()) {
+                                if(adressLine) adressLine += ', ';
+                                adressLine += firstGeoObject.getPremise();
+                            }
+                            if(firstGeoObject.getPremiseNumber()) {
+                                if(adressLine) adressLine += ', ';
+                                adressLine += firstGeoObject.getPremiseNumber();
+                            }
+                            window.awz_yd_modal.showGpsAddress(firstGeoObject.getAddressLine(), adressLine);
+                        }).error(function (res) {
+                            var serv_error = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_ERR') : 'server error';
+                            window.awz_yd_modal.showGpsAddress('');
+                            window.awz_yd_modal.setError(serv_error);
+                        });
+                    }else{
+                        this.showGpsAddress('');
+                    }
+                }catch (e){
+                    this.showGpsAddress('');
+                }
+            }
+        },
+        showGpsAddress: function(address, toponim){
+            if($('#AWZ_YD_DOST_INFO').length){
+                $('#AWZ_YD_DOST_INFO').html(address);
+            }
+
+            var form = $('#AWZ_YD_DOST_LINK').parents('form');
+            if(!$('#AWZ_YD_CORD_ADRESS').length){
+                form.prepend('<input type="hidden" name="AWZ_YD_CORD_ADRESS" id="AWZ_YD_CORD_ADRESS" value="">');
+            }
+            $('#AWZ_YD_CORD_ADRESS').val(address);
+
+            if(toponim){
+                var form = $('#AWZ_YD_DOST_LINK').parents('form');
+                form.find('input, textarea').each(function(){
+                    if(!$(this).val() && $(this).attr('autocomplete') == 'address'){
+                        $(this).val(toponim);
+                        return;
+                    }
+                });
+            }
+
+            try{
+                window.BX.Sale.OrderAjaxComponent.sendRequest();
+            }catch (e) {
+
+            }
+        },
+        showgps: function(title, params){
+            this.initType = 'address';
+            this.lastSign = params;
+            $('body').append(this.template(title));
+            $('.awz-yd-modal-filter-payment-wrap').hide();
+            var h = $(window).height();
+            var w = $(window).width();
+            if(w > 860) {
+                w = Math.ceil(w*0.8);
+                h = Math.ceil(h*0.8);
+                $('.awz-yd-modal-content-wrap').css({
+                    'margin-top':Math.ceil(($(window).height()-h)/2)+'px',
+                    'width':w+'px',
+                    'height': h+'px'
+                });
+            }else{
+                $('.awz-yd-close').addClass('awz-yd-close-mobile');
+                w = Math.ceil(w);
+                h = Math.ceil(h);
+                $('.awz-yd-modal-content-wrap').css({'width':w+'px', 'height': h+'px'});
+            }
+            $('.awz-yd-modal-body .awz-yd-contentWrap').append('<div class="awz-yd-map" id="awz-yd-map"></div>');
+            var hmap = $('.awz-yd-modal-content-wrap').height() - $('.awz-yd-modal-header').height() - 30;
+            $('.awz-yd-modal-body').css({'height':hmap+'px'});
+
+            this.getMapAddress(params);
+
         },
         show: function(title, params){
+            this.initType = 'pvz';
             this.lastSign = params;
             $('body').append(this.template(title));
             var h = $(window).height();
@@ -142,6 +232,93 @@ if(!window.awz_yd_modal){
                     }
                 }
             });
+        },
+        addToMapFromAddress: function(inputAdress){
+            var msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_ADDRESS_GEO_ERR') : 'geocoder not avalible';
+            try{
+                ymaps.geocode(inputAdress, {
+                    results: 1
+                }).then(function(res) {
+                    window.awz_yd_modal.initMapGps(res.geoObjects.get(0).geometry.getCoordinates());
+                }).error(function(res) {
+                    window.awz_yd_modal.setError(msg);
+                });
+            }catch (e) {
+                window.awz_yd_modal.setError(msg);
+            }
+
+        },
+        addToMapFromCords: function(cords){
+            this.initMapGps(cords, cords);
+        },
+        getAddressGpsMap: function(coords){
+            var form = $('#AWZ_YD_DOST_LINK').parents('form');
+            if(!$('#AWZ_YD_CORD').length){
+                form.prepend('<input type="hidden" name="AWZ_YD_CORD" id="AWZ_YD_CORD" value="">');
+            }
+            $('#AWZ_YD_CORD').val(coords.join());
+        },
+        initPlacemark: function(coords){
+            // Если метка уже создана – просто передвигаем ее.
+            if (window.awz_yd_modal.map.myPlacemark) {
+                window.awz_yd_modal.map.myPlacemark.geometry.setCoordinates(coords);
+            }else {
+                window.awz_yd_modal.map.myPlacemark = window.awz_yd_modal.createPlacemark(coords);
+                window.awz_yd_modal.map.geoObjects.add(window.awz_yd_modal.map.myPlacemark);
+                // Слушаем событие окончания перетаскивания на метке.
+                window.awz_yd_modal.map.myPlacemark.events.add('dragend', function () {
+                    window.awz_yd_modal.getAddressGpsMap(window.awz_yd_modal.map.myPlacemark.geometry.getCoordinates());
+                });
+            }
+        },
+        createPlacemark: function(coords) {
+
+            var msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_ADDRESS') : '...';
+
+            return new ymaps.Placemark(coords, {
+                iconCaption: msg
+            }, {
+                preset: 'islands#redDotIconWithCaption',
+                draggable: true
+            });
+        },
+        initMapGps: function(center, placemark){
+
+            if(!center){
+                center = [55.7522, 37.6156];
+            }
+
+            var controls = ['zoomControl'];
+
+            this.map = new ymaps.Map("awz-yd-map",{
+                center: center,
+                zoom: 12,
+                controls: controls
+            },{
+                balloonMaxWidth: 280
+            });
+
+            if(window.hasOwnProperty('_awz_yd_lib_setSearchAddress') && window._awz_yd_lib_setSearchAddress != 'Y') {
+            }else{
+                var searchControl = new ymaps.control.SearchControl({
+                    options: {
+                        noPlacemark: true
+                    }
+                });
+                this.map.controls.add(searchControl);
+            }
+
+            // Слушаем клик на карте.
+            this.map.events.add('click', function (e) {
+                var coords = e.get('coords');
+                window.awz_yd_modal.initPlacemark(coords);
+                window.awz_yd_modal.getAddressGpsMap(coords);
+            });
+
+            if(placemark){
+                window.awz_yd_modal.initPlacemark(placemark);
+            }
+
         },
         initMap: function(){
 
@@ -316,6 +493,50 @@ if(!window.awz_yd_modal){
             }
             return objectsArray;
         },
+        getMapAddress: function(params){
+            $('.awz-yd-modal-body').append(window.awz_yd_modal.loader_template());
+            var serv_error = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_ERR') : 'server error';
+            var choise_msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_CHOISE') : 'choise';
+
+            if(!$('#AWZ_YD_CORD').length){
+
+                $.ajax({
+                    url: '/bitrix/services/main/ajax.php?action=awz:ydelivery.api.standart.gpsmap',
+                    method: 'POST',
+                    data: {
+                        signed: params
+                    },
+                    success: function(resp){
+                        var data = resp.data;
+                        window.awz_yd_modal.hideLoader();
+                        if(data && data.hasOwnProperty('address')){
+                            ymaps.ready(function(){
+                                window.awz_yd_modal.addToMapFromAddress(data['address']);
+                            });
+                        }else if(resp.status === 'error'){
+                            var msg = '';
+                            var k;
+                            for(k in resp.errors){
+                                var err = resp.errors[k];
+                                msg += err.message+'<br><br>';
+                            }
+                            window.awz_yd_modal.setError(msg);
+                        }
+                    },
+                    error: function(){
+                        window.awz_yd_modal.setError(serv_error);
+                    }
+                });
+
+            }else{
+                ymaps.ready(function(){
+                    var cords = $('#AWZ_YD_CORD').val();
+                    window.awz_yd_modal.addToMapFromCords(cords.split(','));
+                    window.awz_yd_modal.hideLoader();
+                });
+            }
+
+        },
         getPickpointsList: function(params){
             //console.log(params);
 
@@ -347,7 +568,7 @@ if(!window.awz_yd_modal){
                             });
                             window.awz_yd_modal.objectManager.clusters.options.set('preset', 'islands#blackClusterIcons');
                             window.awz_yd_modal.objectManager.clusters.events.add(['balloonopen'], function(e){
-                                console.log(e);
+                                //console.log(e);
                             });
                             window.awz_yd_modal.objectManager.objects.events.add(['click'], function(e){
                                 window.awz_yd_modal.loadBaloonAjax(e, params);

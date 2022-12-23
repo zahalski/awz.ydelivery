@@ -1,9 +1,11 @@
 <?php
 namespace Awz\Ydelivery\Profiles;
 
+use Bitrix\Main\Context;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\Helper;
 use Awz\Ydelivery\Handler;
+use Bitrix\Main\Security;
 
 Loc::loadMessages(__FILE__);
 
@@ -83,6 +85,21 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SOURCE_TEST'),
                         "DEFAULT" => ''
                     ),
+                    'BTN_CLASS' => array(
+                        'TYPE' => 'STRING',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_BTN_CLASS'),
+                        "DEFAULT" => 'btn btn-primary'
+                    ),
+                    'SHOW_MAP' => array(
+                        'TYPE' => 'Y/N',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP'),
+                        "DEFAULT" => 'N'
+                    ),
+                    'SHOW_MAP_IGN' => array(
+                        'TYPE' => 'Y/N',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_IGN'),
+                        "DEFAULT" => 'N'
+                    ),
                     'ERROR_COST_DSBL' => array(
                         'TYPE' => 'Y/N',
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_DSBL1'),
@@ -126,7 +143,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
 
     protected function calculateConcrete(\Bitrix\Sale\Shipment $shipment = null)
     {
-
+        $request = Context::getCurrent()->getRequest();
         $config = $this->getConfigValues();
         $api = Helper::getApiFromProfile($this);
         if($api->isTest()){
@@ -254,12 +271,20 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                 'address'=>$locationName
             )
         );
+
+        if($request->get('AWZ_YD_CORD_ADRESS')){
+            $data['destination']['address'] = $request->get('AWZ_YD_CORD_ADRESS');
+        }
+
         /*if($locationGeoId){
             $data['destination']['geo_id'] = $locationGeoId;
         }else{
             $data['destination']['address'] = $locationName;
         }*/
         //echo'<pre>';print_r(print_r($location['LOCATION_NAME']));echo'</pre>';
+
+        $pointHtml = '';
+        $pointHtmlAdd = '';
 
         if($config['MAIN']['STORE_ID']){
             $data['source'] = array('platform_station_id'=>$config['MAIN']['STORE_ID']);
@@ -269,6 +294,20 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
 
         $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), 86400);
         $r = $api->calc($data);
+
+        if(
+            $config['MAIN']['SHOW_MAP']=='Y' &&
+            $config['MAIN']['SHOW_MAP_IGN']=='Y' &&
+            !$r->isSuccess() &&
+            ($data['destination']['address'] != $locationName)
+        ){
+            $data['destination']['address'] = $locationName;
+            $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), 86400);
+            $r = $api->calc($data);
+            if($r->isSuccess()){
+                $pointHtmlAdd .= '<br><br>'.'<!--info-ydost-start-->'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_ERR').' '.$locationName.'<!--info-ydost-end-->';
+            }
+        }
 
         if($r->isSuccess()){
             $calkData = $r->getData();
@@ -296,10 +335,14 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         }
 
         $calkData = $r->getData();
+
         if($calkData['result']['pricing_total']){
 
             $api->setCacheParams(md5(serialize(array($data, $config, 'grafik'))), 3600);
-            $r = $api->grafik(array('station_id'=>$config['MAIN']['STORE_ID'], 'full_address'=>$locationName));
+            $r = $api->grafik(array(
+                'station_id'=>$config['MAIN']['STORE_ID'],
+                'full_address'=>$data['destination']['address']
+            ));
             if($r->isSuccess()){
                 $grafikData = $r->getData();
                 if(isset($grafikData['result']['offers']) && !empty($grafikData['result']['offers'])){
@@ -349,6 +392,29 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             );
         }
 
+        if($config['MAIN']['SHOW_MAP']=='Y'){
+            $signer = new Security\Sign\Signer();
+
+            $signedParameters = $signer->sign(base64_encode(serialize(array(
+                'address'=>$locationName,
+                'geo_id'=>$locationGeoId,
+                'profile_id'=>$this->getId(),
+                's_id'=>bitrix_sessid()
+            ))));
+
+
+            if($request->get('AWZ_YD_CORD_ADRESS')){
+                $pointHtml .= $request->get('AWZ_YD_CORD_ADRESS').$pointHtmlAdd;
+            }
+
+            $buttonHtml = '<a id="AWZ_YD_DOST_LINK" class="'.$config['MAIN']['BTN_CLASS'].'" href="#" onclick="window.awz_yd_modal.showgps(\''.Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_BTN_OPEN').'\',\''.$signedParameters.'\');return false;">'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_BTN_OPEN').'</a><div id="AWZ_YD_DOST_INFO">'.$pointHtml.'</div>';
+            $result->setDescription($result->getDescription().
+                '<!--btn-ydost-start-->'.
+                $buttonHtml
+                .'<!--btn-ydost-end-->'
+            );
+        }
+
         $disableWriteDate = false;
         $event = new \Bitrix\Main\Event(
             Handler::MODULE_ID, "OnCalcBeforeReturn",
@@ -376,9 +442,27 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             }
         }
 
-        //DATE_CODE_
-
-        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+        //запись координат
+        $cordStr = $request->get('AWZ_YD_CORD');
+        if(!$request->isAdminSection() && $cordStr){
+            $addressCord = Helper::getPropAddressCord($this->getId());
+            $addressCordValue = explode(',',$cordStr);
+            if(!empty($addressCord) && ($this->getId() == Helper::getProfileId($order, Helper::DOST_TYPE_ALL))){
+                /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+                foreach($props as $prop){
+                    if($prop->getField('CODE') == $addressCord[0]){
+                        if(count($addressCord)==1){
+                            $prop->setValue(implode(',',$addressCordValue));
+                            break;
+                        }else{
+                            $prop->setValue($addressCordValue[0]);
+                        }
+                    }elseif(isset($addressCord[1]) && ($prop->getField('CODE') == $addressCord[1])){
+                        $prop->setValue($addressCordValue[1]);
+                    }
+                }
+            }
+        }
 
         if(!$request->isAdminSection() && !$disableWriteDate){
             $AWZ_YD_POINT_DATE = date('d.m.Y', time() + $result->getPeriodFrom()*86400);

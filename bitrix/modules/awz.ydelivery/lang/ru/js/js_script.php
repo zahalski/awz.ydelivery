@@ -8,3 +8,5 @@ $MESS["AWZ_YDELIVERY_JS_SERV_PAY_CARD"] = "карта";
 $MESS["AWZ_YDELIVERY_JS_SERV_PAY_PREPAY"] = "предоплата";
 $MESS["AWZ_YDELIVERY_JS_SERV_TYPE_PVZ"] = "ПВЗ";
 $MESS["AWZ_YDELIVERY_JS_SERV_TYPE_TERMINAL"] = "постамат";
+$MESS["AWZ_YDELIVERY_JS_ADDRESS"] = "Доставить сюда!";
+$MESS["AWZ_YDELIVERY_JS_ADDRESS_GEO_ERR"] = "Извините, геокодер недоступен в данный момент.";

@@ -20,4 +20,9 @@ $MESS["AWZ_YDELIVERY_D"] = "д.";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD"] = "Превышены допустимые параметры веса или размеров";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SROK_FROM_STARTDAY"] = "Считать срок доставки от начала дня (0:00)";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_ADD_HOUR"] = "Количество часов, которое добавлять к интервалу доставки в заявке (например, 01.01.2023 00:00:00 + N часов)";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP"] = "Показывать карту для выбора точки доставки";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_BTN_OPEN"] = "Отметить точку доставки";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_BTN_CLASS"] = "Класс кнопки выбора GPS";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_IGN"] = "Перезапустить расчет без адреса в случае ошибки расчета (после ввода GPS)";
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_ERR"] = "Не удалось получить расчет по данному адресу. Стоимость и сроки показаны для региона: ";
 ?>
