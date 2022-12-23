@@ -170,6 +170,7 @@ if(!$ID && $isOrdered){
             }else{
                 unset($prepareData['recipient_info']['email']);
             }
+			$configProfile = Helper::getConfigByProfileId($curProfile);
             if($profileAddress){
                 if($_REQUEST['info']['address_cord']){
                     $cord = explode(',',$_REQUEST['info']['address_cord']);
@@ -189,9 +190,13 @@ if(!$ID && $isOrdered){
                     trim($_REQUEST['info']['address']);
 
                 if($_REQUEST['info']['date_dost']){
+                    $addTime = 0;
+                    if($configProfile['MAIN']['ADD_HOUR']){
+                        $addTime = intval($configProfile['MAIN']['ADD_HOUR']) * 60 * 60;
+                    }
                     $prepareData['destination']['interval'] = array(
-                        'from'=>strtotime($_REQUEST['info']['date_dost']),
-                        'to'=>strtotime($_REQUEST['info']['date_dost'])+86400,
+                        'from'=>strtotime($_REQUEST['info']['date_dost'])+$addTime,
+                        'to'=>strtotime($_REQUEST['info']['date_dost'])+86400+$addTime,
                     );
                 }else{
                     unset($prepareData['destination']['interval']);
@@ -213,9 +218,13 @@ if(!$ID && $isOrdered){
                         'to'=>'2022-06-22T00:00:00.000000Z',
                 );*/
                 if($_REQUEST['info']['date_dost']){
+                    $addTime = 0;
+                    if($configProfile['MAIN']['ADD_HOUR']){
+                        $addTime = intval($configProfile['MAIN']['ADD_HOUR']) * 60 * 60;
+                    }
                     $prepareData['destination']['interval'] = array(
-                        'from'=>strtotime($_REQUEST['info']['date_dost']),
-                        'to'=>strtotime($_REQUEST['info']['date_dost']),
+                        'from'=>strtotime($_REQUEST['info']['date_dost'])+$addTime,
+                        'to'=>strtotime($_REQUEST['info']['date_dost'])+$addTime,
                     );
                 }else{
                     unset($prepareData['destination']['interval']);
