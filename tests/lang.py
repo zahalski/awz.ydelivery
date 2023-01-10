@@ -65,10 +65,42 @@ if version:
                         lang_values.add(*result)
         set_values = set()
         prepare_line = [" "]
+        is_php = False
+        is_comment = False
         with open(_, 'r', encoding='utf-8') as fv:
             cn_line = 0
             for line in fv:
                 cn_line += 1
+
+                #поиск русских букв
+                if "--ru" in modes:
+                    tag_php_start = re.findall(r'(<\?)', line.strip())
+                    tag_php_end = re.findall(r'(\?>)', line.strip())
+                    if len(tag_php_start) > len(tag_php_end):
+                        is_php = True
+                    elif len(tag_php_start) < len(tag_php_end):
+                        is_php = False
+
+                    #пропускаем или убиваем комментарии
+                    if is_php:
+                        line_prev = line
+                        line = re.sub(r'^([\s\t]+#.*)', '', line)
+                        line = re.sub(r'^([\s\t]+//.*)', '', line)
+                        line = re.sub(r'(//.*)$', '', line)
+                        line = re.sub(r'(/\*.*\*/)$', '', line)
+                        if not is_comment:
+                            line = re.sub(r'^(/\*.*\*/)', '', line)
+                            if len(re.findall(r'(/\*)', line.strip())):
+                                is_comment = True
+                        if is_comment and len(re.findall(r'(\*/)', line.strip())):
+                            is_comment = False
+                    if is_comment:
+                        continue
+
+                    #поиск русских буков
+                    if len(re.findall(r'([А-я])', line.strip())):
+                        print('ru? is deprecated?', line, 'in file', _, 'line', cn_line)
+
                 dep_check = True
                 for check_path in deprecated_uncheck:
                     if check_path in _:

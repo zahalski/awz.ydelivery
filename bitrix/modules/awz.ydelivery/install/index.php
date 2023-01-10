@@ -18,7 +18,7 @@ class awz_ydelivery extends CModule {
 
     var $errors = false;
 
-    function __construct()
+    public function __construct()
     {
         $arModuleVersion = array();
 
