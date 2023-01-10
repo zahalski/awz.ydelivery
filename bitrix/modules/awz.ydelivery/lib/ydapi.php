@@ -19,6 +19,8 @@ class Ydapi {
      */
     const URL = 'https://b2b.taxi.yandex.net';
 
+    const CACHE_TYPE_RESPONSE = 'cache';
+
     /**
      * Точка входа api Яндекс доставки (тестовый режим)
      */
@@ -35,10 +37,11 @@ class Ydapi {
 
     /**
      * Сохраняется последний ответ api с метода send
-     * Может быть пустым в случае ответа с кеша
+     * может быть пустым в случае ответа с кеша
      * @var null|HttpClient
      */
     private $lastResponse = null;
+    private $lastResponseType;
 
     private $cacheParams = array();
 	
@@ -60,7 +63,7 @@ class Ydapi {
     }
 
     /**
-     * очистка параметров для кеша
+     * Очистка параметров для кеша
      * должна вызываться после любого запроса через кеш
      */
     public function clearCacheParams(){
@@ -70,8 +73,8 @@ class Ydapi {
     /**
      * параметры для кеша результата запроса
      *
-     * @param $cacheId ид кеша
-     * @param $ttl время действия в секундах
+     * @param $cacheId string Ид кеша
+     * @param $ttl int Время действия в секундах
      */
     public function setCacheParams($cacheId, $ttl){
         $this->cacheParams = array(
@@ -366,9 +369,25 @@ class Ydapi {
                             new Error($json['error'])
                         );
                     }elseif(isset($json['code'],$json['message']) && $json['code'] && $json['message']){
-                        $result->addError(
-                            new Error($json['message'], $json['code'])
-                        );
+                        if(isset($json['error_details']) && is_array($json['error_details'])){
+                            foreach($json['error_details'] as $keyCode=>$errVal){
+                                if(is_array($errVal)) {
+                                    foreach($errVal as $errText){
+                                        $result->addError(
+                                            new Error($errText, $keyCode)
+                                        );
+                                    }
+                                }else{
+                                    $result->addError(
+                                        new Error($errVal, $keyCode)
+                                    );
+                                }
+                            }
+                        }else{
+                            $result->addError(
+                                new Error($json['message'], $json['code'])
+                            );
+                        }
                     }elseif(isset($json['code'],$json['details']['debug_message']) && $json['code'] && $json['details']['debug_message']){
                         $result->addError(
                             new Error($json['details']['debug_message'], $json['code'])
@@ -481,6 +500,16 @@ class Ydapi {
     }
 
     /**
+     * Тип запроса
+     * устанавливается в случае наличия кеша
+     *
+     * @return null|string
+     */
+    public function getLastResponseType(){
+        return $this->lastResponseType;
+    }
+
+    /**
      * Запись последнего запроса
      *
      * @param null $resp
@@ -490,6 +519,7 @@ class Ydapi {
     private function setLastResponse($resp = null, $type=''){
         if($resp && !($resp instanceof HttpClient)){
             $resp = null;
+            $this->lastResponseType = $type;
         }
         $this->lastResponse = $resp;
         return $this->lastResponse;
