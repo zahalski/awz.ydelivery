@@ -3,9 +3,6 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-Loader::includeModule($module_id);
-Loader::includeModule('sale');
-
 use Awz\Ydelivery\Handler;
 use Awz\Ydelivery\Helper;
 use Bitrix\Main\Config\Option;
@@ -17,6 +14,9 @@ use Bitrix\Main\Page\Asset;
 use Bitrix\Main\Security;
 use Bitrix\Sale\Location\LocationTable;
 use Bitrix\Sale\Order;
+
+Loader::includeModule($module_id);
+Loader::includeModule('sale');
 
 Loc::loadMessages(__FILE__);
 

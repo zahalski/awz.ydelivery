@@ -3,9 +3,6 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-Loader::includeModule($module_id);
-Loader::includeModule('sale');
-
 use Awz\Ydelivery\Handler;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
@@ -16,6 +13,9 @@ use Awz\Ydelivery\Lists\Edit;
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Page\Asset;
 Loc::loadMessages(__FILE__);
+
+Loader::includeModule($module_id);
+Loader::includeModule('sale');
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
 if ($POST_RIGHT == "D")

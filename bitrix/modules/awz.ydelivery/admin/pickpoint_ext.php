@@ -3,8 +3,6 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-Loader::includeModule($module_id);
-
 use Bitrix\Main\Entity\Query;
 use Bitrix\Main\Error;
 use Bitrix\Main\IO\File;
@@ -19,6 +17,8 @@ use Awz\Ydelivery\OffersTable;
 use Awz\Ydelivery\PvzTable;
 use Awz\Ydelivery\PvzExtTable;
 Loc::loadMessages(__FILE__);
+
+Loader::includeModule($module_id);
 
 function convertCsvString($str=''){
     if(mb_substr($str,0,1) == '"'){
