@@ -433,6 +433,9 @@ class handlersDelivery {
 <!-- cl-start -->
 ## История версий
 
+**version 1.0.37**    
+- обновление 1.0.37.    
+
 **version 1.0.36**    
 - исключение из лога pickup list;    
 - добавлено получение адреса с модуля yandex.market;    
