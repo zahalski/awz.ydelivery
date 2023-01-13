@@ -2,14 +2,25 @@
 namespace Awz\Ydelivery\Profiles;
 
 use Bitrix\Main\Context;
+use Bitrix\Main\Error;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\Helper;
 use Awz\Ydelivery\Handler;
+use Bitrix\Main\Result;
 use Bitrix\Main\Security;
+use Bitrix\Sale\Delivery\CalculationResult;
+use Bitrix\Sale\Delivery\Services\Base;
+use Bitrix\Sale\Delivery\Services\Manager;
+use Bitrix\Sale\EntityPropertyValue;
+use Bitrix\Sale\Location\LocationTable;
+use Bitrix\Sale\Shipment;
+use Bitrix\Main\Config\Option;
 
 Loc::loadMessages(__FILE__);
 
-class Standart extends \Bitrix\Sale\Delivery\Services\Base
+class Standart extends Base
 {
     protected static $isProfile = true;
     protected static $parent = null;
@@ -19,7 +30,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
     public function __construct(array $initParams)
     {
         parent::__construct($initParams);
-        $this->parent = \Bitrix\Sale\Delivery\Services\Manager::getObjectById($this->parentId);
+        $this->parent = Manager::getObjectById($this->parentId);
     }
 
     public static function getClassTitle()
@@ -47,7 +58,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         return self::$isProfile;
     }
 
-    public function isCompatible(\Bitrix\Sale\Shipment $shipment)
+    public function isCompatible(Shipment $shipment)
     {
         $calcResult = self::calculateConcrete($shipment);
         return $calcResult->isSuccess();
@@ -84,6 +95,11 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                         'TYPE' => 'STRING',
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SOURCE_TEST'),
                         "DEFAULT" => ''
+                    ),
+                    'NDS' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_NDS'),
+                        "DEFAULT" => '0'
                     ),
                     'BTN_CLASS' => array(
                         'TYPE' => 'STRING',
@@ -141,7 +157,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         return $result;
     }
 
-    protected function calculateConcrete(\Bitrix\Sale\Shipment $shipment = null)
+    protected function calculateConcrete(Shipment $shipment = null)
     {
         $request = Context::getCurrent()->getRequest();
         $config = $this->getConfigValues();
@@ -150,7 +166,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             $config['MAIN']['STORE_ID'] = $config['MAIN']['STORE_ID_TEST'];
         }
 
-        $result = new \Bitrix\Sale\Delivery\CalculationResult();
+        $result = new CalculationResult();
 
         $weight = $shipment->getWeight();
         $order = $shipment->getCollection()->getOrder();
@@ -177,14 +193,14 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         }
 
         if($allWd>300 || $maxWd>110 || $weight>30000){
-            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD')));
+            $result->addError(new Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD')));
             return $result;
         }
 
         $props = $order->getPropertyCollection();
         $locationCode = $props->getDeliveryLocation()->getValue();
         if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {
-            if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+            if ($loc = LocationTable::getRowById($locationCode)) {
                 $locationCode = $loc['CODE'];
             }
         }
@@ -192,7 +208,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         $locationGeoId = '';
 
         if($locationCode) {
-            $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+            $res = LocationTable::getList(array(
                 'filter' => array(
                     '=CODE' => $locationCode,
                     '=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
@@ -217,7 +233,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             }
         }
 
-        $event = new \Bitrix\Main\Event(
+        $event = new Event(
             Handler::MODULE_ID, "onAfterLocationNameCreate",
             array(
                 'shipment'=>$shipment,
@@ -230,7 +246,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         $event->send();
         if ($event->getResults()) {
             foreach ($event->getResults() as $evenResult) {
-                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
                     if(isset($r['location'])){
                         $locationName = $r['location'];
@@ -241,13 +257,13 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
 
         if(!$locationName){
             $result->addError(
-                new \Bitrix\Main\Error(
+                new Error(
                     Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_REGION')
                 )
             );
             return $result;
         }
-        $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+        $res = LocationTable::getList(array(
             'filter' => array(
                 '=CODE' => $locationCode,
                 '=EXTERNAL.SERVICE.CODE' => 'YAMARKET',
@@ -276,12 +292,46 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             $data['destination']['address'] = $request->get('AWZ_YD_CORD_ADRESS');
         }
 
-        /*if($locationGeoId){
-            $data['destination']['geo_id'] = $locationGeoId;
-        }else{
-            $data['destination']['address'] = $locationName;
-        }*/
-        //echo'<pre>';print_r(print_r($location['LOCATION_NAME']));echo'</pre>';
+        $marketPostData = array();
+        if(Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$this->getId(), 'N', '')=='Y'){
+            $rawInput = file_get_contents('php://input');
+            if($rawInput && strpos($rawInput,'{')!==false){
+                try{
+                    $marketPostData = \Bitrix\Main\Web\Json::decode($rawInput);
+                    //file_put_contents($_SERVER['DOCUMENT_ROOT'].'/cart.txt', print_r($marketPostData, true)."\n\n", FILE_APPEND);
+                }catch (\Exception $e){
+
+                }
+            }
+
+            if(isset($marketPostData['cart']['delivery']['address']['country'])){
+                $preparedMarketAddress = [$marketPostData['cart']['delivery']['address']['country']];
+                if(isset($marketPostData['cart']['delivery']['address']['city'])){
+                    $preparedMarketAddress[] = $marketPostData['cart']['delivery']['address']['city'];
+                }
+                if(isset($marketPostData['cart']['delivery']['address']['street'])){
+                    $preparedMarketAddress[] = $marketPostData['cart']['delivery']['address']['street'];
+                }
+                if(isset($marketPostData['cart']['delivery']['address']['house'])){
+                    $preparedMarketAddress[] = $marketPostData['cart']['delivery']['address']['house'];
+                }
+                $data['destination']['address'] = implode(", ", $preparedMarketAddress);
+            }
+            if(isset($marketPostData['order']['delivery']['address']['country'])){
+                $preparedMarketAddress = [$marketPostData['order']['delivery']['address']['country']];
+                if(isset($marketPostData['order']['delivery']['address']['city'])){
+                    $preparedMarketAddress[] = $marketPostData['order']['delivery']['address']['city'];
+                }
+                if(isset($marketPostData['order']['delivery']['address']['street'])){
+                    $preparedMarketAddress[] = $marketPostData['order']['delivery']['address']['street'];
+                }
+                if(isset($marketPostData['order']['delivery']['address']['house'])){
+                    $preparedMarketAddress[] = $marketPostData['order']['delivery']['address']['house'];
+                }
+                $data['destination']['address'] = implode(", ", $preparedMarketAddress);
+            }
+        }
+
 
         $pointHtml = '';
         $pointHtmlAdd = '';
@@ -312,7 +362,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         if($r->isSuccess()){
             $calkData = $r->getData();
             if($calkData['result']['message']){
-                $r->addError(new \Bitrix\Main\Error($calkData['result']['message']));
+                $r->addError(new Error($calkData['result']['message']));
             }
         }
 
@@ -324,7 +374,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                 $result->setDescription('<p style="color:red;">'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_COST').'</p>');
 
                 global $USER;
-                if($USER->isAdmin()){
+                if($USER->IsAdmin()){
                     $result->setDescription($result->getDescription()."<br>### ".implode("; ",$r->getErrorMessages())." ###");
                 }
 
@@ -369,7 +419,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                     }
                 }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
                     $result->addError(
-                        new \Bitrix\Main\Error(
+                        new Error(
                             Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_NOGRAF')
                         )
                     );
@@ -377,7 +427,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
                 }
             }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
                 $result->addError(
-                    new \Bitrix\Main\Error(
+                    new Error(
                         Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_NOGRAF')
                     )
                 );
@@ -416,21 +466,21 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
         }
 
         $disableWriteDate = false;
-        $event = new \Bitrix\Main\Event(
+        $event = new Event(
             Handler::MODULE_ID, "OnCalcBeforeReturn",
             array('shipment'=>$shipment, 'calcResult'=>$result)
         );
         $event->send();
         if ($event->getResults()) {
             foreach ($event->getResults() as $evenResult) {
-                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
                     if(isset($r['disableWriteDate'])){
                         $disableWriteDate = $r['disableWriteDate'];
                     }
                     if(isset($r['result']) || isset($r['RESULT'])){
                         $rOb = isset($r['result']) ? $r['result'] : $r['RESULT'];
-                        if($rOb instanceof \Bitrix\Main\Result){
+                        if($rOb instanceof Result){
                             if(!$rOb->isSuccess()) {
                                 foreach ($rOb->getErrors() as $error) {
                                     $result->addError($error);
@@ -448,7 +498,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             $addressCord = Helper::getPropAddressCord($this->getId());
             $addressCordValue = explode(',',$cordStr);
             if(!empty($addressCord) && ($this->getId() == Helper::getProfileId($order, Helper::DOST_TYPE_ALL))){
-                /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+                /* @var EntityPropertyValue $prop*/
                 foreach($props as $prop){
                     if($prop->getField('CODE') == $addressCord[0]){
                         if(count($addressCord)==1){
@@ -469,7 +519,7 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
             if($this->getId() == Helper::getProfileId($order, Helper::DOST_TYPE_ALL)){
                 $code = Helper::getPropDateCode($this->getId());
                 if($code && ($order->getField('DELIVERY_ID') == $this->getId())){
-                    /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+                    /* @var EntityPropertyValue $prop*/
                     foreach($props as $prop){
                         if($prop->getField('CODE') == $code){
                             $prop->setValue($AWZ_YD_POINT_DATE);
@@ -484,11 +534,11 @@ class Standart extends \Bitrix\Sale\Delivery\Services\Base
 
     }
 
-    public static function onBeforeAdd(array &$fields = array()): \Bitrix\Main\Result
+    public static function onBeforeAdd(array &$fields = array()): Result
     {
         if(!$fields['LOGOTIP']){
             $fields['LOGOTIP'] = Handler::getLogo();
         }
-        return new \Bitrix\Main\Result();
+        return new Result();
     }
 }
