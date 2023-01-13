@@ -529,7 +529,7 @@ class Ydapi {
         return $this->lastResponse;
     }
 
-	public function setStandartJson($val){
-		$this->standartJson = $val;
-	}
+    public function setStandartJson($val){
+        $this->standartJson = $val;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace Awz\Ydelivery;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Error;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity;
@@ -39,7 +40,10 @@ class PvzExtTable extends Entity\DataManager
                     'required' => true,
                     'title'=>Loc::getMessage('AWZ_YDELIVERY_PVZ_PVZEXT_EXT_ID')
                 )
-            )
+            ),
+            new Entity\ReferenceField('PVZ', '\Awz\Ydelivery\PvzTable',
+                array('=this.PVZ_ID' => 'ref.PVZ_ID')
+            ),
         );
     }
 
@@ -53,6 +57,7 @@ class PvzExtTable extends Entity\DataManager
 
         if($result) return $result['PVZ_ID'];
 
+        return null;
     }
 
     public static function addLink($pvzId, $pvzExtId){
@@ -98,7 +103,7 @@ class PvzExtTable extends Entity\DataManager
 
     public static function deleteAll(){
 
-        $connection = \Bitrix\Main\Application::getConnection();
+        $connection = Application::getConnection();
         $sql = "TRUNCATE TABLE ".self::getTableName().";";
         $connection->queryExecute($sql);
 

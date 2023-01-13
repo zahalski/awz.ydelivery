@@ -5,10 +5,10 @@ use Bitrix\Main\Type;
 
 class Sign implements Type\IRequestFilter
 {
-    protected $params = array();
-    protected $values = array();
+    protected $params = [];
+    protected $values = [];
 
-    public function __construct(array $params = array(), array $values = array())
+    public function __construct(array $params = [], array $values = [])
     {
         $this->params = $params;
         $this->values = $values;

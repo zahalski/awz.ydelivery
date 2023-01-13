@@ -25,4 +25,4 @@ $MESS["AWZ_YDELIVERY_PROFILE_STANDART_BTN_OPEN"] = "Отметить точку 
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_BTN_CLASS"] = "Класс кнопки выбора GPS";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_IGN"] = "Перезапустить расчет без адреса в случае ошибки расчета (после ввода GPS)";
 $MESS["AWZ_YDELIVERY_PROFILE_STANDART_SETT_SHOW_MAP_ERR"] = "Не удалось получить расчет по данному адресу. Стоимость и сроки показаны для региона: ";
-?>
+$MESS["AWZ_YDELIVERY_PROFILE_STANDART_NDS"] = "НДС товаров (-1 = нулевой НДС, 0 - НДС по умолчанию в Яндексе, 1+ - ваша ставка НДС).";

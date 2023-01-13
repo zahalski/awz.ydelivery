@@ -15,9 +15,9 @@ class Sign extends Base {
 
     const ERROR_INVALID_PARAMS = 'invalid_sign';
 
-    protected $keys = array();
+    protected $keys = [];
 
-    public function __construct(array $params = array())
+    public function __construct(array $params = [])
     {
         $this->keys = $params;
         parent::__construct();

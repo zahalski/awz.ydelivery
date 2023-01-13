@@ -19,14 +19,14 @@ class Standart extends Controller
 
     public function configureActions()
     {
-        return array(
-            'gpsmap' => array(
-                'prefilters' => array(
+        return [
+            'gpsmap' => [
+                'prefilters' => [
                     new Scope(Scope::AJAX),
-                    new Sign(array('address','geo_id','profile_id','page','order','user','s_id'))
-                )
-            )
-        );
+                    new Sign(['address','geo_id','profile_id','page','order','user','s_id'])
+                ]
+            ]
+        ];
     }
 
     public function gpsmapAction($address = '', $geo_id = '', $profile_id = '', $page = '')
@@ -46,13 +46,13 @@ class Standart extends Controller
 
         $api = Helper::getApiByProfileId($profile_id);
 
-        return array(
+        return [
             'page'=>$page,
             'address' => $address,
             'geo_id' => $geo_id,
             'profile_id' => $profile_id,
             'from_cache'=>$api->getLastResponse() ? 0 : 1
-        );
+        ];
     }
 
 }
