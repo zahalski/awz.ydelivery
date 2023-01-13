@@ -8,13 +8,16 @@ use Bitrix\Main\Engine\ActionFilter\Scope;
 use Awz\Ydelivery\Api\Filters\Sign;
 use Awz\Ydelivery\Helper;
 use Bitrix\Main\Error;
+use Bitrix\Main\Event;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
+use Bitrix\Sale\Order;
 
 Loc::loadMessages(__FILE__);
 
-class pickPoints extends Controller
+class PickPoints extends Controller
 {
 
     public function configureActions()
@@ -43,7 +46,7 @@ class pickPoints extends Controller
 
     public function setorderAction($address = '', $geo_id = '', $profile_id = '', $page = '', $user = '', $order='', $point=''){
 
-        \Bitrix\Main\Loader::includeModule('sale');
+        Loader::includeModule('sale');
 
         if(!$user || !$order || !$point || !$page){
             $this->addError(
@@ -55,7 +58,7 @@ class pickPoints extends Controller
             return null;
         }
 
-        $orderOb = \Bitrix\Sale\Order::load($order);
+        $orderOb = Order::load($order);
         $propertyCollection = $orderOb->getPropertyCollection();
         $res = null;
 
@@ -138,7 +141,7 @@ class pickPoints extends Controller
         return $resultData['html'];
     }
 
-    public function listAction($address = '', $geo_id = '', $profile_id = '', $page = '', $terminal='')
+    public function listAction($address = '', $geo_id = '', $profile_id = '', $page = '', $terminal='', $dost_day=0)
     {
 
         if(!$profile_id){
@@ -174,23 +177,45 @@ class pickPoints extends Controller
             return null;
         }
         $items = array();
+        $itemsPrepare = array();
+        $issetPositions = array();
 
         foreach($pickpoints['result']['points'] as $point){
             if($terminal == 'N' && $point['type']=='terminal') continue;
 			if(!in_array($point['type'],array('terminal','pickup_point'))) continue;
-            $items[] = array(
+            $key = md5(serialize($point['position']));
+            if(isset($issetPositions[$key])) continue;
+            $issetPositions[$key] = true;
+            $itemsPrepare[$point['id']] = array(
                 'id'=>$point['id'],
                 'position'=>$point['position'],
                 'payment_methods'=>$point['payment_methods'],
-                'type'=>$point['type']
+                'type'=>$point['type'],
+                'days'=>0
             );
         }
+
+        $items = $itemsPrepare;
+
+        $event = new Event(
+            Handler::MODULE_ID, "OnBeforelistActionReturn",
+            array(
+                'items'=>&$items,
+                'dost_day'=>$dost_day,
+                'address'=>$address,
+                'geo_id'=>$geo_id,
+                'profile_id'=>$profile_id,
+                'page'=>$page,
+                'terminal'=>$terminal
+            )
+        );
+        $event->send();
 
         if($api->getLastResponse() && (Option::get(Handler::MODULE_ID, "UPDATE_PVZ_BG", "Y", "") == 'Y')) {
             Application::getInstance()->addBackgroundJob(
                 array("\\Awz\\Ydelivery\\Checker", "runJob"),
                 array($pickpoints['result']['points']),
-                \Bitrix\Main\Application::JOB_PRIORITY_NORMAL
+                Application::JOB_PRIORITY_NORMAL
             );
         }
 
