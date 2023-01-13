@@ -1,7 +1,6 @@
 <?php
 namespace Awz\Ydelivery;
 
-use Bitrix\Main\ObjectException;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Web\HttpClient;
 use Bitrix\Main\Result;
@@ -303,7 +302,7 @@ class Ydapi {
     /**
      * Запросы к апи логистической платформы
      *
-     * @param $method метод апи
+     * @param string $method метод апи
      * @param array $data параметры запроса
      * @param string $type post или get
      * @return Result
@@ -433,6 +432,11 @@ class Ydapi {
         }
 
         if($typeLog = Option::get(Handler::MODULE_ID, "ENABLE_LOG", "", "")){
+
+            if($method == 'api/b2b/platform/pickup-points/list'){
+                $typeLog = 'ERROR';
+            }
+
             if($httpClient && (
                 $typeLog === 'DEBUG' || ($typeLog === 'ERROR' && !$result->isSuccess())
                 )
