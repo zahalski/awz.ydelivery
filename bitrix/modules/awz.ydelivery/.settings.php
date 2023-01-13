@@ -1,11 +1,11 @@
 <?php
-return array(
-    'controllers' => array(
-        'value' => array(
-            'namespaces' => array(
+return [
+    'controllers' => [
+        'value' => [
+            'namespaces' => [
                 '\\Awz\\Ydelivery\\Api\\Controller' => 'api'
-            )
-        ),
+            ]
+        ],
         'readonly' => true
-    )
-);
+    ]
+];

@@ -4,6 +4,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 }
 
+use Awz\Ydelivery\PvzTable;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 
@@ -23,14 +24,14 @@ class AwzYdeliveryBaloon extends CBitrixComponent
         {
             return;
         }
-        $paramsIn =& $this->getParams();
+        $paramsIn = $this->getParams();
 
-        $this->arResult['ITEM'] = array();
+        $this->arResult['ITEM'] = [];
 
         if($paramsIn['DATA']){
             $this->arResult['ITEM'] = $paramsIn['DATA'];
         }elseif($paramsIn['ID']){
-            $r = \Awz\Ydelivery\PvzTable::getPvz($paramsIn['ID']);
+            $r = PvzTable::getPvz($paramsIn['ID']);
             if($r)
                 $this->arResult['ITEM'] = $r['PRM'];
         }

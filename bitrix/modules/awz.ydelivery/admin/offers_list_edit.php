@@ -3,10 +3,14 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-\Bitrix\Main\Loader::includeModule($module_id);
-\Bitrix\Main\Loader::includeModule('sale');
+Loader::includeModule($module_id);
+Loader::includeModule('sale');
 
+use Awz\Ydelivery\Checker;
+use Bitrix\Main\Application;
 use Bitrix\Main\Error;
+use Bitrix\Main\IO\File;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\Helper;
 use Bitrix\Main\Config\Option;
@@ -15,6 +19,12 @@ use Bitrix\Main\Result;
 use Bitrix\Main\Security;
 use Awz\Ydelivery\OffersTable;
 use Awz\Ydelivery\PvzTable;
+use Bitrix\Main\Security\Random;
+use Bitrix\Main\Security\Sign\Signer;
+use Bitrix\Sale\EntityPropertyValue;
+use Bitrix\Sale\Order;
+use Bitrix\Sale\PaymentCollection;
+
 Loc::loadMessages(__FILE__);
 
 $POST_RIGHT = $APPLICATION->GetGroupRight($module_id);
@@ -24,7 +34,7 @@ if ($POST_RIGHT == "D")
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE"));
 $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");
 
-\CUtil::InitJSCore(array('ajax', 'awz_yd_lib', 'sidepanel'));
+CJSCore::Init(array('ajax', 'awz_yd_lib', 'sidepanel'));
 
 $key = Option::get("fileman", "yandex_map_api_key");
 Asset::getInstance()->addString('<script src="//api-maps.yandex.ru/2.1/?lang=ru_RU&apikey='.$key.'"></script>', true);
@@ -42,7 +52,7 @@ $isOrdered = OffersTable::getList(array('select'=>array('ID'),'filter'=>array('=
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
 if($_REQUEST['START_AGENT'] == 'Y'){
-    \Awz\Ydelivery\Checker::agentGetStatus(true);
+    Checker::agentGetStatus(true);
 }
 
 if(!$ID && $isOrdered){
@@ -52,8 +62,8 @@ if(!$ID && $isOrdered){
 
     $result = new Result();
 
-    $order = \Bitrix\Sale\Order::load($ORDER_ID);
-    /* @var \Bitrix\Sale\PaymentCollection*/
+    $order = Order::load($ORDER_ID);
+    /* @var PaymentCollection*/
     $paymentCollection = $order->getPaymentCollection();
     $paymentId = 0;
     if($paymentCollection){
@@ -189,14 +199,28 @@ if(!$ID && $isOrdered){
                 $prepareData['destination']['custom_location']['details']['full_address'] =
                     trim($_REQUEST['info']['address']);
 
-                if($_REQUEST['info']['date_dost']){
+                if($_REQUEST['info']['interval_prepared']){
+                    $intervalVal = explode(',',$_REQUEST['info']['interval_prepared']);
+                    unset($prepareData['destination']['interval']);
+                    $prepareData['destination']['interval_utc'] = array(
+                        'from'=>$intervalVal[0],
+                        'to'=>$intervalVal[1]
+                    );
+                }elseif($_REQUEST['info']['date_dost']){
                     $addTime = 0;
                     if($configProfile['MAIN']['ADD_HOUR']){
                         $addTime = intval($configProfile['MAIN']['ADD_HOUR']) * 60 * 60;
                     }
+                    $intervals = explode(',',$_REQUEST['info']['date_dost']);
+                    $intervals[0] = strtotime($intervals[0]);
+                    if(!isset($intervals[1])){
+                        $intervals[1] = $intervals[0]+86400;
+                    }else{
+                        $intervals[1] = strtotime($intervals[1]);
+                    }
                     $prepareData['destination']['interval'] = array(
-                        'from'=>strtotime($_REQUEST['info']['date_dost'])+$addTime,
-                        'to'=>strtotime($_REQUEST['info']['date_dost'])+86400+$addTime,
+                        'from'=>$intervals[0]+$addTime,
+                        'to'=>$intervals[1]+$addTime,
                     );
                 }else{
                     unset($prepareData['destination']['interval']);
@@ -209,15 +233,14 @@ if(!$ID && $isOrdered){
                         'platform_id'=>trim($_REQUEST['info']['pvz'])
                     )
                 );
-                /*$prepareData['destination']['interval'] = array(
-                        'from'=>strtotime(date('d.m.Y'))+86400*4 + 3*60*60,
-                        'to'=>strtotime(date('d.m.Y'))+86400*4 + 3*60*60,
-                );*/
-                /*$prepareData['destination']['interval_utc'] = array(
-                        'from'=>'2022-06-22T00:00:00.000000Z',
-                        'to'=>'2022-06-22T00:00:00.000000Z',
-                );*/
-                if($_REQUEST['info']['date_dost']){
+                if($_REQUEST['info']['interval_prepared']){
+                    $intervalVal = explode(',',$_REQUEST['info']['interval_prepared']);
+                    unset($prepareData['destination']['interval']);
+                    $prepareData['destination']['interval_utc'] = array(
+                        'from'=>$intervalVal[0],
+                        'to'=>$intervalVal[1]
+                    );
+                }elseif($_REQUEST['info']['date_dost']){
                     $addTime = 0;
                     if($configProfile['MAIN']['ADD_HOUR']){
                         $addTime = intval($configProfile['MAIN']['ADD_HOUR']) * 60 * 60;
@@ -337,7 +360,7 @@ if(!$ID && $isOrdered){
     }
     */
 
-    /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+    /* @var EntityPropertyValue $prop*/
     $adressProp = $propertyCollection->getAddress();
 
     $prepareAutoResult = OffersTable::getPrepare($order, true);
@@ -774,7 +797,6 @@ if(!$ID && $isOrdered){
                                             <textarea cols="30" rows="5" name="info[address]"><?=$val?></textarea>
                                         </td>
                                     </tr>
-
                                     <tr>
                                         <td width="50%" class="adm-detail-content-cell-l">
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_POL_ADDR2')?>
@@ -787,6 +809,43 @@ if(!$ID && $isOrdered){
                                             if(isset($_REQUEST['info']['address_kv'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['address_kv']));
                                             ?>
                                             <input type="text" name="info[address_kv]" value="<?=$val?>">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="50%" class="adm-detail-content-cell-l">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_INTERVAL')?>
+                                        </td>
+                                        <td class="adm-detail-content-cell-r">
+                                            <?
+                                            $val = '';
+                                            $valAddress = '';
+                                            if(isset($prepareAutoData['destination']['custom_location']['details']['full_address']))
+                                                $valAddress = $prepareAutoData['destination']['custom_location']['details']['full_address'];
+                                            if(isset($_REQUEST['info']['address'])) $valAddress = htmlspecialcharsEx(trim($_REQUEST['info']['address']));
+                                            if(isset($_REQUEST['info']['interval_prepared'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['interval_prepared']));
+                                            if(!$valAddress) $valAddress = $_REQUEST['info']['interval_prepared_adress'];
+                                            $api = Helper::getApiByProfileId($profileAddress);
+                                            $intervalsRes = $api->grafik(array(
+                                                'station_id'=>$prepareAutoData['source']['platform_station']['platform_id'],
+                                                'full_address'=>$valAddress,
+                                                'last_mile_policy'=>'time_interval'
+                                            ));
+                                            ?>
+                                            <input readonly="readonly" type="text" name="info[interval_prepared_adress]" value="<?=$valAddress?>">
+                                            <select name="info[interval_prepared]">
+                                                <option value=""><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE')?></option>
+                                                <?if($intervalsRes->isSuccess()){
+                                                    $intervals = $intervalsRes->getData();
+                                                    foreach($intervals['result']['offers'] as $fm){
+                                                        $keyFm = $fm['from'].','.$fm['to'];
+                                                        $selected = '';
+                                                        if($val == $keyFm) $selected = ' selected="selected"';
+                                                        ?><option value="<?=$keyFm?>"<?=$selected?>><?=date("d.m.Y H:i:s", strtotime($fm['from']))?> - <?=date("d.m.Y H:i:s", strtotime($fm['to']))?></option><?
+                                                    }
+                                                }?>
+                                            </select>
+                                            <br>
+                                            <span style="color:red;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_DESC')?></span>
                                         </td>
                                     </tr>
                                 <?}else{?>
@@ -817,7 +876,7 @@ if(!$ID && $isOrdered){
                                                 ?>
                                             </div>
                                             <?
-                                            $signer = new \Bitrix\Main\Security\Sign\Signer();
+                                            $signer = new Signer();
                                             $signedParameters = $signer->sign(base64_encode(serialize(array(
                                                 'address'=>$locationName,
                                                 'geo_id'=>'',
@@ -841,6 +900,42 @@ if(!$ID && $isOrdered){
                                             </script>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td width="50%" class="adm-detail-content-cell-l">
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_INTERVAL')?>
+                                        </td>
+                                        <td class="adm-detail-content-cell-r">
+                                            <?
+                                            $val = '';
+                                            $valPvz = '';
+                                            if(isset($prepareAutoData['destination']['platform_station']['platform_id']))
+                                                $valPvz = $prepareAutoData['destination']['platform_station']['platform_id'];
+                                            if(isset($_REQUEST['info']['pvz'])) $valPvz = htmlspecialcharsEx(trim($_REQUEST['info']['pvz']));
+                                            if(isset($_REQUEST['info']['interval_prepared'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['interval_prepared']));
+                                            if(!$valPvz) $valPvz = $_REQUEST['info']['interval_prepared_pvz'];
+                                            $api = Helper::getApiByProfileId($profilePvz);
+                                            $intervalsRes = $api->grafik(array(
+                                                'station_id'=>$prepareAutoData['source']['platform_station']['platform_id'],
+                                                'self_pickup_id'=>$valPvz
+                                            ));
+                                            ?>
+                                            <input readonly="readonly" type="text" name="info[interval_prepared_pvz]" value="<?=$valPvz?>">
+                                            <select name="info[interval_prepared]">
+                                                <option value=""><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE')?></option>
+                                                <?if($intervalsRes->isSuccess()){
+                                                    $intervals = $intervalsRes->getData();
+                                                    foreach($intervals['result']['offers'] as $fm){
+                                                        $keyFm = $fm['from'].','.$fm['to'];
+                                                        $selected = '';
+                                                        if($val == $keyFm) $selected = ' selected="selected"';
+                                                        ?><option value="<?=$keyFm?>"<?=$selected?>><?=date("d.m.Y H:i:s", strtotime($fm['from']))?> - <?=date("d.m.Y H:i:s", strtotime($fm['to']))?></option><?
+                                                    }
+                                                }?>
+                                            </select>
+                                            <br>
+                                            <span style="color:red;"><?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_DESC')?></span>
+                                        </td>
+                                    </tr>
                                 <?}?>
                                 <tr>
                                     <td width="50%" class="adm-detail-content-cell-l">
@@ -853,7 +948,7 @@ if(!$ID && $isOrdered){
                                             $val = $prepareAutoData['bx_external']['delivery_date'];
                                         if(isset($_REQUEST['info']['date_dost'])) $val = htmlspecialcharsEx(trim($_REQUEST['info']['date_dost']));
                                         ?>
-                                        <?=\CAdminCalendar::CalendarDate('info[date_dost]', $val)?>
+                                        <?= CAdminCalendar::CalendarDate('info[date_dost]', $val)?>
 
                                     </td>
                                 </tr>
@@ -1034,7 +1129,7 @@ if(!$ID && $isOrdered){
 
             if($_REQUEST['DELETE_AFTER_RESP'] == 'Y'){
 
-                $resultCansel = \Awz\Ydelivery\OffersTable::canselOffer($data['ID']);
+                $resultCansel = OffersTable::canselOffer($data['ID']);
                 if($resultCansel->isSuccess()){
                     $dataCansel = $resultCansel->getData();
                     CAdminMessage::ShowMessage(array('TYPE'=>'OK', 'MESSAGE'=>$dataCansel['result']['description']));
@@ -1060,7 +1155,7 @@ if(!$ID && $isOrdered){
         }
     }elseif($_REQUEST['CANSEL'] == 'Y'){
         if($data['OFFER_ID'] == $_REQUEST['OFFER_ID_CONFIRM']){
-            $resultCansel = \Awz\Ydelivery\OffersTable::canselOffer($data['ID']);
+            $resultCansel = OffersTable::canselOffer($data['ID']);
             if($resultCansel->isSuccess()){
                 $dataCansel = $resultCansel->getData();
                 CAdminMessage::ShowMessage(array('TYPE'=>'OK', 'MESSAGE'=>$dataCansel['result']['description']));
@@ -1089,16 +1184,16 @@ if(!$ID && $isOrdered){
 
             $invoiceData = $resInvoice->getData();
             $fileContent = $invoiceData['result'];
-            $tmpName = time().'-invoice-'.\Bitrix\Main\Security\Random::getString(20).'.pdf';
-            $fileOb = new \Bitrix\Main\IO\File(\Bitrix\Main\Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
+            $tmpName = time().'-invoice-'. Random::getString(20).'.pdf';
+            $fileOb = new File(Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
             $fileOb->putContents($fileContent);
-            $makeFile = \CFile::MakeFileArray($fileOb->getPath());
+            $makeFile = CFile::MakeFileArray($fileOb->getPath());
             $makeFile['MODULE_ID'] = $module_id;
-            $fileId = \CFile::SaveFile($makeFile, "ydelivery");
+            $fileId = CFile::SaveFile($makeFile, "ydelivery");
             if(intval($fileId)>0){
                 if(!is_array($data['HISTORY'])) $data['HISTORY'] = array();
                 if($data['HISTORY']['order_invoice_file']){
-                    \CFile::Delete($data['HISTORY']['order_invoice_file']);
+                    CFile::Delete($data['HISTORY']['order_invoice_file']);
                 }
                 $data['HISTORY']['order_invoice_file'] = $fileId;
                 OffersTable::update(array('ID'=>$data['ID']), array('HISTORY'=>$data['HISTORY']));
@@ -1127,16 +1222,16 @@ if(!$ID && $isOrdered){
 
             $labelData = $resLabel->getData();
             $fileContent = $labelData['result'];
-            $tmpName = time().'-label-'.\Bitrix\Main\Security\Random::getString(20).'.pdf';
-            $fileOb = new \Bitrix\Main\IO\File(\Bitrix\Main\Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
+            $tmpName = time().'-label-'. Random::getString(20).'.pdf';
+            $fileOb = new File(Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
             $fileOb->putContents($fileContent);
-            $makeFile = \CFile::MakeFileArray($fileOb->getPath());
+            $makeFile = CFile::MakeFileArray($fileOb->getPath());
             $makeFile['MODULE_ID'] = $module_id;
-            $fileId = \CFile::SaveFile($makeFile, "ydelivery");
+            $fileId = CFile::SaveFile($makeFile, "ydelivery");
             if(intval($fileId)>0){
                 if(!is_array($data['HISTORY'])) $data['HISTORY'] = array();
                 if($data['HISTORY']['order_label_file']){
-                    \CFile::Delete($data['HISTORY']['order_label_file']);
+                    CFile::Delete($data['HISTORY']['order_label_file']);
                 }
                 $data['HISTORY']['order_label_file'] = $fileId;
                 OffersTable::update(array('ID'=>$data['ID']), array('HISTORY'=>$data['HISTORY']));
@@ -1152,9 +1247,9 @@ if(!$ID && $isOrdered){
     }
 
     if(!$data){
-        $yandexRes = new \Bitrix\Main\Result();
+        $yandexRes = new Result();
         $yandexRes->addError(
-            new \Bitrix\Main\Error(
+            new Error(
                 Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_ERR_ID')
             )
         );
@@ -1168,7 +1263,7 @@ if(!$ID && $isOrdered){
         }
 
         if(!$api || ($_REQUEST['UPDATE_EXTERNAL_DATA']!='Y' && !empty($data['HISTORY']['last']))){
-            $yandexRes = new \Bitrix\Main\Result();
+            $yandexRes = new Result();
             $yandexRes->setData($data['HISTORY']['last']);
         }else{
             $yandexRes = $api->offerInfo($data['OFFER_ID']);
@@ -1177,7 +1272,7 @@ if(!$ID && $isOrdered){
 
     if($yandexRes->isSuccess()){
 
-        $order = \Bitrix\Sale\Order::load($data['ORDER_ID']);
+        $order = Order::load($data['ORDER_ID']);
         $curProfile = Helper::getProfileId($order);
         $val_stat_all = Option::get($module_id, "CHECKER_FIN_".$curProfile, "", '');
         $val_stat_all = unserialize($val_stat_all);
@@ -1521,9 +1616,9 @@ if(!$ID && $isOrdered){
 
 
                     <?
-                    $statusOb = \CSaleStatus::GetList();
+                    $statusOb = CSaleStatus::GetList();
                     $statusAr = array('ALL'=>array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_ADMIN_OL_VSE_STATUSY"),"ID"=>"ALL"));
-                    while($d = $statusOb->fetch()){
+                    while($d = $statusOb->Fetch()){
                         $statusAr[$d['ID']] = $d;
                     }
                     ?>

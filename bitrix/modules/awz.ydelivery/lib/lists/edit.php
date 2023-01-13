@@ -2,13 +2,19 @@
 
 namespace Awz\Ydelivery\Lists;
 
+use Awz\Ydelivery\Main;
+use Bitrix\Main\Application;
+use Bitrix\Main\IO\File;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\OffersTable;
 use Awz\Ydelivery\Helper;
+use Bitrix\Main\Security\Random;
+use Bitrix\Sale\Order;
 
 Loc::loadMessages(__FILE__);
 
-class Edit extends \Awz\Ydelivery\Main {
+class Edit extends Main {
 
     public function __construct($params) {
         parent::__construct($params);
@@ -64,10 +70,10 @@ class Edit extends \Awz\Ydelivery\Main {
         foreach($profiles as $id=>$name){
             $profilesData[$id] = array();
         }
-        if(\Bitrix\Main\Loader::includeModule('sale')){
+        if(Loader::includeModule('sale')){
             foreach($idAr as $id){
                 $data = OffersTable::getRowById($id);
-                $order = \Bitrix\Sale\Order::load($data['ORDER_ID']);
+                $order = Order::load($data['ORDER_ID']);
                 $profile = Helper::getProfileId($order);
                 $profilesData[$profile][] = $data['OFFER_ID'];
             }
@@ -107,8 +113,8 @@ class Edit extends \Awz\Ydelivery\Main {
                 if($res->isSuccess()){
                     $resData = $res->getData();
                     $fileContent = $resData['result'];
-                    $tmpName = 'labels-'.time().'-'.\Bitrix\Main\Security\Random::getString(20).'.pdf';
-                    $fileOb = new \Bitrix\Main\IO\File(\Bitrix\Main\Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
+                    $tmpName = 'labels-'.time().'-'. Random::getString(20).'.pdf';
+                    $fileOb = new File(Application::getDocumentRoot() . "/upload/tmp/".$tmpName);
                     $fileOb->putContents($fileContent);
                     echo '<a style="margin:5px;" href="/upload/tmp/'.$tmpName.'" target="_blank">'.Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DOWNLOAD').' ['.$tmpName.']</a><br><br>';
                 }else{

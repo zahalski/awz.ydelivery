@@ -3,10 +3,18 @@ namespace Awz\Ydelivery;
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Context;
+use Bitrix\Main\Error;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Page\Asset;
 use Bitrix\Main\UI\Extension;
+use Bitrix\Main\Web\Json;
+use Bitrix\Sale\EntityPropertyValue;
 use Bitrix\Sale\Order;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Sale\PaySystem\Manager as PayManager;
+use Bitrix\Sale\ResultError;
 
 Loc::loadMessages(__FILE__);
 
@@ -14,8 +22,8 @@ class handlersBx {
 
     public static function registerHandler(){
 
-        $result = new \Bitrix\Main\EventResult(
-            \Bitrix\Main\EventResult::SUCCESS,
+        $result = new EventResult(
+            EventResult::SUCCESS,
             array(
                 'Awz\Ydelivery\Handler' => '/bitrix/modules/awz.ydelivery/lib/handler.php',
                 'Awz\Ydelivery\Profiles\Pickup' => '/bitrix/modules/awz.ydelivery/lib/profiles/pickup.php',
@@ -39,7 +47,7 @@ class handlersBx {
 
             $order = $args['ORDER'];
             $propertyCollection = $order->getPropertyCollection();
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             $profileId = Helper::getProfileId($order, Helper::DOST_TYPE_PVZ);
             $prop = $propertyCollection->getItemByOrderPropertyCode(Helper::getPropPvzCode($profileId));
 
@@ -58,21 +66,22 @@ class handlersBx {
             $content .= '});';
             return '<script>'.$content.'</script>';
         }
+        return null;
     }
 
     public static function OnEndBufferContent(&$content){
         global $APPLICATION;
-        if($APPLICATION->getCurPage(false) == '/bitrix/admin/sale_order_ajax.php'){
+        if($APPLICATION->GetCurPage(false) == '/bitrix/admin/sale_order_ajax.php'){
             if($_REQUEST['action'] == 'changeDeliveryService' && $_REQUEST['formData']['order_id']){
-                if(!\Bitrix\Main\Loader::includeModule('awz.ydelivery')) return;
+                if(!Loader::includeModule('awz.ydelivery')) return;
 
                 $profileId = $_REQUEST['formData']['SHIPMENT'][1]['PROFILE'];
                 if($profileId){
-                    $delivery = \Awz\Ydelivery\Helper::deliveryGetByProfileId($profileId);
+                    $delivery = Helper::deliveryGetByProfileId($profileId);
                     if($delivery['CLASS_NAME'] == '\Awz\Ydelivery\Profiles\Pickup'){
-                        $json = \Bitrix\Main\Web\Json::decode($content);
+                        $json = Json::decode($content);
                         $json['SHIPMENT_DATA']['PROFILES'] .= '<br><a href="#" class="adm-btn adm-btn-green adm-btn-add" onclick="BX.SidePanel.Instance.open(\'/bitrix/admin/awz_ydelivery_picpoint_list.php?LANG=ru&profile_id='.$profileId.'&order='.intval($_REQUEST['formData']['order_id']).'&from=changeDeliveryService\',{cacheable: false});return false;">'.Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_CHOISE_PVZ').'</a>';
-                        $content = \Bitrix\Main\Web\Json::encode($json);
+                        $content = Json::encode($json);
                     }
                 }
 
@@ -81,7 +90,7 @@ class handlersBx {
         }
     }
 
-    public static function OnSaleOrderBeforeSaved(\Bitrix\Main\Event $event){
+    public static function OnSaleOrderBeforeSaved(Event $event){
 
         $request = Context::getCurrent()->getRequest();
         /* @var Order $order*/
@@ -92,8 +101,8 @@ class handlersBx {
 
         if(!$checkMyDeliveryPvz) {
             $event->addResult(
-                new \Bitrix\Main\EventResult(
-                    \Bitrix\Main\EventResult::SUCCESS, $order
+                new EventResult(
+                    EventResult::SUCCESS, $order
                 )
             );
         }else{
@@ -101,13 +110,13 @@ class handlersBx {
             $errorText = '';
             $setPoints = false;
             if($request->get('AWZ_YD_POINT_ID')){
-                $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
+                $pointId = preg_replace('/([^0-9A-z\-])/i', '', $request->get('AWZ_YD_POINT_ID'));
             }
             if(!$pointId && (Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$checkMyDeliveryPvz, 'N', '')=='Y')){
                 $rawInput = file_get_contents('php://input');
                 if($rawInput && strpos($rawInput,'{')!==false){
                     try{
-                        $postData = \Bitrix\Main\Web\Json::decode($rawInput);
+                        $postData = Json::decode($rawInput);
                         if(isset($postData['order']['delivery']['outlet']['code'])){
                             $pointId = $postData['order']['delivery']['outlet']['code'];
                         }
@@ -117,7 +126,7 @@ class handlersBx {
                 }
             }
 
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             $checkIsProp = false;
             $propAddress = false;
             foreach($propertyCollection as $prop){
@@ -165,17 +174,17 @@ class handlersBx {
                     $errorText = Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_PVZ_PROP');
                 }
                 $event->addResult(
-                    new \Bitrix\Main\EventResult(
-                        \Bitrix\Main\EventResult::ERROR,
-                        \Bitrix\Sale\ResultError::create(
-                            new \Bitrix\Main\Error($errorText, "DELIVERY")
+                    new EventResult(
+                        EventResult::ERROR,
+                        ResultError::create(
+                            new Error($errorText, "DELIVERY")
                         )
                     )
                 );
             }else{
                 $event->addResult(
-                    new \Bitrix\Main\EventResult(
-                        \Bitrix\Main\EventResult::SUCCESS, $order
+                    new EventResult(
+                        EventResult::SUCCESS, $order
                     )
                 );
             }
@@ -184,7 +193,7 @@ class handlersBx {
         $results = $event->getResults();
 
         foreach($results as $result){
-            if($result->getType() == \Bitrix\Main\EventResult::ERROR){
+            if($result->getType() == EventResult::ERROR){
                 return;
             }
         }
@@ -212,9 +221,9 @@ class handlersBx {
                 if(!$result->isSuccess()){
                     foreach($result->getErrors() as $err){
                         $event->addResult(
-                            new \Bitrix\Main\EventResult(
-                                \Bitrix\Main\EventResult::ERROR,
-                                \Bitrix\Sale\ResultError::create(
+                            new EventResult(
+                                EventResult::ERROR,
+                                ResultError::create(
                                     $err
                                 )
                             )
@@ -230,11 +239,13 @@ class handlersBx {
 
     public static function OrderDeliveryBuildList(&$arResult, &$arUserResult, $arParams)
     {
-        \CUtil::InitJSCore(array('ajax', 'awz_yd_lib'));
+        \CJSCore::Init(array('ajax', 'awz_yd_lib'));
 
         $key = Option::get("fileman", "yandex_map_api_key");
         $setSearchAddress = Option::get(Handler::MODULE_ID, "MAP_ADDRESS", "N", "");
-        Asset::getInstance()->addString('<script>window._awz_yd_lib_setSearchAddress = "'.$setSearchAddress.'";</script>', true);
+        $setBallon2 = Option::get(Handler::MODULE_ID, "BALUN_VARIANT", "N", "");
+        Asset::getInstance()->addString('<script>window._awz_yd_lib_setSearchAddressYa = "'.$setSearchAddress.'";</script>', true);
+        Asset::getInstance()->addString('<script>window._awz_yd_lib_setBallonVariant = "'.$setBallon2.'";</script>', true);
         Asset::getInstance()->addString('<script src="//api-maps.yandex.ru/2.1/?lang=ru_RU&apikey='.$key.'"></script>', true);
 
     }
@@ -325,7 +336,7 @@ class handlersBx {
 
             $pointId = false;
             if($request->get('AWZ_YD_POINT_ID')){
-                $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
+                $pointId = preg_replace('/([^0-9A-z\-])/i', '', $request->get('AWZ_YD_POINT_ID'));
             }
             if($pointId){
                 $pointData = PvzTable::getPvz($pointId);
@@ -361,7 +372,7 @@ class handlersBx {
                 if(!$paymentId) {
                     foreach($arPaySystemServiceAll as $key=>$payment){
                         if($paymentOb){
-                            $paySystemService = \Bitrix\Sale\PaySystem\Manager::getObjectById($payment['ID']);
+                            $paySystemService = PayManager::getObjectById($payment['ID']);
                             $paymentOb->setFields(array(
                                 'PAY_SYSTEM_ID' => $paySystemService->getField("PAY_SYSTEM_ID"),
                                 'PAY_SYSTEM_NAME' => $paySystemService->getField("NAME"),

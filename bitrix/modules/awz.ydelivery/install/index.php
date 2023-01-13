@@ -1,8 +1,8 @@
 <?php
-use \Bitrix\Main\Localization\Loc,
-    \Bitrix\Main\EventManager,
-    \Bitrix\Main\ModuleManager,
-    \Bitrix\Main\Application;
+use Bitrix\Main\Localization\Loc,
+    Bitrix\Main\EventManager,
+    Bitrix\Main\ModuleManager,
+    Bitrix\Main\Application;
 
 Loc::loadMessages(__FILE__);
 
@@ -20,7 +20,7 @@ class awz_ydelivery extends CModule {
 
     public function __construct()
     {
-        $arModuleVersion = array();
+        $arModuleVersion = [];
 
         include(__DIR__.'/version.php');
 
@@ -164,7 +164,7 @@ class awz_ydelivery extends CModule {
         $this->InstallEvents();
         $this->createAgents();
 
-        ModuleManager::RegisterModule($this->MODULE_ID);
+        ModuleManager::registerModule($this->MODULE_ID);
 
         return true;
     }
@@ -186,7 +186,7 @@ class awz_ydelivery extends CModule {
             $this->UnInstallEvents();
             $this->deleteAgents();
 
-            ModuleManager::UnRegisterModule($this->MODULE_ID);
+            ModuleManager::unRegisterModule($this->MODULE_ID);
 
             return true;
         }
@@ -212,7 +212,7 @@ class awz_ydelivery extends CModule {
 
 	function checkOldInstallTables(){
 		
-		$connection = \Bitrix\Main\Application::getConnection();
+		$connection = Application::getConnection();
 		$checkColumn = false;
 		$checkTable = false;
 		$recordsRes = $connection->query("select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='b_awz_ydelivery_offer'");
@@ -224,8 +224,29 @@ class awz_ydelivery extends CModule {
 			}
 
 		}
+        $checkTablePvz = false;
+        $columnInterval = false;
+        $columnIntervalDate = false;
+        $recordsRes = $connection->query("select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='b_awz_ydelivery_pvz'");
+		while($dt = $recordsRes->fetch()){
+            $checkTablePvz = true;
+			if($dt['COLUMN_NAME'] == 'DOST_DAY'){
+                $columnInterval = true;
+			}
+            if($dt['COLUMN_NAME'] == 'LAST_UP'){
+                $columnIntervalDate = true;
+			}
+		}
 		if($checkTable && !$checkColumn){
 			$sql = 'ALTER TABLE `b_awz_ydelivery_offer` ADD `LAST_STATUS` varchar(65) DEFAULT NULL';
+			$connection->queryExecute($sql);
+		}
+        if($checkTablePvz && !$columnInterval){
+			$sql = 'ALTER TABLE `b_awz_ydelivery_pvz` ADD `DOST_DAY` int(65) DEFAULT NULL';
+			$connection->queryExecute($sql);
+		}
+        if($checkTablePvz && !$columnIntervalDate){
+			$sql = 'ALTER TABLE `b_awz_ydelivery_pvz` ADD `LAST_UP` datetime DEFAULT NULL';
 			$connection->queryExecute($sql);
 		}
 		

@@ -15,6 +15,8 @@ create table if not exists b_awz_ydelivery_offer (
 CREATE TABLE IF NOT EXISTS `b_awz_ydelivery_pvz` (
     ID int(18) NOT NULL AUTO_INCREMENT,
     PVZ_ID varchar(255) NOT NULL,
+    DOST_DAY int(7) DEFAULT NULL,
+    LAST_UP datetime DEFAULT NULL,
     PRM longtext,
     PRIMARY KEY (`ID`),
     unique IX_PVZ_ID (PVZ_ID)

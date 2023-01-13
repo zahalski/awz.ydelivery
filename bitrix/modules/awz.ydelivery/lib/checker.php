@@ -1,12 +1,21 @@
 <?php
 namespace Awz\Ydelivery;
 
+use Bitrix\Main\ArgumentException;
+use Bitrix\Main\ArgumentNullException;
+use Bitrix\Main\ArgumentOutOfRangeException;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
+use Bitrix\Main\NotImplementedException;
+use Bitrix\Main\SystemException;
+use Bitrix\Main\Type\DateTime;
 use Bitrix\Sale\Order;
 use Bitrix\Main\Web\Json;
 use Bitrix\Main\Application;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
+use Bitrix\Sale\Result;
 
 class Checker {
 
@@ -66,7 +75,7 @@ class Checker {
      * @return array
      */
     public static function unDoubleStatus($histStatus){
-        $dublicateStatusList = array(
+        $dublicateStatusList = [
             'DELIVERY_PROCESSING_STARTED',
             'DELIVERY_LOADED',
             'DELIVERY_AT_START',
@@ -75,10 +84,10 @@ class Checker {
             'DELIVERY_AT_START_SORT',
             'DELIVERY_UPDATED_BY_RECIPIENT',
             'DELIVERY_UPDATED_BY_DELIVERY'
-        );
+        ];
 
-        $statList = array();
-        $prevStatus = array();
+        $statList = [];
+        $prevStatus = [];
         foreach($histStatus as $stat){
             if(isset($statList[$stat['status']]) || in_array($stat['status'], $dublicateStatusList)){
                 $statusCode = $prevStatus['status'].'_'.$stat['status'];
@@ -104,21 +113,21 @@ class Checker {
     }
 
     /**
-     * @throws \Bitrix\Main\NotImplementedException
-     * @throws \Bitrix\Main\ArgumentNullException
-     * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ArgumentOutOfRangeException
-     * @throws \Bitrix\Main\SystemException
-     * @throws \Bitrix\Main\ArgumentException
+     * @throws NotImplementedException
+     * @throws ArgumentNullException
+     * @throws LoaderException
+     * @throws ArgumentOutOfRangeException
+     * @throws SystemException
+     * @throws ArgumentException
      */
     public static function agentGetStatus($disableTimer=false){
 
-        if(!\Bitrix\Main\Loader::includeModule('sale')){
+        if(!Loader::includeModule('sale')){
             return "\\Awz\\Ydelivery\\Checker::agentGetStatus();";
         }
 
         if($disableTimer){
-            $r = PvzTable::getList(array('select'=>array('ID'),'limit'=>1))->fetch();
+            $r = PvzTable::getList(['select'=> ['ID'],'limit'=>1])->fetch();
             if(!$r){
                 self::agentGetPickpoints();
             }
@@ -128,7 +137,7 @@ class Checker {
 
         $statusList = unserialize(Option::get(Handler::MODULE_ID, 'YD_STATUSLIST', '', ''));
 
-        $checkedOrder = array();
+        $checkedOrder = [];
         foreach($deliveryProfileList as $profileId=>$profileName){
 
             $activeChecker = Option::get(
@@ -158,44 +167,44 @@ class Checker {
                 '',''
                 )
             );
-            if(!is_array($opt_CHECKER_FIN)) $opt_CHECKER_FIN = array();
+            if(!is_array($opt_CHECKER_FIN)) $opt_CHECKER_FIN = [];
 
-            $filter = array(
+            $filter = [
                 "!=HISTORY_FIN"=>'Y',
                 '=ORD.CANCELED'=>'N',
-                '<=LAST_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()-$opt_interval)
-            );
+                '<=LAST_DATE'=> DateTime::createFromTimestamp(time()-$opt_interval)
+            ];
             if(!empty($checkedOrder)){
                 $filter['!ORDER_ID'] = $checkedOrder;
             }
 
             $rOffers = OffersTable::getList(
-                array(
-                    'select'=>array("*",'ORD_STATUS'=>'ORD.STATUS_ID','ORD_TRACKING_NUMBER'=>'ORD.TRACKING_NUMBER'),
+                [
+                    'select'=> ["*",'ORD_STATUS'=>'ORD.STATUS_ID','ORD_TRACKING_NUMBER'=>'ORD.TRACKING_NUMBER'],
                     'filter'=>$filter,
                     'limit'=>15,
-                    'order'=>array('ID'=>'DESC')
-                )
+                    'order'=> ['ID'=>'DESC']
+                ]
             );
 
             $val_stat_disabled = Option::get(Handler::MODULE_ID, "CHECKER_FIN_DSBL", "", '');
             $val_stat_disabled = unserialize($val_stat_disabled);
-            if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
+            if(!is_array($val_stat_disabled)) $val_stat_disabled = [];
 
             while($data = $rOffers->fetch()){
 
                 $finUp = $data['HISTORY'];
-                if(!$finUp) $finUp = array();
-                if(!isset($finUp['hist'])) $finUp['hist'] = array();
-                if(!$finUp['errors']) $finUp['errors'] = array();
+                if(!$finUp) $finUp = [];
+                if(!isset($finUp['hist'])) $finUp['hist'] = [];
+                if(!$finUp['errors']) $finUp['errors'] = [];
 
                 $order = Order::load($data['ORDER_ID']);
                 if(!$order) continue;
 
                 if(!Helper::getProfileId($order)) {
                     OffersTable::update(
-                        array('ID'=>$data['ID']),
-                        array('HISTORY_FIN'=>'Y')
+                        ['ID'=>$data['ID']],
+                        ['HISTORY_FIN'=>'Y']
                     );
                     continue;
                 }
@@ -271,16 +280,16 @@ class Checker {
                 if($finalize == 'Y'){
                     $noUpdateDate = false;
                 }
-                $arChange = array(
+                $arChange = [
                     'HISTORY'=>$finUp,
                     'HISTORY_FIN'=>$finalize,
                     'LAST_STATUS'=>$data['LAST_STATUS']
-                );
+                ];
                 if(!$noUpdateDate){
-                    $arChange['LAST_DATE'] = \Bitrix\Main\Type\DateTime::createFromTimestamp(time());
+                    $arChange['LAST_DATE'] = DateTime::createFromTimestamp(time());
                 }
                 OffersTable::update(
-                    array('ID'=>$data['ID']),
+                    ['ID'=>$data['ID']],
                     $arChange
                 );
 
@@ -322,12 +331,12 @@ class Checker {
                     $event = new Event(
                         Handler::MODULE_ID,
                         "onBeforeStatusUpdate",
-                        array('order'=>$order,
+                        ['order'=>$order,
                             'ordStatus'=>$ordStatus,
                             'startStatus'=>$startStatusCode,
                             'newOrdStatus'=>$newStatus,
                             'newStatus'=>$lStatus
-                        )
+                        ]
                     );
                     $event->send();
                     if ($event->getResults()) {
@@ -339,20 +348,20 @@ class Checker {
                                 }
                                 if(isset($r['lastDate'])){
                                     OffersTable::update(
-                                        array('ID'=>$data['ID']),
-                                        array(
+                                        ['ID'=>$data['ID']],
+                                        [
                                             'LAST_DATE'=>$r['lastDate']
-                                        )
+                                        ]
                                     );
                                 }
                                 if(isset($r['result']) && ($r['result'] instanceof \Bitrix\Main\Result)){
                                     if(!$r['result']->isSuccess()) {
                                         $finUp['errors'][] = $r['result']->getErrorMessages();
                                         OffersTable::update(
-                                            array('ID'=>$data['ID']),
-                                            array(
+                                            ['ID'=>$data['ID']],
+                                            [
                                                 'HISTORY'=>$finUp
-                                            )
+                                            ]
                                         );
                                     }
                                 }
@@ -360,36 +369,36 @@ class Checker {
                         }
                     }
 
-                    $chekerUpdate = array();
-                    $chekerUpdateErr = array();
+                    $chekerUpdate = [];
+                    $chekerUpdateErr = [];
                     if($newStatus){
                         if($newStatus != $ordStatus) {
 
                             $order->setField('STATUS_ID', $newStatus);
                             $result = $order->save();
-                            /* @var $result \Bitrix\Sale\Result */
+                            /* @var $result Result */
                             if(!isset($finUp['setstatus'])){
-                                $finUp['setstatus'] = array();
+                                $finUp['setstatus'] = [];
                             }
                             if(!$result->isSuccess()){
                                 $finUp['errors'][] = $result->getErrorMessages();
-                                $finUp['setstatus'][] = array(
+                                $finUp['setstatus'][] = [
                                     time(), $newStatus,
                                     $finUp['lastStatusCode'], 'error:'.count($finUp['errors'])
-                                );
+                                ];
                                 $chekerUpdateErr = $result->getErrorMessages();
                             }else{
-                                $finUp['setstatus'][] = array(
+                                $finUp['setstatus'][] = [
                                     time(), $newStatus,
                                     $finUp['lastStatusCode']
-                                );
-                                $chekerUpdate = array(time(), $newStatus);
+                                ];
+                                $chekerUpdate = [time(), $newStatus];
                             }
                             OffersTable::update(
-                                array('ID'=>$data['ID']),
-                                array(
+                                ['ID'=>$data['ID']],
+                                [
                                     'HISTORY'=>$finUp
-                                )
+                                ]
                             );
 
                         }
@@ -398,7 +407,7 @@ class Checker {
                     $event = new Event(
                         Handler::MODULE_ID,
                         "onOfterStatusUpdate",
-                        array(
+                        [
                             'order'=>$order,
                             'ordStatus'=>$ordStatus,
                             'newOrdStatus'=>$newStatus,
@@ -406,7 +415,7 @@ class Checker {
                             'newStatus'=>$lStatus,
                             'chekerUpdate'=>$chekerUpdate,
                             'chekerUpdateErr'=>$chekerUpdateErr
-                        )
+                        ]
                     );
                     $event->send();
 

@@ -99,10 +99,12 @@ $MESS["AWZ_YDELIVERY_OTKLUCITQ"] = "Отключить";
 $MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LINK"] = "Связь ПВЗ с внешними источниками";
 $MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LOAD"] = "Перейти к загрузке";
 $MESS["AWZ_YDELIVERY_OPT_L_UPPVZ_LINK_ON"] = "Включить поиск ПВЗ по внешним кодам";
-$MESS["AWZ_YDELIVERY_OPT_MAP_ADRESS"] = "Включить строку поиска адреса на Яндекс Карте (обязателен ключ API в настройках модуля fileman)";
+$MESS["AWZ_YDELIVERY_OPT_MAP_ADRESS"] = "Включить строку поиска адреса для ПВЗ на Яндекс Карте (обязателен ключ API в настройках модуля fileman)";
+$MESS["AWZ_YDELIVERY_OPT_BALUN_VARIANT"] = "Включить стандартные иконки Яндекс Карты";
 $MESS["AWZ_YDELIVERY_OPT_DSBL_STATUS"] = "Отключить статусы в логистической платформе";
 $MESS["AWZ_YDELIVERY_OPT_DSBL_STATUS_INFO"] = "Отключен настройками";
 $MESS["AWZ_YDELIVERY_OPT_L_YM_TRADING_ON"] = "Включить обработку ПВЗ из json запроса модуля yandex.market (должны быть загружены внешние коды пвз яндекс маркета)";
+$MESS["AWZ_YDELIVERY_OPT_L_YM_TRADING2_ON"] = "Включить обработку Адреса из json запроса модуля yandex.market";
 
 $MESS["AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM"] = "Заказ создан в логистической платформе";
 $MESS["AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM_DRAFT"] = "Заказ создан в логистической платформе, Заказ создан";
@@ -179,4 +181,3 @@ $MESS["AWZ_YDELIVERY_OPT_ENABLE_LOG_2"] = "Все запросы";
 $MESS["AWZ_YDELIVERY_OPT_ENABLE_LOG_3"] = "Только ошибки";
 $MESS["AWZ_YDELIVERY_OPT_ENABLE_LOG_PATH"] = "Просмотр лога";
 
-?>

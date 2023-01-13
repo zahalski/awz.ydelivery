@@ -1,7 +1,14 @@
 <?php
 namespace Awz\Ydelivery;
 
+use Bitrix\Main\Entity\BooleanField;
+use Bitrix\Main\Entity\DatetimeField;
+use Bitrix\Main\Entity\IntegerField;
+use Bitrix\Main\Entity\Result;
+use Bitrix\Main\Entity\StringField;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Type\DateTime;
+
 Loc::loadMessages(__FILE__);
 
 /**
@@ -128,9 +135,9 @@ class Main {
 			if(is_array($params)) {
 				$this->params = $params;
 			}else{
-				throw new Main\ArgumentException(sprintf(
-					'Incorrect parameters, should be an array'
-				));
+				throw new \Bitrix\Main\ArgumentException(
+                    'Incorrect parameters, should be an array'
+                );
 			}
 		}
 		
@@ -185,7 +192,7 @@ class Main {
 			{
 				if(strlen($ID)<=0)
 					continue;
-					$ID = IntVal($ID);
+					$ID = intval($ID);
 				
 				if(isset($act[$_REQUEST['action']])){
 					call_user_func($act[$_REQUEST['action']], $ID);
@@ -225,14 +232,14 @@ class Main {
 				if(!$this->getAdminList()->IsUpdated($ID))
 				continue;
 
-				$ID = IntVal($ID);
+				$ID = intval($ID);
 				
 				$entity = $this->getParam("ENTITY");
 				
 				foreach($arFields as $key=>$value){
 					$obField = $entity::getEntity()->getField($key);
-					if($obField instanceof \Bitrix\Main\Entity\DatetimeField){
-						$arData[$key]=\Bitrix\Main\Type\DateTime::createFromUserTime($value);
+					if($obField instanceof DatetimeField){
+						$arData[$key]= DateTime::createFromUserTime($value);
 					}else{
 						$arData[$key]=$value;
 					}
@@ -444,11 +451,11 @@ class Main {
 					if(strpos($val_n, '.')===false)
 					    $obField = $entity::getEntity()->getField($val_n);
 
-					if($obField instanceof \Bitrix\Main\Entity\IntegerField){
+					if($obField instanceof IntegerField){
 						if(!$type) $type = "INT";
-					}elseif($obField instanceof \Bitrix\Main\Entity\StringField){
+					}elseif($obField instanceof StringField){
 						if(!$type) $type = "STRING";
-					}elseif($obField instanceof \Bitrix\Main\Entity\BooleanField){
+					}elseif($obField instanceof BooleanField){
 						if(!$type) $type = "BOOL";
 					}
 					global ${$row};
@@ -546,7 +553,7 @@ class Main {
 	
 	public function checkFilter(){
 		
-		if(!$this->getParam("FIND")) return;
+		if(!$this->getParam("FIND")) return null;
 		
 		$title = array();
 		$entity = $this->getParam("ENTITY");
@@ -593,15 +600,15 @@ class Main {
             $obField = null;
 			if(strpos($val_n, '.')===false)
 			    $obField = $entity::getEntity()->getField($val_n);
-			if($obField instanceof \Bitrix\Main\Entity\IntegerField){
+			if($obField instanceof IntegerField){
 				$tmp = intval($tmp);
-			}elseif($obField instanceof \Bitrix\Main\Entity\StringField){
+			}elseif($obField instanceof StringField){
 				if(!$keyFilterAdd) $keyFilterAdd = "?";
-			}elseif($obField instanceof \Bitrix\Main\Entity\BooleanField){
+			}elseif($obField instanceof BooleanField){
 				$validate = (is_array($val) && isset($val["VALIDATE"])) ? $val["VALIDATE"] : true;
 			}
 			if($tmp && $validate){
-				$res = new \Bitrix\Main\Entity\Result();
+				$res = new Result();
 				$obField->validateValue($tmp, $this->getParam("PRIMARY"), array($val_n=>$tmp), $res);
 				if($res->isSuccess()){
 					$arFilter[$keyFilterAdd.$val_n] = $tmp;

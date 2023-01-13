@@ -3,9 +3,12 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-\Bitrix\Main\Loader::includeModule($module_id);
+Loader::includeModule($module_id);
 
+use Bitrix\Main\Entity\Query;
 use Bitrix\Main\Error;
+use Bitrix\Main\IO\File;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\Helper;
 use Bitrix\Main\Config\Option;
@@ -40,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $POST_RIGHT == "W" && strlen($_REQUE
     }
 
     if($_REQUEST['filecsv']){
-        $file = new \Bitrix\Main\IO\File($_SERVER["DOCUMENT_ROOT"].$_REQUEST['filecsv']);
+        $file = new File($_SERVER["DOCUMENT_ROOT"].$_REQUEST['filecsv']);
 
         //die();
         $delim = '';
@@ -97,7 +100,7 @@ $aTabs[] = array(
     "TITLE" => Loc::getMessage('AWZ_YDELIVERY_ADMIN_EXT_OPT_SECT1')
 );
 
-$tabControl = new \CAdminTabControl("tabControl", $aTabs);
+$tabControl = new CAdminTabControl("tabControl", $aTabs);
 $tabControl->Begin();
 ?>
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?=LANGUAGE_ID?>" id="FORMACTION">
@@ -111,7 +114,7 @@ $tabControl->BeginNextTab();
             <?
             $err = '';
             try {
-                $main_query = new \Bitrix\Main\Entity\Query(PvzExtTable::getEntity());
+                $main_query = new Query(PvzExtTable::getEntity());
                 $main_query->registerRuntimeField("CNT", array('expression' => array('COUNT(*)', 'ID'), 'data_type' => 'integer'));
                 $main_query->setSelect(array("CNT"));
                 $main_query->setFilter(array());
@@ -123,7 +126,7 @@ $tabControl->BeginNextTab();
                 $err = $e->getMessage();
             }
 
-            $main_query = new \Bitrix\Main\Entity\Query(PvzTable::getEntity());
+            $main_query = new Query(PvzTable::getEntity());
             $main_query->registerRuntimeField("CNT",array('expression' => array('COUNT(*)','ID'), 'data_type'=>'integer'));
             $main_query->setSelect(array("CNT"));
             $main_query->setFilter(array());

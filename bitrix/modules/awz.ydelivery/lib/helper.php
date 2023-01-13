@@ -1,6 +1,7 @@
 <?php
 namespace Awz\Ydelivery;
 
+use Bitrix\Catalog\ProductTable;
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\ArgumentNullException;
 use Bitrix\Main\ArgumentOutOfRangeException;
@@ -13,11 +14,14 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Result;
 use Bitrix\Main\Error;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Security\Random;
 use Bitrix\Sale\BasketItem;
 use Bitrix\Sale\Delivery\Services\Base;
 use Bitrix\Sale\Delivery\Services\Manager as DeliveryManager;
 use Bitrix\Main\SystemException;
 use Bitrix\Sale\Order;
+use Bitrix\Sale\Shipment;
+use Bitrix\Sale\ShipmentCollection;
 
 Loc::loadMessages(__FILE__);
 
@@ -204,9 +208,7 @@ class Helper {
      */
     public static function generateBarCode(Order $order){
 
-        if($order){
-            $orderId = $order->getId();
-        }
+        $orderId = $order->getId();
 
         $tmpl = Option::get(Handler::MODULE_ID, "BAR_CODE_TEMPLATE", "", "");
 
@@ -217,8 +219,8 @@ class Helper {
             '#DATE_Y#'=>date('Y', strtotime($order->getField('DATE_INSERT'))),
             '#ORDER#'=>$orderId,
             '#SEC#'=>time() % 86400,
-            '#RAND2#'=>\Bitrix\Main\Security\Random::getString(2),
-            '#RAND3#'=>\Bitrix\Main\Security\Random::getString(3),
+            '#RAND2#'=> Random::getString(2),
+            '#RAND3#'=> Random::getString(3),
         );
 
         if(isset(self::$cacheBar[$orderId])){
@@ -333,6 +335,8 @@ class Helper {
 
         $productsIds = array();
 
+        $nds = intval($deliveryConfig['MAIN']['NDS']);
+
         foreach($basket as $basketItem){
 
             $artCode = $basketItem->getProductId();
@@ -354,7 +358,8 @@ class Helper {
                 "barcode"        	=> (string) $barCode,
                 "billing_details" 	=> array(
                     "unit_price"         => ($basketItem->getPrice() * 100),
-                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? ($basketItem->getPrice() * 100) : 0)
+                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? ($basketItem->getPrice() * 100) : 0),
+                    "nds"=>$nds
                 ),
                 "physical_dims"     => array(
                     "predefined_volume"=> intval($predefined),
@@ -366,7 +371,7 @@ class Helper {
         }
 
         if(!empty($productsIds)){
-            $r = \Bitrix\Catalog\ProductTable::getList(array(
+            $r = ProductTable::getList(array(
                 'select'=>array('ID','WEIGHT','WIDTH','LENGTH','HEIGHT'),
                 'filter'=>array('=ID'=>array_keys($productsIds))
             ));
@@ -436,7 +441,7 @@ class Helper {
             return self::$cacheConfig['ORDER_'.$order->getId()];
         }
 
-        /* @var \Bitrix\Sale\ShipmentCollection $shipmentCollection */
+        /* @var ShipmentCollection $shipmentCollection */
         $shipmentCollection = $order->getShipmentCollection();
 
         $checkMyDelivery = self::getProfileId($order);
@@ -466,19 +471,19 @@ class Helper {
      */
     public static function getProfileId(Order $order, $type='all'){
 
-        /* @var \Bitrix\Sale\ShipmentCollection $shipmentCollection */
+        /* @var ShipmentCollection $shipmentCollection */
         $shipmentCollection = $order->getShipmentCollection();
         $checkMyDelivery = false;
-        /* @var \Bitrix\Sale\Shipment $shipment*/
+        /* @var Shipment $shipment*/
         foreach ($shipmentCollection as $shipment) {
             if ($shipment->isSystem()) continue;
-            /* @var $delivery \Bitrix\Sale\Delivery\Services\Base */
+            /* @var $delivery Base */
             $delivery = $shipment->getDelivery();
-            if($delivery instanceof \Bitrix\Sale\Delivery\Services\Base && $delivery->isInstalled()){
+            if($delivery instanceof Base && $delivery->isInstalled()){
                 $classNames = Handler::getChildrenClassNames();
                 if($type == self::DOST_TYPE_ALL || $type == self::DOST_TYPE_PVZ){
                     $className = '\\'.$classNames[0];
-                    $params = \Bitrix\Sale\Delivery\Services\Manager::getById($delivery->getId());
+                    $params = DeliveryManager::getById($delivery->getId());
                     //bug php 7.3 main 20.200.300, sale 20.5.43
                     $bug = false;
                     if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
@@ -495,7 +500,7 @@ class Helper {
                 }
                 if($type == self::DOST_TYPE_ALL || $type == self::DOST_TYPE_ADR) {
                     $className = '\\' . $classNames[1];
-                    $params = \Bitrix\Sale\Delivery\Services\Manager::getById($delivery->getId());
+                    $params = DeliveryManager::getById($delivery->getId());
                     //bug php 7.3 main 20.200.300, sale 20.5.43
                     $bug = false;
                     if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
@@ -684,10 +689,10 @@ class Helper {
     }
 
     /**
-     * возвращает массив доступных кодов оплат службы доставки
+     * Возвращает массив доступных кодов оплат службы доставки
      *
-     * @param $profileId ид профиля доставки
-     * @param $paymentId ид платежной системы
+     * @param $profileId int ид профиля доставки
+     * @param $paymentId int ид платежной системы
      * @return array
      * @throws ArgumentNullException
      * @throws ArgumentOutOfRangeException

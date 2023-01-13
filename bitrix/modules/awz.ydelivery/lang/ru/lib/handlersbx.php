@@ -8,4 +8,3 @@ $MESS["AWZ_YDELIVERY_HANDLERBX_ERR_PVZ_PROP"] = "Не указано свойс�
 $MESS["AWZ_YDELIVERY_HANDLERBX_BTN_OPEN_OLD"] = "Посмотреть заявку в доставку";
 $MESS["AWZ_YDELIVERY_HANDLERBX_BTN_OPEN_NEW"] = "Новая заявка в доставку";
 $MESS["AWZ_YDELIVERY_HANDLERBX_HANDLER_NAME"] = "Яндекс Доставка";
-?>

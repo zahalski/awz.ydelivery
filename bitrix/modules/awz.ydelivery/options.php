@@ -1,9 +1,17 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
+use Awz\Ydelivery\Checker;
+use Awz\Ydelivery\GrafikTable;
 use Awz\Ydelivery\Handler;
+use Awz\Ydelivery\Helper;
+use Awz\Ydelivery\PvzTable;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\Security\Random;
+use Bitrix\Sale\PaySystem\Manager;
+
 Loc::loadMessages(__FILE__);
 global $APPLICATION;
 $module_id = "awz.ydelivery";
@@ -16,7 +24,7 @@ $APPLICATION->SetTitle(Loc::getMessage('AWZ_YDELIVERY_OPT_TITLE'));
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
-\Bitrix\Main\Loader::includeModule($module_id);
+Loader::includeModule($module_id);
 
 $defStatus = array(
     "CREATED_IN_PLATFORM" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_CREATED_IN_PLATFORM"),
@@ -95,10 +103,10 @@ if(empty($statusList)) {
     Option::set($module_id, 'YD_STATUSLIST', serialize($defStatus), '');
 }
 
-$deliveryProfileList = \Awz\Ydelivery\Helper::getActiveProfileIds();
+$deliveryProfileList = Helper::getActiveProfileIds();
 
-$payYandexMethods = \Awz\Ydelivery\Helper::getYandexPayMethods();
-$paySystemResult = \Bitrix\Sale\PaySystem\Manager::getList(array(
+$payYandexMethods = Helper::getYandexPayMethods();
+$paySystemResult = Manager::getList(array(
     'filter'  => array(
         'ACTIVE' => 'Y',
     )
@@ -131,24 +139,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
     }else{
         $sendRunAgent = false;
         if($_REQUEST['DELETE_PVZ']=='Y'){
-            \Awz\Ydelivery\PvzTable::deleteAll();
+            PvzTable::deleteAll();
             CAdminMessage::ShowMessage(array('TYPE'=>'OK',
                 'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS1')));
             $sendRunAgent = true;
         }
         if($_REQUEST['UPDATE_PVZ']=='Y'){
-            \Awz\Ydelivery\Checker::agentGetPickpoints(true);
+            Checker::agentGetPickpoints(true);
             CAdminMessage::ShowMessage(array('TYPE'=>'OK',
                 'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_MESS2')));
             $sendRunAgent = true;
         }
         if($_REQUEST['UPDATE_GRAFIK_DEL']=='Y'){
-            \Awz\Ydelivery\GrafikTable::checkExists();
-            \Awz\Ydelivery\GrafikTable::deleteAll();
+            GrafikTable::checkExists();
+            GrafikTable::deleteAll();
         }
         if($_REQUEST['UPDATE_GRAFIK']=='Y'){
-            \Awz\Ydelivery\GrafikTable::checkExists();
-            $resultGrafik = \Awz\Ydelivery\GrafikTable::loadGetFile($_REQUEST['GRAFIK_FILE']);
+            GrafikTable::checkExists();
+            $resultGrafik = GrafikTable::loadGetFile($_REQUEST['GRAFIK_FILE']);
             if($resultGrafik->isSuccess()){
                 CAdminMessage::ShowMessage(array('TYPE'=>'OK',
                     'MESSAGE'=>Loc::getMessage('AWZ_YDELIVERY_OPT_GRAFIK_OK')));
@@ -170,6 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
         Option::set($module_id, "UPDATE_PVZ_BG", trim($_REQUEST["UPDATE_PVZ_BG"]), "");
         Option::set($module_id, "SEARCH_EXT", trim($_REQUEST["SEARCH_EXT"]), "");
         Option::set($module_id, "MAP_ADDRESS", trim($_REQUEST["MAP_ADDRESS"]), "");
+        Option::set($module_id, "BALUN_VARIANT", trim($_REQUEST["BALUN_VARIANT"]), "");
         Option::set($module_id, "CHECKER_FIN_DSBL", serialize($_REQUEST["CHECKER_FIN_DSBL"]), "");
 
         foreach($statusList as $k=>$v){
@@ -208,10 +217,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
 
 
 
-$statusOb = \CSaleStatus::GetList();
+$statusOb = CSaleStatus::GetList();
 $statusAr = array(array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_VSE_STATUSY"),"ID"=>"ALL"));
 $statusAr2 = array(array("NAME"=>Loc::getMessage("AWZ_YDELIVERY_OTKLUCITQ"),"ID"=>"DISABLE"));
-while($d = $statusOb->fetch()){
+while($d = $statusOb->Fetch()){
     $statusAr[$d['ID']] = $d;
     $statusAr2[$d['ID']] = $d;
 }
@@ -252,7 +261,7 @@ $val_stat_disabled = Option::get($module_id, "CHECKER_FIN_DSBL", "", '');
 $val_stat_disabled = unserialize($val_stat_disabled);
 if(!is_array($val_stat_disabled)) $val_stat_disabled = array();
 
-$tabControl = new \CAdminTabControl("tabControl", $aTabs);
+$tabControl = new CAdminTabControl("tabControl", $aTabs);
 $tabControl->Begin();
 ?>
 <style>.adm-workarea option:checked {background-color: rgb(206, 206, 206);}</style>
@@ -266,7 +275,7 @@ $tabControl->BeginNextTab();
         <td>
             <?$val = Option::get($module_id, "BAR_CODE_TEMPLATE", "", "");?>
             <?if(!$val){
-                $val = '#DATE##ORDER#-'.mb_strtoupper(\Bitrix\Main\Security\Random::getString(3));
+                $val = '#DATE##ORDER#-'.mb_strtoupper(Random::getString(3));
                 Option::set($module_id, "BAR_CODE_TEMPLATE", $val, "");
             }?>
             <input type="text" size="35" maxlength="255" value="<?=$val?>" name="BAR_CODE_TEMPLATE"/>
@@ -311,6 +320,12 @@ $tabControl->BeginNextTab();
         <td>
             <?$val = Option::get($module_id, "MAP_ADDRESS", "N","");?>
             <input type="checkbox" value="Y" name="MAP_ADDRESS" <?if ($val=="Y") echo "checked";?>></td>
+    </tr>
+        <tr>
+        <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_BALUN_VARIANT')?></td>
+        <td>
+            <?$val = Option::get($module_id, "BALUN_VARIANT", "N","");?>
+            <input type="checkbox" value="1" name="BALUN_VARIANT" <?if ($val=="1") echo "checked";?>></td>
     </tr>
     <tr class="heading">
         <td colspan="2">
@@ -435,7 +450,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     if($minMode && $profileId!=$startProfile) continue;
     $tabControl->BeginNextTab();
 
-    $pvzList = \Awz\Ydelivery\Helper::getActiveProfileIds(\Awz\Ydelivery\Helper::DOST_TYPE_PVZ);
+    $pvzList = Helper::getActiveProfileIds(Helper::DOST_TYPE_PVZ);
     $isPvz = isset($pvzList[$profileId]) ? true : false;
 
     ?>
@@ -447,7 +462,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     </tr>
 
 <?if($isPvz){?>
-    <?if(\Bitrix\Main\Loader::includeModule('yandex.market')){?>
+    <?if(Loader::includeModule('yandex.market')){?>
     <tr>
         <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_YM_TRADING_ON')?></td>
         <td>
@@ -480,6 +495,14 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     </tr>
 
 <?}else{?>
+    <?if(Loader::includeModule('yandex.market')){?>
+        <tr>
+            <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_YM_TRADING2_ON')?></td>
+            <td>
+                <?$val = Option::get($module_id, "YM_TRADING_ON_".$profileId, "N","");?>
+                <input type="checkbox" value="Y" name="YM_TRADING_ON_<?=$profileId?>" <?if ($val=="Y") echo "checked";?>></td>
+        </tr>
+    <?}?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ_ADR_CORD')?></td>
         <td>

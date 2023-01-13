@@ -3,12 +3,13 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-\Bitrix\Main\Loader::includeModule($module_id);
-\Bitrix\Main\Loader::includeModule('sale');
+Loader::includeModule($module_id);
+Loader::includeModule('sale');
 
 use Awz\Ydelivery\Handler;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Awz\Ydelivery\Helper;
 use Awz\Ydelivery\Lists\Edit;
@@ -34,9 +35,9 @@ foreach($val_stat_disabled as $code){
     unset($STATUS_LIST[$code]);
 }
 
-$statusOb = \CSaleStatus::GetList();
+$statusOb = CSaleStatus::GetList();
 $statusAr = array();
-while($d = $statusOb->fetch()){
+while($d = $statusOb->Fetch()){
     $statusAr[$d['ID']] = '['.$d['ID'].'] - '.$d['NAME'];
 }
 

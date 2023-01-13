@@ -10,4 +10,3 @@ $MESS["AWZ_YDELIVERY_ADMIN_PL_COPY"] = "Скопируйте значение в
 $MESS["AWZ_YDELIVERY_ADMIN_PL_ORDER_SEND"] = "Отправить в заказ ID";
 $MESS["AWZ_YDELIVERY_ADMIN_PL_ERR_DOST_TYPE"] = "Яндекс Доставка не найдена в заказе";
 $MESS["AWZ_YDELIVERY_ID_POSTAMATA"] = "Ид постамата ";
-?>

@@ -3,11 +3,15 @@
 namespace Awz\Ydelivery;
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Result;
+use Bitrix\Main\SystemException;
+use Bitrix\Sale\Delivery\Services\Base;
 use Bitrix\Sale\Delivery\Services\Manager;
+use Bitrix\Sale\Shipment;
 
 Loc::loadMessages(__FILE__);
 
-class Handler extends \Bitrix\Sale\Delivery\Services\Base {
+class Handler extends Base {
 
     const MODULE_ID = 'awz.ydelivery';
 
@@ -58,20 +62,20 @@ class Handler extends \Bitrix\Sale\Delivery\Services\Base {
 
     public static function getChildrenClassNames()
     {
-        return array(
+        return [
             'Awz\Ydelivery\Profiles\Pickup',
             'Awz\Ydelivery\Profiles\Standart',
-        );
+        ];
     }
 
     public function getProfilesList()
     {
-        return array(Profiles\Pickup::getClassTitle(), Profiles\Standart::getClassTitle());
+        return [Profiles\Pickup::getClassTitle(), Profiles\Standart::getClassTitle()];
     }
 
-    protected function calculateConcrete(\Bitrix\Sale\Shipment $shipment = null)
+    protected function calculateConcrete(Shipment $shipment = null)
     {
-        throw new \Bitrix\Main\SystemException(Loc::getMessage('AWZ_YDELIVERY_HANDLER_NOPROFILE'));
+        throw new SystemException(Loc::getMessage('AWZ_YDELIVERY_HANDLER_NOPROFILE'));
     }
 
     public static function getLogo(){
@@ -82,12 +86,12 @@ class Handler extends \Bitrix\Sale\Delivery\Services\Base {
 
     }
 
-    public static function onBeforeAdd(array &$fields = array()): \Bitrix\Main\Result
+    public static function onBeforeAdd(array &$fields = []): Result
     {
         if(!$fields['LOGOTIP']){
             $fields['LOGOTIP'] = Handler::getLogo();
         }
-        return new \Bitrix\Main\Result();
+        return new Result();
     }
 
 }

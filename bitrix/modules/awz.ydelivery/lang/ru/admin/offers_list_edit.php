@@ -105,4 +105,6 @@ $MESS["AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_4"] = "отключе�
 $MESS["AWZ_YDELIVERY_ADMIN_OL_EDIT_TITLE_STAT_MODULE_SETT_5"] = "автоматизация";
 $MESS["AWZ_YDELIVERY_ADMIN_OL_VSE_STATUSY"] = "Все статусы";
 $MESS["AWZ_YDELIVERY_ADMIN_OL_COUNT_RESP"] = "Всего запросов: <b>#CN#</b> из <b>#LIMIT#</b>";
-?>
+$MESS["AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_DESC"] = "При выборе интервала, дата доставки игнорируется";
+$MESS["AWZ_YDELIVERY_ADMIN_OL_DEF_DATE"] = "по умолчанию";
+$MESS["AWZ_YDELIVERY_ADMIN_OL_DEF_DATE_INTERVAL"] = "Интервал доставки";

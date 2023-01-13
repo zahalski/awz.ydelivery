@@ -2,10 +2,23 @@
 
 namespace Awz\Ydelivery;
 
+use Bitrix\Main\ArgumentException;
+use Bitrix\Main\ArgumentNullException;
+use Bitrix\Main\ArgumentOutOfRangeException;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Error;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
+use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity;
+use Bitrix\Main\NotImplementedException;
+use Bitrix\Main\ObjectPropertyException;
 use Bitrix\Main\Result;
+use Bitrix\Main\SystemException;
+use Bitrix\Main\Type\DateTime;
+use Bitrix\Sale\EntityPropertyValue;
+use Bitrix\Sale\Location\LocationTable;
 use Bitrix\Sale\Order;
 
 Loc::loadMessages(__FILE__);
@@ -86,24 +99,24 @@ class OffersTable extends Entity\DataManager
     }
 
     /**
-     * @param $orderId integer идентификатор заказа
+     * @param $orderId int Идентификатор заказа
      * @return Result
-     * @throws \Bitrix\Main\ArgumentNullException
+     * @throws ArgumentNullException
      */
     public static function addFromOrderId($orderId){
-        $order = \Bitrix\Sale\Order::load($orderId);
+        $order = Order::load($orderId);
         return self::addFromOrder($order);
     }
 
     /**
-     * Отмена заказа на логичтической платформе
+     * Отмена заказа на логистической платформе
      *
-     * @param string $offerId идентификатор заявки
+     * @param string $offerId Идентификатор заявки
      * @return Result
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ArgumentNullException
-     * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\SystemException
+     * @throws ArgumentException
+     * @throws ArgumentNullException
+     * @throws LoaderException
+     * @throws SystemException
      */
     public static function canselOffer($offerId){
 
@@ -135,15 +148,15 @@ class OffersTable extends Entity\DataManager
      * Получение данных по умолчанию из заказа для отправки в логистическую платформу
      *
      * @param Order $order
-     * @param bool $noErrors не возвращать ошибки
+     * @param bool $noErrors Не возвращать ошибки
      * @return Result
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ArgumentNullException
-     * @throws \Bitrix\Main\ArgumentOutOfRangeException
-     * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\NotImplementedException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @throws ArgumentException
+     * @throws ArgumentNullException
+     * @throws ArgumentOutOfRangeException
+     * @throws LoaderException
+     * @throws NotImplementedException
+     * @throws ObjectPropertyException
+     * @throws SystemException
      */
     public static function getPrepare(Order $order, $noErrors=false){
 
@@ -193,11 +206,11 @@ class OffersTable extends Entity\DataManager
             $prepareData['last_mile_policy'] = 'self_pickup';
             $prepareData['bx_external'] = array();
 
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             foreach($propertyCollection as $prop){
                 if($prop->getField('CODE') == Helper::getPropPvzCode($checkMyDeliveryPvz)){
                     $platformId = $prop->getValue();
-                    if(\Bitrix\Main\Config\Option::get(Handler::MODULE_ID, "SEARCH_EXT", "N","") == 'Y'){
+                    if(Option::get(Handler::MODULE_ID, "SEARCH_EXT", "N","") == 'Y'){
                         $extRes = PvzExtTable::getList(array(
                             'select'=>array('PVZ_ID'),
                             'filter'=>array('=EXT_ID'=>$platformId),
@@ -209,7 +222,7 @@ class OffersTable extends Entity\DataManager
                 }
             }
 
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             foreach($propertyCollection as $prop){
                 if($prop->getField('CODE') == Helper::getPropDateCode($checkMyDeliveryPvz)){
                     if($prop->getValue()){
@@ -262,14 +275,14 @@ class OffersTable extends Entity\DataManager
 				$locationCode = '';
 			}
 			if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))){
-				if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+				if ($loc = LocationTable::getRowById($locationCode)) {
 					$locationCode = $loc['CODE'];
 				}
 			}
             
             $locationName = '';
 			if($locationCode){
-				$res = \Bitrix\Sale\Location\LocationTable::getList(array(
+				$res = LocationTable::getList(array(
 					'filter' => array(
 						'=CODE' => $locationCode,
 						'=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
@@ -358,7 +371,7 @@ class OffersTable extends Entity\DataManager
             $prepareData['bx_external'] = array();
             $prepareData['last_mile_policy'] = 'time_interval';
 
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             $adressProp = $propertyCollection->getAddress();
 			if($adressProp)
 				$prepareData['destination']['custom_location']['details']['full_address'] = $adressProp->getValue();
@@ -367,7 +380,7 @@ class OffersTable extends Entity\DataManager
             $addressCordValue = array('','');
 
 
-            /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+            /* @var EntityPropertyValue $prop*/
             foreach($propertyCollection as $prop){
                 if($prop->getField('CODE') == Helper::getPropDateCode($checkMyDeliveryAddress)){
                     if($prop->getValue()){
@@ -392,7 +405,7 @@ class OffersTable extends Entity\DataManager
                 }
             }
             if($addressCordValue[0]){
-                if(strpos($addressCordValue[0], ',')!==false){
+                if(mb_strpos($addressCordValue[0], ',')!==false){
                     $addressCordValue = explode(',', $addressCordValue[0]);
                 }
             }
@@ -421,13 +434,13 @@ class OffersTable extends Entity\DataManager
 				$locationCode = '';
 			}
             if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))){
-				if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+				if ($loc = LocationTable::getRowById($locationCode)) {
 					$locationCode = $loc['CODE'];
 				}
 			}
             $locationName = '';
 			if($locationCode){
-				$res = \Bitrix\Sale\Location\LocationTable::getList(array(
+				$res = LocationTable::getList(array(
 					'filter' => array(
 						'=CODE' => $locationCode,
 						'=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
@@ -517,7 +530,7 @@ class OffersTable extends Entity\DataManager
 
         }
 
-        $event = new \Bitrix\Main\Event(
+        $event = new Event(
             Handler::MODULE_ID,
             "changePrepareData",
             array('result'=>$result, 'order'=>$order)
@@ -525,11 +538,11 @@ class OffersTable extends Entity\DataManager
         $event->send();
         if ($event->getResults()) {
             foreach ($event->getResults() as $evenResult) {
-                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
                     if(isset($r['result'])){
                         $r = $r['result'];
-                        if($r instanceof \Bitrix\Main\Result){
+                        if($r instanceof Result){
                             $result = $r;
                         }
                     }
@@ -574,13 +587,13 @@ class OffersTable extends Entity\DataManager
      *
      * @param Order $order
      * @return Result
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ArgumentNullException
-     * @throws \Bitrix\Main\ArgumentOutOfRangeException
-     * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\NotImplementedException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @throws ArgumentException
+     * @throws ArgumentNullException
+     * @throws ArgumentOutOfRangeException
+     * @throws LoaderException
+     * @throws NotImplementedException
+     * @throws ObjectPropertyException
+     * @throws SystemException
      */
     public static function addFromOrder(Order $order){
 
@@ -638,8 +651,8 @@ class OffersTable extends Entity\DataManager
                             array(
                                 'ORDER_ID'=>$order->getId(),
                                 'OFFER_ID'=>$bronData['result']['request_id'],
-                                'CREATE_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()),
-                                'LAST_DATE'=>\Bitrix\Main\Type\DateTime::createFromTimestamp(time()),
+                                'CREATE_DATE'=> DateTime::createFromTimestamp(time()),
+                                'LAST_DATE'=> DateTime::createFromTimestamp(time()),
                                 'HISTORY_FIN'=>'N'
                             )
                         );
@@ -662,6 +675,6 @@ class OffersTable extends Entity\DataManager
             }
 
         }
-
+        return $result;
     }
 }

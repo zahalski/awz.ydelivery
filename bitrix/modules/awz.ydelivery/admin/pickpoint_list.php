@@ -3,15 +3,20 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 global $APPLICATION;
 $module_id = "awz.ydelivery";
 
-\Bitrix\Main\Loader::includeModule($module_id);
-\Bitrix\Main\Loader::includeModule('sale');
+Loader::includeModule($module_id);
+Loader::includeModule('sale');
 
 use Awz\Ydelivery\Handler;
 use Awz\Ydelivery\Helper;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Page\Asset;
 use Bitrix\Main\Security;
+use Bitrix\Sale\Location\LocationTable;
+use Bitrix\Sale\Order;
 
 Loc::loadMessages(__FILE__);
 
@@ -22,7 +27,7 @@ if ($POST_RIGHT == "D")
 $APPLICATION->SetTitle(Loc::getMessage("AWZ_YDELIVERY_ADMIN_PL_TITLE"));
 $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");
 
-\CUtil::InitJSCore(array('ajax', 'awz_yd_lib'));
+CJSCore::Init(array('ajax', 'awz_yd_lib'));
 
 $key = Option::get("fileman", "yandex_map_api_key");
 $setSearchAddress = Option::get($module_id, "MAP_ADDRESS", "N", "");
@@ -33,7 +38,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 
 
 
-$order = \Bitrix\Sale\Order::load(intval($_REQUEST['order']));
+$order = Order::load(intval($_REQUEST['order']));
 
 if($_REQUEST['page'] == 'order_edit'){
     $profileId = Helper::getProfileId($order, Helper::DOST_TYPE_PVZ);
@@ -47,14 +52,14 @@ if($profileId){
     $props = $order->getPropertyCollection();
     $locationCode = $props->getDeliveryLocation()->getValue();
     if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {
-        if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+        if ($loc = LocationTable::getRowById($locationCode)) {
             $locationCode = $loc['CODE'];
         }
     }
     $locationName = '';
     $locationGeoId = '';
     if($locationCode) {
-        $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+        $res = LocationTable::getList(array(
             'filter' => array(
                 '=CODE' => $locationCode,
                 '=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
@@ -78,7 +83,7 @@ if($profileId){
             }
         }
     }
-    $event = new \Bitrix\Main\Event(
+    $event = new Event(
         Handler::MODULE_ID, "onAfterLocationNameCreate",
         array(
             'shipment'=>null,
@@ -91,7 +96,7 @@ if($profileId){
     $event->send();
     if ($event->getResults()) {
         foreach ($event->getResults() as $evenResult) {
-            if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+            if ($evenResult->getType() == EventResult::SUCCESS) {
                 $r = $evenResult->getParameters();
                 if(isset($r['location'])){
                     $locationName = $r['location'];
@@ -107,7 +112,7 @@ if($profileId){
             )
         );
     }else{
-        $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+        $res = LocationTable::getList(array(
             'filter' => array(
                 '=CODE' => $locationCode,
                 '=EXTERNAL.SERVICE.CODE' => 'YAMARKET',
@@ -128,7 +133,7 @@ if($profileId){
             'address'=>$locationName,
             'geo_id'=>$locationGeoId,
             'profile_id'=>$profileId,
-            'user'=>$USER->getId(),
+            'user'=>$USER->GetID(),
             'page'=>'admin',
             'order'=>$order->getId(),
             's_id'=>bitrix_sessid()

@@ -16,4 +16,3 @@ $MESS["AWZ_YDELIVERY_OFFERS_ERR_NO_REGION"] = "Не указан регион д
 $MESS["AWZ_YDELIVERY_OFFERS_ERR_NO_YANDEX"] = "Неверный тип доставки";
 $MESS["AWZ_YDELIVERY_OFFERS_ERR_NO_PREP_DATA"] = "Данные для отправки не подготовлены";
 $MESS["AWZ_YDELIVERY_OFFERS_ERR_API_NOT_FOUND"] = "Api отключено для данного профиля доставки";
-?>
