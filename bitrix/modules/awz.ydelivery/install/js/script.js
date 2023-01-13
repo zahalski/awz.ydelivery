@@ -17,7 +17,7 @@ if(!window.awz_yd_modal){
             var msg3 = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_PAY_PREPAY') : 'prepay';
             var msg4 = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_TYPE_PVZ') : 'pick-up point';
             var msg5 = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_TYPE_TERMINAL') : 'terminal';
-            
+
             var close_msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_CLOSE') : 'close';
             var ht = '<div class="awz-yd-modal-content-bg"></div>' +
                 '<a class="awz-yd-close" href="#"><div>\n' +
@@ -453,6 +453,10 @@ if(!window.awz_yd_modal){
             var objectsArray = [];
             var k;
             for(k in window.awz_yd_modal.last_items){
+
+                var msg_d = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_D') : '';
+                var msg_ot = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_OT') : '';
+
                 var item = window.awz_yd_modal.last_items[k];
                 if(payment && payment.length){
                     var k2;
@@ -470,6 +474,22 @@ if(!window.awz_yd_modal){
                     }
                     if(!checkType) continue;
                 }
+                opt = {
+                    iconLayout: 'default#image',
+                    iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
+                    iconImageSize: [32, 42],
+                    iconImageOffset: [-16, -42],
+                    preset: 'islands#blackClusterIcons',
+                    openEmptyBalloon: true
+                };
+
+
+                if(window.hasOwnProperty('_awz_yd_lib_setBallonVariant') && window._awz_yd_lib_setBallonVariant == '1'){
+                    var opt = {
+                        preset: item.type == 'pickup_point' ? 'islands#redDotIcon' : 'islands#greenDotIcon',
+                        openEmptyBalloon: true
+                    };
+                }
 
                 objectsArray.push({
                     "type": "Feature",
@@ -478,15 +498,9 @@ if(!window.awz_yd_modal){
                         "type": "Point",
                         "coordinates": [item.position.latitude,item.position.longitude]
                     },
-                    "options":{
-                        iconLayout: 'default#image',
-                        iconImageHref: "/bitrix/images/awz.ydelivery/yandexPoint.svg",
-                        iconImageSize: [32, 42],
-                        iconImageOffset: [-16, -42],
-                        preset: 'islands#blackClusterIcons',
-                        openEmptyBalloon: true
-                    },
+                    "options":opt,
                     "properties":{
+                        iconCaption: item.days>0 ? msg_ot+' '+item.days+msg_d+'.': '',
                         balloonContent: '',
                         id: item.id
                     }
@@ -547,11 +561,16 @@ if(!window.awz_yd_modal){
             var serv_error = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_SERV_ERR') : 'server error';
             var choise_msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_CHOISE') : 'choise';
 
+            if(!window.awz_yd_modal.hasOwnProperty('add_srok')){
+                window.awz_yd_modal.add_srok = 0;
+            }
+
             $.ajax({
                 url: '/bitrix/services/main/ajax.php?action=awz:ydelivery.api.pickpoints.list',
                 method: 'POST',
                 data: {
-                    signed: params
+                    signed: params,
+                    dost_day: window.awz_yd_modal.add_srok
                 },
                 success: function(resp){
                     var data = resp.data;
@@ -567,7 +586,7 @@ if(!window.awz_yd_modal){
                                 clusterBalloonContentLayout: customBalloonContentLayout,
                                 geoObjectOpenBalloonOnClick: false
                             });
-                            window.awz_yd_modal.objectManager.clusters.options.set('preset', 'islands#blackClusterIcons');
+                            window.awz_yd_modal.objectManager.clusters.options.set('preset', 'islands#invertedDarkBlueClusterIcons');
                             window.awz_yd_modal.objectManager.clusters.events.add(['balloonopen'], function(e){
                                 //console.log(e);
                             });
