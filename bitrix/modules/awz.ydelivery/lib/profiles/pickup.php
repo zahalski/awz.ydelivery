@@ -4,23 +4,38 @@ namespace Awz\Ydelivery\Profiles;
 use Awz\Ydelivery\Handler;
 use Awz\Ydelivery\Helper;
 use Awz\Ydelivery\PvzTable;
+use Bitrix\Main\ArgumentNullException;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Context;
+use Bitrix\Main\Error;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Result;
 use Bitrix\Main\Security;
+use Bitrix\Main\Web\Json;
+use Bitrix\Sale\Delivery\CalculationResult;
+use Bitrix\Sale\Delivery\Services\Base;
+use Bitrix\Sale\Delivery\Services\Manager;
+use Bitrix\Sale\EntityPropertyValue;
+use Bitrix\Sale\Location\LocationTable;
+use Bitrix\Sale\Shipment;
 
 Loc::loadMessages(__FILE__);
 
-class Pickup extends \Bitrix\Sale\Delivery\Services\Base
+class Pickup extends Base
 {
     protected static $isProfile = true;
     protected static $parent = null;
 
+    public static $cachePoints = array();
+
     public function __construct(array $initParams)
     {
         if(empty($initParams["PARENT_ID"]))
-            throw new \Bitrix\Main\ArgumentNullException('initParams[PARENT_ID]');
+            throw new ArgumentNullException('initParams[PARENT_ID]');
         parent::__construct($initParams);
-        $this->parent = \Bitrix\Sale\Delivery\Services\Manager::getObjectById($this->parentId);
+        $this->parent = Manager::getObjectById($this->parentId);
         if(!($this->parent instanceof Handler))
             throw new ArgumentNullException('parent is not instance of \Awz\Ydelivery\Handler');
         if(isset($initParams['PROFILE_ID']) && intval($initParams['PROFILE_ID']) > 0)
@@ -52,7 +67,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         return self::$isProfile;
     }
 
-    public function isCompatible(\Bitrix\Sale\Shipment $shipment)
+    public function isCompatible(Shipment $shipment)
     {
         $calcResult = self::calculateConcrete($shipment);
         return $calcResult->isSuccess();
@@ -89,6 +104,11 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         'TYPE' => 'STRING',
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_SOURCE_TEST'),
                         "DEFAULT" => ''
+                    ),
+                    'NDS' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_NDS'),
+                        "DEFAULT" => '0'
                     ),
                     'BTN_CLASS' => array(
                         'TYPE' => 'STRING',
@@ -160,14 +180,35 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SET_PVZ_AUTO_EXPERIMENTAL'),
                         "DEFAULT" => 'N'
                     ),
+                    'SROK_DAYS_EMPTYPVZ' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SROK_DAYS_EMPTYPVZ'),
+                        "DEFAULT" => '0'
+                    ),
                 )
             )
         );
         return $result;
     }
 
-    protected function calculateConcrete(\Bitrix\Sale\Shipment $shipment = null)
+    protected function calculateConcrete(Shipment $shipment = null)
     {
+
+        $logOrder = false;
+        $isMarket = false;
+        if(Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$this->getId(), 'N', '')=='Y'){
+            $rawInput = file_get_contents('php://input');
+            if($rawInput && strpos($rawInput,'{')!==false){
+                try{
+                    $postData = Json::decode($rawInput);
+                    if(isset($postData['order']['businessId']) || isset($postData['cart']['businessId'])){
+                        $isMarket = true;
+                    }
+                }catch (\Exception $e){
+
+                }
+            }
+        }
 
         $config = $this->getConfigValues();
         $api = Helper::getApiFromProfile($this);
@@ -175,7 +216,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             $config['MAIN']['STORE_ID'] = $config['MAIN']['STORE_ID_TEST'];
         }
 
-        $result = new \Bitrix\Sale\Delivery\CalculationResult();
+        $result = new CalculationResult();
 
         $weight = $shipment->getWeight();
         $order = $shipment->getCollection()->getOrder();
@@ -218,22 +259,21 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
          */
 
         if($allWd>300 || $maxWd>110 || $weight>30000){
-            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD')));
+            $result->addError(new Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD')));
             return $result;
         }
 
         $props = $order->getPropertyCollection();
         $locationCode = $props->getDeliveryLocation()->getValue();
         if($locationCode && (strlen($locationCode) == strlen(intval($locationCode)))) {
-            if ($loc = \Bitrix\Sale\Location\LocationTable::getRowById($locationCode)) {
+            if ($loc = LocationTable::getRowById($locationCode)) {
                 $locationCode = $loc['CODE'];
             }
         }
         $locationName = '';
         $locationGeoId = '';
-
         if($locationCode) {
-            $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+            $res = LocationTable::getList(array(
                 'filter' => array(
                     '=CODE' => $locationCode,
                     '=PARENTS.NAME.LANGUAGE_ID' => LANGUAGE_ID,
@@ -258,7 +298,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             }
         }
 
-        $event = new \Bitrix\Main\Event(
+        $event = new Event(
             Handler::MODULE_ID, "onAfterLocationNameCreate",
             array(
                 'shipment'=>$shipment,
@@ -271,7 +311,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         $event->send();
         if ($event->getResults()) {
             foreach ($event->getResults() as $evenResult) {
-                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
                     if(isset($r['location'])){
                         $locationName = $r['location'];
@@ -281,10 +321,10 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         }
 
         if(!$locationName){
-            $result->addError(new \Bitrix\Main\Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_REGION')));
+            $result->addError(new Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_REGION')));
             return $result;
         }
-        $res = \Bitrix\Sale\Location\LocationTable::getList(array(
+        $res = LocationTable::getList(array(
             'filter' => array(
                 '=CODE' => $locationCode,
                 '=EXTERNAL.SERVICE.CODE' => 'YAMARKET',
@@ -311,14 +351,12 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         $pointHtml = '';
         $request = Context::getCurrent()->getRequest();
         if($request->get('AWZ_YD_POINT_ID')){
-            $pointId = preg_replace('/([^0-9A-z\-])/is', '', $request->get('AWZ_YD_POINT_ID'));
+            $pointId = preg_replace('/([^0-9A-z\-])/i', '', $request->get('AWZ_YD_POINT_ID'));
         }
-
-        if(!$pointId && (\Bitrix\Main\Config\Option::get(Handler::MODULE_ID, 'YM_TRADING_ON_'.$this->getId(), 'N', '')=='Y')){
+        if($isMarket){
             $rawInput = file_get_contents('php://input');
             if($rawInput && strpos($rawInput,'{')!==false){
                 try{
-                    $postData = \Bitrix\Main\Web\Json::decode($rawInput);
                     if(isset($postData['order']['delivery']['outlet']['code'])){
                         $pointId = $postData['order']['delivery']['outlet']['code'];
                     }
@@ -328,6 +366,10 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
             }
         }
 
+        $pointData = array();
+        if($pointId){
+            $pointData = PvzTable::getPvz($pointId);
+        }
         if($pointId){
             $blnRes = Helper::getBaloonHtml($pointId, true);
             if($blnRes->isSuccess()){
@@ -335,10 +377,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 $pointHtml = $blnData['html'];
             }
         }
-        $pointData = array();
-        if($pointId){
-            $pointData = PvzTable::getPvz($pointId);
-        }
+
 
         $data = array(
             //'client_price'=>1000,
@@ -378,6 +417,15 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 $pickpointsResult = $api->getPickpoints(array('geo_id'=>intval($locationGeoId)));
                 if($pickpointsResult->isSuccess()){
                     $pickpoints = $pickpointsResult->getData();
+
+                    $allPoints = array();
+                    foreach($pickpoints['result']['points'] as $point){
+                        if(!in_array($point['type'],array('pickup_point'))) continue;
+                        $allPoints[] = $point['id'];
+                    }
+
+                    self::$cachePoints[$this->getId()][$locationGeoId] = $allPoints;
+
                     if(isset($pickpoints['result']['points'])){
                         foreach($pickpoints['result']['points'] as $point){
                             if(!in_array($point['type'],array('terminal','pickup_point'))) continue;
@@ -387,6 +435,17 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                             }
                         }
                     }
+
+                    $resMinPoints = PvzTable::getList(array(
+                        'select'=>array('PVZ_ID'),
+                        'filter'=>array('=PVZ_ID'=>$allPoints, '>DOST_DAY'=>0),
+                        'limit'=>1,
+                        'order'=>array('DOST_DAY'=>'ASC')
+                    ))->fetch();
+                    if($resMinPoints){
+                        $data['destination'] = array('platform_station_id'=>$resMinPoints['PVZ_ID']);
+                    }
+
                 }else{
                     $api->cleanCache();
                 }
@@ -409,11 +468,10 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         if(!$ttl) $ttl = 604800;
         $api->setCacheParams(md5(serialize(array($data, $config, 'calc'))), $ttl);
         $r = $api->calc($data);
-
         if($r->isSuccess()){
             $calkData = $r->getData();
             if($calkData['result']['message']){
-                $r->addError(new \Bitrix\Main\Error($calkData['result']['message']));
+                $r->addError(new Error($calkData['result']['message']));
             }
         }else{
             $api->cleanCache();
@@ -427,7 +485,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 $result->setDescription('<p style="color:red;">'.Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_COST').'</p>');
 
                 global $USER;
-                if($USER->isAdmin()){
+                if($USER->IsAdmin()){
                     $result->setDescription($result->getDescription()."<br>### ".implode("; ",$r->getErrorMessages())." ###");
                 }
 
@@ -474,7 +532,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                     $result->setTmpData($tmpData);
                     foreach($grafikData['result']['offers'] as $offer){
 						if($config['MAIN']['SROK_FROM_STARTDAY']=='Y'){
-                            $offer['from'] = date('c',strtotime(date('d.m.Y',strtotime($offer['from']))));
+                            $offer['from'] = date('c',strtotime(date('d.m.Y',strtotime($offer['from'])+intval($config['MAIN']['ADD_HOUR'])*60*60)));
                         }
                         $fromDay = ceil((strtotime($offer['from']) - time())/86400);
                         if($fromDay>0){
@@ -491,11 +549,16 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 
                         break;
                     }
+                    if($config['MAIN']['SROK_DAYS_EMPTYPVZ'] && !$request->get('AWZ_YD_POINT_ID')){
+                        $result->setPeriodFrom(intval($config['MAIN']['SROK_DAYS_EMPTYPVZ']));
+                        $result->setPeriodTo(intval($config['MAIN']['SROK_DAYS_EMPTYPVZ']));
+                        $result->setPeriodDescription(intval($config['MAIN']['SROK_DAYS_EMPTYPVZ']).' '.Loc::getMessage("AWZ_YDELIVERY_D"));
+                    }
                 }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
                     if($locationGeoId && isset($pointData['PVZ_ID']))
                         Helper::getPointIdFromGeoId($locationGeoId, $config, (string) $pointData['PVZ_ID'], 0, true);
                     $result->addError(
-                        new \Bitrix\Main\Error(
+                        new Error(
                             Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF')
                         )
                     );
@@ -503,7 +566,7 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
                 }
             }elseif($config['MAIN']['ERROR_COST_DSBL_SROK'] == 'Y'){
                 $result->addError(
-                    new \Bitrix\Main\Error(
+                    new Error(
                         Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_NOGRAF')
                     )
                 );
@@ -538,21 +601,21 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         );
 
         $disableWriteDate = false;
-        $event = new \Bitrix\Main\Event(
+        $event = new Event(
             Handler::MODULE_ID, "OnCalcBeforeReturn",
             array('shipment'=>$shipment, 'calcResult'=>$result)
         );
         $event->send();
         if ($event->getResults()) {
             foreach ($event->getResults() as $evenResult) {
-                if ($evenResult->getType() == \Bitrix\Main\EventResult::SUCCESS) {
+                if ($evenResult->getType() == EventResult::SUCCESS) {
                     $r = $evenResult->getParameters();
                     if(isset($r['disableWriteDate'])){
                         $disableWriteDate = $r['disableWriteDate'];
                     }
                     if(isset($r['result']) || isset($r['RESULT'])){
                         $rOb = isset($r['result']) ? $r['result'] : $r['RESULT'];
-                        if($rOb instanceof \Bitrix\Main\Result){
+                        if($rOb instanceof Result){
                             if(!$rOb->isSuccess()) {
                                 foreach ($rOb->getErrors() as $error) {
                                     $result->addError($error);
@@ -565,13 +628,13 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
         }
 
         //DATE_CODE_
-        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+        $request = Context::getCurrent()->getRequest();
         if(!$request->isAdminSection() && !$disableWriteDate){
             $AWZ_YD_POINT_DATE = date('d.m.Y', time() + $result->getPeriodFrom()*86400);
             if($this->getId() == Helper::getProfileId($order, Helper::DOST_TYPE_ALL)){
                 $code = Helper::getPropDateCode($this->getId());
                 if($code && ($order->getField('DELIVERY_ID') == $this->getId())){
-                    /* @var \Bitrix\Sale\EntityPropertyValue $prop*/
+                    /* @var EntityPropertyValue $prop*/
                     foreach($props as $prop){
                         if($prop->getField('CODE') == $code){
                             $prop->setValue($AWZ_YD_POINT_DATE);
@@ -586,11 +649,11 @@ class Pickup extends \Bitrix\Sale\Delivery\Services\Base
 
     }
 
-    public static function onBeforeAdd(array &$fields = array()): \Bitrix\Main\Result
+    public static function onBeforeAdd(array &$fields = array()): Result
     {
         if(!$fields['LOGOTIP']){
             $fields['LOGOTIP'] = Handler::getLogo();
         }
-        return new \Bitrix\Main\Result();
+        return new Result();
     }
 }
