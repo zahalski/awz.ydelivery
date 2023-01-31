@@ -19,7 +19,10 @@ for name in os.listdir(updates_path):
 
 sorted_change_log = dict(sorted(change_log.items()))
 last_version_ar = '.'.join([str(int(_)) for _ in sorted_change_log.popitem()[0].split('.')])
-last_version_updated = '.'.join([str(int(_)) for _ in sorted_change_log.popitem()[0].split('.')])
+if len(sorted_change_log) == 0:
+    last_version_updated = last_version_ar
+else:
+	last_version_updated = '.'.join([str(int(_)) for _ in sorted_change_log.popitem()[0].split('.')])
 
 args = sys.argv
 if len(args) > 1:
