@@ -150,10 +150,16 @@ if(!$ID && $isOrdered){
                     round($product['unit_price'], 2)*100;
                 $prepareData['items'][$key]['billing_details']['assessed_unit_price'] =
                     round($product['assessed_unit_price'], 2)*100;
-                $prepareData['items'][$key]['physical_dims']['predefined_volume'] =
-                    intval($product['predefined_volume']);
+                //$prepareData['items'][$key]['physical_dims']['predefined_volume'] =
+                //    intval($product['predefined_volume']);
                 $prepareData['items'][$key]['physical_dims']['weight_gross'] =
                     intval($product['weight_gross']);
+                $prepareData['items'][$key]['physical_dims']['dx'] =
+                    intval($product['dims_dx']);
+                $prepareData['items'][$key]['physical_dims']['dy'] =
+                    intval($product['dims_dy']);
+                $prepareData['items'][$key]['physical_dims']['dz'] =
+                    intval($product['dims_dz']);
             }
 
             $prepareData['places'] = array();
@@ -163,7 +169,10 @@ if(!$ID && $isOrdered){
                         'barcode'=>trim($place['barcode']),
                         'physical_dims'=>array(
                             'weight_gross'=>intval($place['weight']),
-                            'predefined_volume'=>intval($place['pred'])
+                            'dx'=>intval($place['pred_dx']),
+                            'dy'=>intval($place['pred_dy']),
+                            'dz'=>intval($place['pred_dz']),
+                            //'predefined_volume'=>intval($place['pred']),
                         )
                     );
                 }
@@ -624,11 +633,23 @@ if(!$ID && $isOrdered){
                                             ?>
                                             <input type="text" name="product[<?=$key?>][weight_gross]" value="<?=$val?>"><br>
                                             <?
-                                            $val = $item['physical_dims']['predefined_volume'];
-                                            if(isset($_REQUEST['product'][$key]['predefined_volume']))
-                                                $val = intval($_REQUEST['product'][$key]['predefined_volume']);
+                                            $val = $item['physical_dims']['dx'];
+                                            if(isset($_REQUEST['product'][$key]['dims_dx']))
+                                                $val = intval($_REQUEST['product'][$key]['dims_dx']);
                                             ?>
-                                            <input type="text" name="product[<?=$key?>][predefined_volume]" value="<?=$val?>">
+                                            <input size="3" type="text" name="product[<?=$key?>][dims_dx]" value="<?=$val?>" style="float:left;margin-right:5px;">
+                                            <?
+                                            $val = $item['physical_dims']['dy'];
+                                            if(isset($_REQUEST['product'][$key]['dims_dy']))
+                                                $val = intval($_REQUEST['product'][$key]['dims_dy']);
+                                            ?>
+                                            <input size="3" type="text" name="product[<?=$key?>][dims_dy]" value="<?=$val?>" style="float:left;margin-right:5px;">
+                                            <?
+                                            $val = $item['physical_dims']['dz'];
+                                            if(isset($_REQUEST['product'][$key]['dims_dz']))
+                                                $val = intval($_REQUEST['product'][$key]['dims_dz']);
+                                            ?>
+                                            <input size="3" type="text" name="product[<?=$key?>][dims_dz]" value="<?=$val?>" style="float:left;margin-right:5px;">
                                         </td>
                                     </tr>
                                 <?}?>
@@ -643,9 +664,25 @@ if(!$ID && $isOrdered){
                     <?
                     $allWeight = 0;
                     $allPredefined = 0;
+                    $allPredefined_dx = 0;
+                    $allPredefined_dy = 0;
+                    $allPredefined_dz = 0;
+                    $allCntRows = 0;
                     foreach($items as $item){
                         $allWeight += $item['count']*$item['physical_dims']['weight_gross'];
                         $allPredefined += $item['count']*$item['physical_dims']['predefined_volume'];
+                        $allCntRows += $item['count'];
+                        if($item['physical_dims']['dx'] > $allPredefined_dx) $allPredefined_dx = $item['physical_dims']['dx'];
+                        if($item['physical_dims']['dy'] > $allPredefined_dy) $allPredefined_dy = $item['physical_dims']['dy'];
+                        if($item['physical_dims']['dz'] > $allPredefined_dz) $allPredefined_dz = $item['physical_dims']['dz'];
+                    }
+                    $maxDim = max($allPredefined_dx, $allPredefined_dy, $allPredefined_dz);
+                    if($allPredefined_dx == $maxDim){
+                        $allPredefined_dx = $allPredefined_dx*$allCntRows;
+                    }elseif($allPredefined_dy == $maxDim){
+                        $allPredefined_dy = $allPredefined_dy*$allCntRows;
+                    }elseif($allPredefined_dz == $maxDim){
+                        $allPredefined_dz = $allPredefined_dz*$allCntRows;
                     }
                     //$allPredefined = $allPredefined * 1.5;
                     ?>
@@ -667,7 +704,7 @@ if(!$ID && $isOrdered){
                                     </th>
                                     <th class="adm-list-table-cell">
                                         <div class="adm-list-table-cell-inner">
-                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PLACE_TH3')?>
+                                            <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_PLACE_TH4')?>
                                         </div>
                                     </th>
                                 </tr>
@@ -688,11 +725,21 @@ if(!$ID && $isOrdered){
                                             <input type="text" name="places[<?=$key?>][weight]" value="<?=$val?>">
                                         </td>
                                         <td class="adm-list-table-cell">
-                                            <?$val = $allPredefined;
+                                            <?$val = $allPredefined_dx;
                                             if($key != 0) $val = '';
-                                            if(isset($_REQUEST['places'][$key]['pred'])) $val = intval($_REQUEST['places'][$key]['pred']);
+                                            if(isset($_REQUEST['places'][$key]['pred_dx'])) $val = intval($_REQUEST['places'][$key]['pred_dx']);
                                             ?>
-                                            <input type="text" name="places[<?=$key?>][pred]" value="<?=$val?>">
+                                            <input size="3" type="text" name="places[<?=$key?>][pred_dx]" value="<?=$val?>" style="float:left;margin-right:5px;">
+                                            <?$val = $allPredefined_dy;
+                                            if($key != 0) $val = '';
+                                            if(isset($_REQUEST['places'][$key]['pred_dy'])) $val = intval($_REQUEST['places'][$key]['pred_dy']);
+                                            ?>
+                                            <input size="3" type="text" name="places[<?=$key?>][pred_dy]" value="<?=$val?>" style="float:left;margin-right:5px;">
+                                            <?$val = $allPredefined_dz;
+                                            if($key != 0) $val = '';
+                                            if(isset($_REQUEST['places'][$key]['pred_dz'])) $val = intval($_REQUEST['places'][$key]['pred_dz']);
+                                            ?>
+                                            <input size="3" type="text" name="places[<?=$key?>][pred_dz]" value="<?=$val?>" style="float:left;margin-right:5px;">
                                         </td>
                                     </tr>
                                 <?}?>
@@ -1432,8 +1479,8 @@ if(!$ID && $isOrdered){
                                         </td>
                                         <td class="adm-list-table-cell">
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN')?>:
-                                            <?=$item['physical_dims']['predefined_volume']?>
-                                            (<?=$item['physical_dims']['dz']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dx']?>)
+
+                                            <?=$item['physical_dims']['dx']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dz']?>
                                             <br>
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN2')?>:
                                             <?=$item['physical_dims']['weight_gross']?>
@@ -1464,8 +1511,7 @@ if(!$ID && $isOrdered){
                                         <td class="adm-list-table-cell"><?=$item['barcode']?></td>
                                         <td class="adm-list-table-cell">
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN')?>:
-                                            <?=$item['physical_dims']['predefined_volume']?>
-                                            (<?=$item['physical_dims']['dz']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dx']?>)
+                                            <?=$item['physical_dims']['dx']?>x<?=$item['physical_dims']['dy']?>x<?=$item['physical_dims']['dz']?>
                                             <br>
                                             <?=Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EDIT_SOSTAV_TH5_MIN2')?>:
                                             <?=$item['physical_dims']['weight_gross']?>

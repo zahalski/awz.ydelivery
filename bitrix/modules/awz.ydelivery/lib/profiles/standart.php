@@ -136,9 +136,24 @@ class Standart extends Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_WEIGHT_DEF'),
                         "DEFAULT" => '3000'
                     ),
-                    'PRED_DEFAULT' => array(
+                    /*'PRED_DEFAULT' => array(
                         'TYPE' => 'NUMBER',
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_DEM_DEF'),
+                        "DEFAULT" => '10'
+                    ),*/
+                    'PRED_DEFAULT_DX' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_DEM_DEF_DX'),
+                        "DEFAULT" => '10'
+                    ),
+                    'PRED_DEFAULT_DY' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_DEM_DEF_DY'),
+                        "DEFAULT" => '10'
+                    ),
+                    'PRED_DEFAULT_DZ' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_DEM_DEF_DZ'),
                         "DEFAULT" => '10'
                     ),
                     'ADD_HOUR' => array(
@@ -192,7 +207,13 @@ class Standart extends Base
             if($allWd_ > $allWd) $allWd = $allWd_;
         }
 
-        if($allWd>300 || $maxWd>110 || $weight>30000){
+        /*
+         * Доставка до двери
+         * Максимальная стоимость заказа 250 000 рублей.
+         * Максимальный вес заказа 200 кг
+         * Максимальные габариты заказа 500 см по сумме 3х сторон, одна сторона не превышает 300 см
+         * */
+        if($allWd>500 || $maxWd>300 || $weight>200000){
             $result->addError(new Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_ERR_WD')));
             return $result;
         }

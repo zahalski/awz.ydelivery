@@ -348,6 +348,9 @@ class Helper {
             }
             if (isset($deliveryConfig)) {
                 $predefined = $deliveryConfig['MAIN']['PRED_DEFAULT'] ? $deliveryConfig['MAIN']['PRED_DEFAULT'] : 10;
+                $predefined_dx = $deliveryConfig['MAIN']['PRED_DEFAULT_DX'] ? $deliveryConfig['MAIN']['PRED_DEFAULT_DX'] : 10;
+                $predefined_dy = $deliveryConfig['MAIN']['PRED_DEFAULT_DY'] ? $deliveryConfig['MAIN']['PRED_DEFAULT_DY'] : 10;
+                $predefined_dz = $deliveryConfig['MAIN']['PRED_DEFAULT_DZ'] ? $deliveryConfig['MAIN']['PRED_DEFAULT_DZ'] : 10;
             }
 
             $productsIds[intval($basketItem->getProductId())] = count($arFinItems);
@@ -362,7 +365,10 @@ class Helper {
                     "nds"=>$nds
                 ),
                 "physical_dims"     => array(
-                    "predefined_volume"=> intval($predefined),
+                    //"predefined_volume"=> intval($predefined),
+                    "dx"=> intval($predefined_dx),
+                    "dy"=> intval($predefined_dy),
+                    "dz"=> intval($predefined_dz),
                     "weight_gross"     => intval($weight)
                 ),
                 "place_barcode"  => self::generateBarCode($order)

@@ -135,9 +135,24 @@ class Pickup extends Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_WEIGHT_DEF'),
                         "DEFAULT" => '3000'
                     ),
-                    'PRED_DEFAULT' => array(
+                    /*'PRED_DEFAULT' => array(
                         'TYPE' => 'NUMBER',
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DEM_DEF'),
+                        "DEFAULT" => '10'
+                    ),*/
+                    'PRED_DEFAULT_DX' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DEM_DEF_DX'),
+                        "DEFAULT" => '10'
+                    ),
+                    'PRED_DEFAULT_DY' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DEM_DEF_DY'),
+                        "DEFAULT" => '10'
+                    ),
+                    'PRED_DEFAULT_DZ' => array(
+                        'TYPE' => 'NUMBER',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_SETT_DEM_DEF_DZ'),
                         "DEFAULT" => '10'
                     ),
                     'ADD_HOUR' => array(
@@ -242,21 +257,42 @@ class Pickup extends Base
             if($allWd_ > $allWd) $allWd = $allWd_;
         }
 
+        /*
+         * Условия почты РФ:  (отключено в модуле)
+         *
+         * (Если доставка курьером до двери)
+         * Д-Ш-В - 60-60-60 (см)
+         * Сумма трёх сторон 140 см
+         * Макс. Вес 29 кг.
+         *
+         * (Если доставка в отделение почты)
+         * Д-Ш-В - 60-60-60 (см)
+         * Сумма трех сторон 140 см
+         * Макс. Вес 20 кг.
+         *
+         * ВАЖНО: оценочная стоимость не должна быть ниже суммы: заказ + доставка.
+         *
+         * ВАЖНО: для получения нужен обязательно паспорт и ФИО получателя
+         * */
+
+        /*
+         * Доставка до ПВЗ
+         * Максимальная стоимость заказа 250 000 рублей.
+         * Максимальный вес заказа 30 кг
+         * Максимальные габариты заказа 300 см по сумме 3х сторон, одна сторона не превышает 110 см
+         *
+         * Доставка до ПСТ
+         * Максимальная стоимость заказа 250 000 рублей.
+         * Максимальный вес заказа 20 кг
+         * Максимальные габариты заказа 118 см по сумме 3х сторон, одна сторона не превышает 40 см
+         */
+
         $disableTerminal = false;
         if($weight>20000) $disableTerminal = true;
 
         if($maxWd>40 || $allWd>118){
             $disableTerminal = true;
         }
-
-        /*
-         * Вес заказа при доставке до двери или до ПВЗ не должен превышать 30 кг.
-         * При необходимости вы можете обсудить особые условия с вашим менеджером.
-         * Сумма длин всех сторон товара при доставке до двери или до ПВЗ не должна превышать 300 см.
-         * При этом длина одной стороны — не более 110 см.
-         * При заказе до постамата ограничения в габаритах — 40×38×40 см.
-         * При этом общая длина сторон не должна превышать 118 см.
-         */
 
         if($allWd>300 || $maxWd>110 || $weight>30000){
             $result->addError(new Error(Loc::getMessage('AWZ_YDELIVERY_PROFILE_PICKUP_ERR_WD')));
