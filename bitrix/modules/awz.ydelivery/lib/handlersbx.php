@@ -75,11 +75,15 @@ class handlersBx {
             if($_REQUEST['action'] == 'changeDeliveryService' && $_REQUEST['formData']['order_id']){
                 if(!Loader::includeModule('awz.ydelivery')) return;
 
-                $profileId = $_REQUEST['formData']['SHIPMENT'][1]['PROFILE'];
+                $profileId = $_REQUEST['formData']['SHIPMENT'][1]['PROFILE'] ? $_REQUEST['formData']['SHIPMENT'][1]['PROFILE'] : $_REQUEST['formData']['SHIPMENT'][1]['DELIVERY_ID'];
                 if($profileId){
                     $delivery = Helper::deliveryGetByProfileId($profileId);
-                    if($delivery['CLASS_NAME'] == '\Awz\Ydelivery\Profiles\Pickup'){
+                    if(in_array($delivery['CLASS_NAME'],array('\Awz\Ydelivery\Profiles\Pickup', '\Awz\Ydelivery\Handler'))){
                         $json = Json::decode($content);
+                        if($delivery['CLASS_NAME'] == '\Awz\Ydelivery\Handler'){
+                            preg_match('/value="([0-9]+)"/is',$json['SHIPMENT_DATA']['PROFILES'], $mc);
+                            $profileId = $mc[1];
+                        }
                         $json['SHIPMENT_DATA']['PROFILES'] .= '<br><a href="#" class="adm-btn adm-btn-green adm-btn-add" onclick="BX.SidePanel.Instance.open(\'/bitrix/admin/awz_ydelivery_picpoint_list.php?LANG=ru&profile_id='.$profileId.'&order='.intval($_REQUEST['formData']['order_id']).'&from=changeDeliveryService\',{cacheable: false});return false;">'.Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_CHOISE_PVZ').'</a>';
                         $content = Json::encode($json);
                     }
