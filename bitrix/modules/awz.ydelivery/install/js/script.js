@@ -273,15 +273,18 @@ if(!window.awz_yd_modal){
             }
         },
         createPlacemark: function(coords) {
-
             var msg = window.BX ? window.BX.message('AWZ_YDELIVERY_JS_ADDRESS') : '...';
-
-            return new ymaps.Placemark(coords, {
-                iconCaption: msg
+            var plc = new ymaps.Placemark(coords, {
+                iconCaption: msg,
+                balloonContentBody: '-'
             }, {
                 preset: 'islands#redDotIconWithCaption',
                 draggable: true
             });
+            plc.events.add(['balloonopen'], function (e) {
+                window.awz_yd_modal.hide();
+            });
+            return plc;
         },
         initMapGps: function(center, placemark){
 
