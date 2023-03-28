@@ -23,7 +23,7 @@ Loc::loadMessages(__FILE__);
 class Standart extends Base
 {
     protected static $isProfile = true;
-    protected static $parent = null;
+    protected $parent = null;
 
     protected static $isCalculatePriceImmediately = true;
 

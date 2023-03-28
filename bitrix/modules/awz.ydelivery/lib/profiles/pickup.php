@@ -26,7 +26,7 @@ Loc::loadMessages(__FILE__);
 class Pickup extends Base
 {
     protected static $isProfile = true;
-    protected static $parent = null;
+    protected $parent = null;
 
     public static $cachePoints = array();
 
