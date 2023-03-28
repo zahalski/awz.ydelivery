@@ -433,6 +433,9 @@ class handlersDelivery {
 <!-- cl-start -->
 ## История версий
 
+**version 1.0.41**    
+- баг фикс (Accessing static property ::$parent as non static).    
+
 **version 1.0.40**    
 - замена текста при выборе адреса доставки на карте для курьера и автозакрытие окна.    
 

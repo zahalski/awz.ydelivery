@@ -1,0 +1,1 @@
+- баг фикс (Accessing static property ::$parent as non static);
