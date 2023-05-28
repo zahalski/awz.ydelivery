@@ -160,7 +160,7 @@ class Ydapi {
      * @return Result
      */
     public function offerInfo(string $offerId){
-        return $this->send('api/b2b/platform/request/info?request_id='.$offerId,array(),'get');
+        return $this->send('api/b2b/platform/request/info?request_id='.$offerId, array(), 'get');
     }
 
     /**
@@ -222,7 +222,7 @@ class Ydapi {
      * @return Result
      */
     public function offerHistory(string $offerId){
-        return $this->send('api/b2b/platform/request/history?request_id='.$offerId);
+        return $this->send('api/b2b/platform/request/history?request_id='.$offerId, array(),'get');
     }
 
     /**
@@ -330,11 +330,15 @@ class Ydapi {
         if(!$res){
             $httpClient = new HttpClient();
             $httpClient->disableSslVerification();
-            $httpClient->setHeaders(array(
+			$headersPrepare = array(
                 'Authorization'=>'Bearer '.$this->getToken(),
                 "Content-Type"=> "application/json",
                 "Accept-Language"=>"ru"
-            ));
+            );
+            /*$httpClient->setHeaders($headersPrepare);*/
+			foreach($headersPrepare as $keyHeader=>$valueHeader){
+				$httpClient->setHeader($keyHeader, $valueHeader);
+			}
             if($type == 'get'){
                 $res = $httpClient->get($url);
             }else{
