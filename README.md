@@ -433,6 +433,13 @@ class handlersDelivery {
 <!-- cl-start -->
 ## История версий
 
+**version 1.0.43**    
+- добавлен параметр referral_source со значением 1сbitrix_AWZ, для учета яндексом типа модуля доставки.    
+
+**version 1.0.42**    
+- замена setHeaders на более старый setHeader (для работы модуля на более ранних версий битрикса);    
+- замена POST на GET в получении истории статусов (изменения в апи яндекса).    
+
 **version 1.0.41**    
 - баг фикс (Accessing static property ::$parent as non static).    
 
