@@ -182,7 +182,8 @@ class OffersTable extends Entity\DataManager
                     )
                 ),
                 'info'=>array(
-                    'operator_request_id'=>(string)$order->getId()
+                    'operator_request_id'=>(string)$order->getId(),
+					'referral_source'=>'1сbitrix_AWZ'
                 ),
                 'recipient_info'=>array(
                     'phone'=>$propertyCollection->getPhone()->getValue(),
@@ -366,7 +367,8 @@ class OffersTable extends Entity\DataManager
                     )
                 ),
                 'info'=>array(
-                    'operator_request_id'=>(string)$order->getId()
+                    'operator_request_id'=>(string)$order->getId(),
+					'referral_source'=>'1сbitrix_AWZ'
                 ),
                 'recipient_info'=>array(
                     'phone'=>$propertyCollection->getPhone()->getValue(),
