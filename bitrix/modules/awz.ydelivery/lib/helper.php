@@ -360,8 +360,8 @@ class Helper {
                 "article"        	=> (string) $artCode,
                 "barcode"        	=> (string) $barCode,
                 "billing_details" 	=> array(
-                    "unit_price"         => ($basketItem->getPrice() * 100),
-                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? ($basketItem->getPrice() * 100) : 0),
+                    "unit_price"         => intval(round($basketItem->getPrice(),2) * 100),
+                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? intval(round($basketItem->getPrice(),2) * 100) : 0),
                     "nds"=>$nds
                 ),
                 "physical_dims"     => array(

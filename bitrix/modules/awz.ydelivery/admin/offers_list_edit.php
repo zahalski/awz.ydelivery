@@ -147,9 +147,9 @@ if(!$ID && $isOrdered){
                 $prepareData['items'][$key]['barcode'] = trim($product['barcode']);
                 $prepareData['items'][$key]['place_barcode'] = trim($product['place_barcode']);
                 $prepareData['items'][$key]['billing_details']['unit_price'] =
-                    round($product['unit_price'], 2)*100;
+                    intval(round($product['unit_price'], 2)*100);
                 $prepareData['items'][$key]['billing_details']['assessed_unit_price'] =
-                    round($product['assessed_unit_price'], 2)*100;
+                    intval(round($product['assessed_unit_price'], 2)*100);
                 //$prepareData['items'][$key]['physical_dims']['predefined_volume'] =
                 //    intval($product['predefined_volume']);
                 $prepareData['items'][$key]['physical_dims']['weight_gross'] =
