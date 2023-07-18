@@ -827,7 +827,7 @@ class Helper {
 
     public static function pennyInt($price){
         if(!$price) return 0;
-        if(gettype($price) === 'int') return $price*100;
+        if(gettype($price) === 'integer') return $price*100;
         if(function_exists('bcmul')){
             return (int) bcmul(round($price,2), 100, 2);
         }else{
