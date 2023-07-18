@@ -134,7 +134,8 @@ if(!$ID && $isOrdered){
             $prepareData['billing_info']['last_mile_policy'] = trim($_REQUEST['order']['last_mile_policy']);
             if($_REQUEST['order']['delivery_cost']){
                 $prepareData['billing_info']['delivery_cost'] =
-                    round($_REQUEST['order']['delivery_cost'], 2)*100;
+                    Helper::pennyInt($_REQUEST['order']['delivery_cost']);
+                    //round($_REQUEST['order']['delivery_cost'], 2)*100;
             }else{
                 unset($prepareData['billing_info']['delivery_cost']);
             }
@@ -147,9 +148,11 @@ if(!$ID && $isOrdered){
                 $prepareData['items'][$key]['barcode'] = trim($product['barcode']);
                 $prepareData['items'][$key]['place_barcode'] = trim($product['place_barcode']);
                 $prepareData['items'][$key]['billing_details']['unit_price'] =
-                    intval(round($product['unit_price'], 2)*100);
+                    Helper::pennyInt($product['unit_price']);
+                    //intval(round($product['unit_price'], 2)*100);
                 $prepareData['items'][$key]['billing_details']['assessed_unit_price'] =
-                    intval(round($product['assessed_unit_price'], 2)*100);
+                    Helper::pennyInt($product['assessed_unit_price']);
+                    //intval(round($product['assessed_unit_price'], 2)*100);
                 //$prepareData['items'][$key]['physical_dims']['predefined_volume'] =
                 //    intval($product['predefined_volume']);
                 $prepareData['items'][$key]['physical_dims']['weight_gross'] =

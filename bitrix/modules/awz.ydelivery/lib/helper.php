@@ -360,8 +360,8 @@ class Helper {
                 "article"        	=> (string) $artCode,
                 "barcode"        	=> (string) $barCode,
                 "billing_details" 	=> array(
-                    "unit_price"         => intval(round($basketItem->getPrice(),2) * 100),
-                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? intval(round($basketItem->getPrice(),2) * 100) : 0),
+                    "unit_price"         => Helper::pennyInt($basketItem->getPrice()),
+                    "assessed_unit_price"=> (!$disable_assessed_unit_price ? Helper::pennyInt($basketItem->getPrice()) : 0),
                     "nds"=>$nds
                 ),
                 "physical_dims"     => array(
@@ -823,6 +823,31 @@ class Helper {
 
         return $res['point_id'];
 
+    }
+
+    public static function pennyInt($price){
+        if(!$price) return 0;
+        if(gettype($price) === 'int') return $price*100;
+        if(function_exists('bcmul')){
+            return (int) bcmul(round($price,2), 100, 2);
+        }else{
+            $str_price = round($price,2);
+            $str_priceAr = explode(".",$str_price);
+            if(count($str_priceAr)==1){
+                $str_priceAr[1] = '00';
+            }
+            if(mb_strlen($str_priceAr[1])==1){
+                $str_priceAr[1] .= '0';
+            }
+            $symbols = mb_str_split(implode('',$str_priceAr));
+            $newInt = 0;
+            $len = count($symbols);
+            foreach($symbols as $key=>$num){
+                $num = (int) $num;
+                $newInt += $num*pow(10,$len-$key-1);
+            }
+            return $newInt;
+        }
     }
 
 }

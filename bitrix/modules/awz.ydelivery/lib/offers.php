@@ -173,7 +173,7 @@ class OffersTable extends Entity\DataManager
             $prepareData = array(
                 'billing_info'=>array(
                     'payment_method'=>'already_paid',
-                    'delivery_cost'=>round($order->getDeliveryPrice(), 2)*100
+                    'delivery_cost'=>Helper::pennyInt($order->getDeliveryPrice())
                 ),
                 'destination'=>array(
                     'type'=>'platform_station',
@@ -356,7 +356,7 @@ class OffersTable extends Entity\DataManager
             $prepareData = array(
                 'billing_info'=>array(
                     'payment_method'=>'already_paid',
-                    'delivery_cost'=>round($order->getDeliveryPrice(), 2)*100
+                    'delivery_cost'=>Helper::pennyInt($order->getDeliveryPrice())
                 ),
                 'destination'=>array(
                     'type'=>'custom_location',
