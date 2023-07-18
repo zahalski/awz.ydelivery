@@ -433,6 +433,9 @@ class handlersDelivery {
 <!-- cl-start -->
 ## История версий
 
+**version 1.0.46**    
+- фикс проверки типа в Helper::pennyInt.    
+
 **version 1.0.45**    
 - фикс бага php с преобразованием чисел в int.    
 
