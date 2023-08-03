@@ -433,6 +433,6 @@ class handlersDelivery {
 <!-- cl-start -->
 ## История версий
 
-https://github.com/zahalski/awz.ydelivery/blob/main/CHANGELOG.md
+https://github.com/zahalski/awz.ydelivery/blob/master/CHANGELOG.md
 
 <!-- cl-end -->
