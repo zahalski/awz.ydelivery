@@ -542,6 +542,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             <?
             $val = Option::get($module_id, "PAY_LINK_".$profileId.'_'.mb_strtoupper($keyPay), "", '');
             $val = unserialize($val);
+            if(!is_array($val)) $val = [];
             ?>
             <select name="PAY_LINK_<?=$profileId?>_<?=mb_strtoupper($keyPay)?>[]" multiple="multiple">
                 <?
