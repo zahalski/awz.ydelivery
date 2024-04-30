@@ -178,6 +178,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
         Option::set($module_id, "UPDATE_PVZ_BG", trim($_REQUEST["UPDATE_PVZ_BG"]), "");
         Option::set($module_id, "SEARCH_EXT", trim($_REQUEST["SEARCH_EXT"]), "");
         Option::set($module_id, "MAP_ADDRESS", trim($_REQUEST["MAP_ADDRESS"]), "");
+        Option::set($module_id, "yandex_map_api_key", trim($_REQUEST["yandex_map_api_key"]), "");
+        Option::set($module_id, "yandex_map_suggest_api_key", trim($_REQUEST["yandex_map_suggest_api_key"]), "");
         Option::set($module_id, "BALUN_VARIANT", trim($_REQUEST["BALUN_VARIANT"]), "");
         Option::set($module_id, "CHECKER_FIN_DSBL", serialize($_REQUEST["CHECKER_FIN_DSBL"]), "");
 
@@ -316,11 +318,30 @@ $tabControl->BeginNextTab();
             <input type="checkbox" value="Y" name="DELETE_AFTER_RESP" <?if ($val=="Y") echo "checked";?>></td>
     </tr>
     <tr>
-        <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_MAP_ADRESS')?></td>
+        <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_MAP_ADRESS')?><br>
+            <a href="https://developer.tech.yandex.ru/services" target="_blank">
+                <?=Loc::getMessage('AWZ_YDELIVERY_OPT_MAP_ADRESS_DESC')?>
+            </a>
+        </td>
         <td>
             <?$val = Option::get($module_id, "MAP_ADDRESS", "N","");?>
-            <input type="checkbox" value="Y" name="MAP_ADDRESS" <?if ($val=="Y") echo "checked";?>></td>
+            <input type="checkbox" value="Y" name="MAP_ADDRESS" <?if ($val=="Y") echo "checked";?>>
+        </td>
     </tr>
+        <tr>
+            <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_MAP_ADRESS_KEY1')?></td>
+            <td>
+                <?$val = Option::get($module_id, "yandex_map_api_key", "","");?>
+                <input type="text" value="<?=$val?>" name="yandex_map_api_key">
+            </td>
+        </tr>
+        <tr>
+            <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_MAP_ADRESS_KEY2')?></td>
+            <td>
+                <?$val = Option::get($module_id, "yandex_map_suggest_api_key", "","");?>
+                <input type="text" value="<?=$val?>" name="yandex_map_suggest_api_key">
+            </td>
+        </tr>
         <tr>
         <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_BALUN_VARIANT')?></td>
         <td>
