@@ -261,10 +261,10 @@ class handlersBx {
 
         Asset::getInstance()->addString('<script>window._awz_yd_lib_setSearchAddressYa = "'.$setSearchAddress.'";</script>', true);
         Asset::getInstance()->addString('<script>window._awz_yd_lib_setBallonVariant = "'.$setBallon2.'";</script>', true);
-        if(strpos(Asset::getInstance()->getJs(), $host.'/2.1/')===false)
-            Asset::getInstance()->addJs('//'.$host.'/2.1/?lang=ru_RU&apikey='.$key.'&suggest_apikey='.$key2, true);
-        //Asset::getInstance()->addString('<script src="//'.$host.'/2.1/?lang=ru_RU&apikey='.$key.'&suggest_apikey='.$key2.'"></script>', true);
-
+        Asset::getInstance()->addJs(
+            '//'.$host.'/2.1/?lang=ru_RU&apikey='.$key.'&suggest_apikey='.$key2,
+            true
+        );
     }
 
     public static function OnAdminContextMenuShow(&$items){
