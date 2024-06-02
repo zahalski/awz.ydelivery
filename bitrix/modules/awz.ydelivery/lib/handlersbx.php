@@ -102,14 +102,46 @@ class handlersBx {
         $propertyCollection = $order->getPropertyCollection();
 
         $checkMyDeliveryPvz = Helper::getProfileId($order, Helper::DOST_TYPE_PVZ);
+        $checkMyDeliveryAdr = Helper::getProfileId($order, Helper::DOST_TYPE_ADR);
+        $checkMyDeliveryEx = Helper::getProfileId($order, Helper::DOST_TYPE_EX);
 
-        if(!$checkMyDeliveryPvz) {
+        if($checkMyDeliveryAdr) {
             $event->addResult(
                 new EventResult(
                     EventResult::SUCCESS, $order
                 )
             );
-        }else{
+        }elseif($checkMyDeliveryEx){
+            $propCord = [];
+            $propSett = Helper::getPropAddressCord($checkMyDeliveryEx);
+            foreach($propertyCollection as $prop){
+                if(in_array($prop->getField('CODE'), $propSett)){
+                    $propCord[] = $prop;
+                }
+            }
+            if(empty($propCord)){
+                $event->addResult(
+                    new EventResult(
+                        EventResult::ERROR,
+                        ResultError::create(
+                            new Error(Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_EXPRESS_PROP'), "DELIVERY")
+                        )
+                    )
+                );
+            }
+            if(!empty($propCord) && !$propCord[0]->getValue()){
+                $event->addResult(
+                    new EventResult(
+                        EventResult::ERROR,
+                        ResultError::create(
+                            new Error(Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_EXPRESS'), "DELIVERY")
+                        )
+                    )
+                );
+                //
+            }
+
+        }elseif($checkMyDeliveryPvz){
 			$pointId = false;
             $errorText = '';
             $setPoints = false;
@@ -203,11 +235,12 @@ class handlersBx {
         }
 
         $statusCheck = false;
-        $checkMyDeliveryAdr = Helper::getProfileId($order, Helper::DOST_TYPE_ADR);
         if($checkMyDeliveryPvz){
             $statusCheck = Helper::getStatusAutoCreate($checkMyDeliveryPvz);
         }elseif($checkMyDeliveryAdr){
             $statusCheck = Helper::getStatusAutoCreate($checkMyDeliveryAdr);
+        }elseif($checkMyDeliveryEx){
+            $statusCheck = Helper::getStatusAutoCreate($checkMyDeliveryEx);
         }
 
         //print_r($statusCheck);

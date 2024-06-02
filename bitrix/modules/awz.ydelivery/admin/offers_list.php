@@ -26,7 +26,9 @@ $APPLICATION->SetAdditionalCSS("/bitrix/css/".$module_id."/style.css");
 Asset::getInstance()->addString('<style>.adm-filter-main-table {width: 100%!important;}</style>');
 
 global $STATUS_LIST;
+global $STATUS_LIST_EX;
 $STATUS_LIST = unserialize(Option::get($module_id, 'YD_STATUSLIST', '', ''));
+$STATUS_LIST_EX = unserialize(Option::get($module_id, 'YD_STATUSLIST_EX', '', ''));
 
 $val_stat_disabled = Option::get($module_id, "CHECKER_FIN_DSBL", "", '');
 $val_stat_disabled = unserialize($val_stat_disabled);

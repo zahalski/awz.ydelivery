@@ -30,6 +30,7 @@ class Helper {
     const DOST_TYPE_ALL = 'all';
     const DOST_TYPE_PVZ = 'pvz';
     const DOST_TYPE_ADR = 'address';
+    const DOST_TYPE_EX = 'express';
 
     const YANDEX_PAYED = 'already_paid';
 
@@ -184,6 +185,22 @@ class Helper {
         return explode(',', $prop);
     }
 
+    /**
+     * код свойства с именем клиента
+     *
+     * @param int $profileId
+     * @return array
+     * @throws ArgumentNullException
+     * @throws ArgumentOutOfRangeException
+     */
+    public static function getPropName($profileId){
+        $prop = Option::get(Handler::MODULE_ID,
+            'PROP_NAME_'.$profileId,
+            '', '');
+        if(!$prop) return array();
+        return explode(',', $prop);
+    }
+
 
     /**
      * статус заказа для автоматического создания заявки
@@ -290,9 +307,16 @@ class Helper {
         $minTime = time()+86400*30;
         $findOffer = null;
         foreach($offers['result']['offers'] as $offer){
-            if($minTime > strtotime($offer['offer_details']['delivery_interval']['min'])){
-                $minTime = strtotime($offer['offer_details']['delivery_interval']['min']);
-                $findOffer = $offer;
+            if(isset($offer['offer_details'])){
+                if($minTime > strtotime($offer['offer_details']['delivery_interval']['min'])){
+                    $minTime = strtotime($offer['offer_details']['delivery_interval']['min']);
+                    $findOffer = $offer;
+                }
+            }elseif(isset($offer['delivery_interval'])){
+                if($minTime > strtotime($offer['delivery_interval']['from'])){
+                    $minTime = strtotime($offer['delivery_interval']['from']);
+                    $findOffer = $offer;
+                }
             }
         }
 
@@ -301,7 +325,7 @@ class Helper {
             return $result;
         }
 
-        $result->setData(array('offer_id'=>$findOffer['offer_id']));
+        $result->setData(array('offer_id'=>$findOffer['offer_id'] ? $findOffer['offer_id'] : $findOffer['payload']));
 
         return $result;
 
@@ -521,6 +545,23 @@ class Helper {
                         }
                     }
                 }
+                if($type == self::DOST_TYPE_ALL || $type == self::DOST_TYPE_EX) {
+                    $className = '\\' . $classNames[2];
+                    $params = DeliveryManager::getById($delivery->getId());
+                    //bug php 7.3 main 20.200.300, sale 20.5.43
+                    $bug = false;
+                    if($params['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'){
+                        $params = DeliveryManager::getById($order->getField('DELIVERY_ID'));
+                        $bug = true;
+                    }
+                    if($params['CLASS_NAME'] == $className){
+                        if($bug){
+                            $checkMyDelivery = $order->getField('DELIVERY_ID');
+                        }else{
+                            $checkMyDelivery = $delivery->getId();
+                        }
+                    }
+                }
             }
         }
         return $checkMyDelivery;
@@ -565,7 +606,12 @@ class Helper {
         unset($cl);
         if($type == Helper::DOST_TYPE_PVZ){
             unset($classNames[1]);
+            unset($classNames[2]);
         }else if($type == Helper::DOST_TYPE_ADR){
+            unset($classNames[0]);
+            unset($classNames[2]);
+        }else if($type == Helper::DOST_TYPE_EX){
+            unset($classNames[1]);
             unset($classNames[0]);
         }
         $r = \Bitrix\Sale\Delivery\Services\Table::getList(array(

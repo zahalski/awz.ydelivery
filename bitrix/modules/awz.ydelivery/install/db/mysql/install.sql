@@ -2,7 +2,7 @@ create table if not exists b_awz_ydelivery_offer (
 	ID int(18) NOT NULL auto_increment,
 	ORDER_ID int(18) NOT NULL,
 	OFFER_ID varchar(255) NOT NULL,
-    HISTORY varchar(6255) DEFAULT NULL,
+    HISTORY longtext DEFAULT NULL,
     HISTORY_FIN varchar(1) DEFAULT NULL,
     CREATE_DATE datetime NOT NULL,
     LAST_DATE datetime NOT NULL,

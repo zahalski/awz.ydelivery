@@ -23,6 +23,7 @@ class Edit extends Main {
     public function getMlifeRowListAdminCustomRow($row){
 
         global $STATUS_LIST;
+        global $STATUS_LIST_EX;
 
         $status = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EMPTY_STATUS');
         $status2 = Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_EMPTY_STATUS');
@@ -38,6 +39,9 @@ class Edit extends Main {
             if(isset($STATUS_LIST[$row->arRes['LAST_STATUS']])){
                 $status2 .= ' - '.$STATUS_LIST[$row->arRes['LAST_STATUS']];
             }
+            if(isset($STATUS_LIST_EX[$row->arRes['LAST_STATUS']])){
+                $status2 .= ' - '.$STATUS_LIST_EX[$row->arRes['LAST_STATUS']];
+            }
         }
         $row->AddViewField("LAST_STATUS", $status2);
 
@@ -50,15 +54,15 @@ class Edit extends Main {
 
     }
 
-    public function canselAction($idAr){
+    public static function canselAction($idAr){
         foreach($idAr as $id){
             $result = OffersTable::canselOffer($id);
             if($result->isSuccess()){
                 $data = $result->getData();
-                CAdminMessage::ShowMessage(array('TYPE'=>'OK', 'MESSAGE'=>$data['result']['description']));
+                \CAdminMessage::ShowMessage(array('TYPE'=>'OK', 'MESSAGE'=>$data['result']['description']));
             }else{
                 //array("MESSAGE"=>"", "TYPE"=>("ERROR"|"OK"|"PROGRESS"), "DETAILS"=>"", "HTML"=>true)
-                CAdminMessage::ShowMessage(array('TYPE'=>'ERROR', 'MESSAGE'=>implode("; ",$result->getErrorMessages())));
+                \CAdminMessage::ShowMessage(array('TYPE'=>'ERROR', 'MESSAGE'=>implode("; ",$result->getErrorMessages())));
             }
         }
     }
@@ -118,7 +122,7 @@ class Edit extends Main {
                     $fileOb->putContents($fileContent);
                     echo '<a style="margin:5px;" href="/upload/tmp/'.$tmpName.'" target="_blank">'.Loc::getMessage('AWZ_YDELIVERY_ADMIN_OL_DOWNLOAD').' ['.$tmpName.']</a><br><br>';
                 }else{
-                    CAdminMessage::ShowMessage(array(
+                    \CAdminMessage::ShowMessage(array(
                         'TYPE'=>'ERROR',
                         'MESSAGE'=>implode('; ', $res->getErrorMessages())
                     ));

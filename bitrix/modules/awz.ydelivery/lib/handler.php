@@ -40,6 +40,9 @@ class Handler extends Base {
             } elseif ($fields['PROFILE_ID'] == 1 && !$fields['SERVICE_TYPE']) {
                 $fields['SERVICE_TYPE'] = $profiles[1];
                 $fields['CLASS_NAME'] = $profiles[1];
+            }elseif ($fields['PROFILE_ID'] == 2 && !$fields['SERVICE_TYPE']) {
+                $fields['SERVICE_TYPE'] = $profiles[2];
+                $fields['CLASS_NAME'] = $profiles[2];
             }
         }
         return Manager::createObject($fields);
@@ -65,12 +68,17 @@ class Handler extends Base {
         return [
             'Awz\Ydelivery\Profiles\Pickup',
             'Awz\Ydelivery\Profiles\Standart',
+            'Awz\Ydelivery\Profiles\Express',
         ];
     }
 
     public function getProfilesList()
     {
-        return [Profiles\Pickup::getClassTitle(), Profiles\Standart::getClassTitle()];
+        return [
+            Profiles\Pickup::getClassTitle(),
+            Profiles\Standart::getClassTitle(),
+            Profiles\Express::getClassTitle()
+        ];
     }
 
     protected function calculateConcrete(Shipment $shipment = null)

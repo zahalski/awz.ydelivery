@@ -92,6 +92,35 @@ $defStatus = array(
     "DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_UPDATED_BY_DELIVERY_DELIVERY_AT_START"),
     "DELIVERY_ATTEMPT_FAILED_DELIVERY_UPDATED_BY_DELIVERY" => Loc::getMessage("AWZ_YDELIVERY_ENQ_STAT_DELIVERY_ATTEMPT_FAILED_DELIVERY_UPDATED_BY_DELIVERY")
 );
+$defStatusEx = [
+     'new'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_NEW"),
+     'estimating'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_ESTIMATING"),
+     'ready_for_approval'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_READY_FOR_APPROVAL"),
+     'accepted'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_ACCEPTED"),
+     'performer_lookup'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PERFORMER_LOOKUP"),
+     'performer_draft'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PERFORMER_DRAFT"),
+     'performer_found'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PERFORMER_FOUND"),
+     'pickup_arrived'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PICKUP_ARRIVED"),
+     'ready_for_pickup_confirmation'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_READY_FOR_PICKUP_CONFIRMATION"),
+     'pickuped'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PICKUPED"),
+     'delivery_arrived'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_DELIVERY_ARRIVED"),
+     'ready_for_delivery_confirmation'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_READY_FOR_DELIVERY_CONFIRMATION"),
+     'pay_waiting'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PAY_WAITING"),
+     'delivered'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_DELIVERED"),
+     'delivered_finish'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_DELIVERED_FINISH"),
+     'returning'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_RETURNING"),
+     'return_arrived'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_RETURN_ARRIVED"),
+     'ready_for_return_confirmation'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_READY_FOR_RETURN_CONFIRMATION"),
+     'returned'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_RETURNED"),
+     'returned_finish'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_RETURNED_FINISH"),
+     'cancelled_by_taxi'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_CANCELLED_BY_TAXI"),
+     'cancelled'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_CANCELLED"),
+     'cancelled_with_payment'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_CANCELLED_WITH_PAYMENT"),
+     'cancelled_with_items_on_hands'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_CANCELLED_WITH_ITEMS_ON_HANDS"),
+     'failed'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_FAILED"),
+     'estimating_failed'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_ESTIMATING_FAILED"),
+     'performer_not_found'=>Loc::getMessage("AWZ_YDELIVERY_ENQ_STATEX_PERFORMER_NOT_FOUND"),
+];
 
 $statusList = unserialize(Option::get($module_id, 'YD_STATUSLIST', '', ''));
 if(isset($statusList['DRAFT'])) { //old dublicates statuses
@@ -102,6 +131,16 @@ if(empty($statusList)) {
     $statusList = $defStatus;
     Option::set($module_id, 'YD_STATUSLIST', serialize($defStatus), '');
 }
+
+$statusListEx = unserialize(Option::get($module_id, 'YD_STATUSLIST_EX', '', ''));
+if(empty($statusListEx)) {
+    $statusListEx = $defStatusEx;
+    Option::set($module_id, 'YD_STATUSLIST_EX', serialize($defStatusEx), '');
+}
+
+$pvzList = Helper::getActiveProfileIds(Helper::DOST_TYPE_PVZ);
+$exList = Helper::getActiveProfileIds(Helper::DOST_TYPE_EX);
+$adrList = Helper::getActiveProfileIds(Helper::DOST_TYPE_ADR);
 
 $deliveryProfileList = Helper::getActiveProfileIds();
 
@@ -126,10 +165,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
 {
     if($minMode){
 
+        /*
+         * $isPvz = isset($pvzList[$profileId]) ? true : false;
+         * $isEx = isset($exList[$profileId]) ? true : false;
+         * $isAdr = isset($adrList[$profileId]) ? true : false;
+         * */
+
         foreach($statusList as $k=>$v){
             if($startCode != $k) continue;
             foreach($deliveryProfileList as $profileId=>$profileName){
                 if($startProfile != $profileId) continue;
+                if(isset($exList[$profileId])) continue;
+                $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
+                Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
+                $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
+                Option::set($module_id, $key, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
+            }
+        }
+        foreach($statusListEx as $k=>$v){
+            if($startCode != $k) continue;
+            foreach($deliveryProfileList as $profileId=>$profileName){
+                if($startProfile != $profileId) continue;
+                if(!isset($exList[$profileId])) continue;
                 $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
                 Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
                 $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
@@ -183,27 +240,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $MODULE_RIGHT == "W" && strlen($_REQ
         Option::set($module_id, "BALUN_VARIANT", trim($_REQUEST["BALUN_VARIANT"]), "");
         Option::set($module_id, "CHECKER_FIN_DSBL", serialize($_REQUEST["CHECKER_FIN_DSBL"]), "");
 
+        foreach($deliveryProfileList as $profileId=>$profileName){
+            foreach($payYandexMethods as $payId=>$payName){
+                Option::set($module_id, "PAY_LINK_".$profileId.'_'.mb_strtoupper($payId), serialize($_REQUEST["PAY_LINK_".$profileId.'_'.mb_strtoupper($payId)]), "");
+            }
+            Option::set($module_id, "YM_TRADING_ON_".$profileId, trim($_REQUEST["YM_TRADING_ON_".$profileId]), "");
+
+            Option::set($module_id, "PVZ_CODE_".$profileId, trim($_REQUEST["PVZ_CODE_".$profileId]), "");
+            Option::set($module_id, "PVZ_ADDRESS_CORD_".$profileId, trim($_REQUEST["PVZ_ADDRESS_CORD_".$profileId]), "");
+            Option::set($module_id, "DATE_CODE_".$profileId, trim($_REQUEST["DATE_CODE_".$profileId]), "");
+            Option::set($module_id, "PVZ_ADDRESS_".$profileId, trim($_REQUEST["PVZ_ADDRESS_".$profileId]), "");
+            Option::set($module_id, "PVZ_ADDRESS_TMPL_".$profileId, trim($_REQUEST["PVZ_ADDRESS_TMPL_".$profileId]), "");
+            Option::set($module_id, "PROP_NAME_".$profileId, trim($_REQUEST["PROP_NAME_".$profileId]), "");
+            Option::set($module_id, "OFFERS_ORDER_STATUS_".$profileId, trim($_REQUEST["OFFERS_ORDER_STATUS_".$profileId]), "");
+
+            Option::set($module_id, "HIDE_PAY_ON_".$profileId, trim($_REQUEST["HIDE_PAY_ON_".$profileId]), "");
+            Option::set($module_id, "CHECKER_ON_".$profileId, trim($_REQUEST["CHECKER_ON_".$profileId]), "");
+            Option::set($module_id, "CHECKER_INTERVAL_".$profileId, trim($_REQUEST["CHECKER_INTERVAL_".$profileId]), "");
+            Option::set($module_id, "CHECKER_COUNT_".$profileId, trim($_REQUEST["CHECKER_COUNT_".$profileId]), "");
+            Option::set($module_id, "CHECKER_FIN_".$profileId, serialize($_REQUEST["CHECKER_FIN_".$profileId]), "");
+        }
         foreach($statusList as $k=>$v){
             foreach($deliveryProfileList as $profileId=>$profileName){
-
-                foreach($payYandexMethods as $payId=>$payName){
-                    Option::set($module_id, "PAY_LINK_".$profileId.'_'.mb_strtoupper($payId), serialize($_REQUEST["PAY_LINK_".$profileId.'_'.mb_strtoupper($payId)]), "");
-                }
-
-                Option::set($module_id, "YM_TRADING_ON_".$profileId, trim($_REQUEST["YM_TRADING_ON_".$profileId]), "");
-
-                Option::set($module_id, "PVZ_CODE_".$profileId, trim($_REQUEST["PVZ_CODE_".$profileId]), "");
-                Option::set($module_id, "PVZ_ADDRESS_CORD_".$profileId, trim($_REQUEST["PVZ_ADDRESS_CORD_".$profileId]), "");
-                Option::set($module_id, "DATE_CODE_".$profileId, trim($_REQUEST["DATE_CODE_".$profileId]), "");
-                Option::set($module_id, "PVZ_ADDRESS_".$profileId, trim($_REQUEST["PVZ_ADDRESS_".$profileId]), "");
-                Option::set($module_id, "PVZ_ADDRESS_TMPL_".$profileId, trim($_REQUEST["PVZ_ADDRESS_TMPL_".$profileId]), "");
-                Option::set($module_id, "OFFERS_ORDER_STATUS_".$profileId, trim($_REQUEST["OFFERS_ORDER_STATUS_".$profileId]), "");
-
-                Option::set($module_id, "HIDE_PAY_ON_".$profileId, trim($_REQUEST["HIDE_PAY_ON_".$profileId]), "");
-                Option::set($module_id, "CHECKER_ON_".$profileId, trim($_REQUEST["CHECKER_ON_".$profileId]), "");
-                Option::set($module_id, "CHECKER_INTERVAL_".$profileId, trim($_REQUEST["CHECKER_INTERVAL_".$profileId]), "");
-                Option::set($module_id, "CHECKER_COUNT_".$profileId, trim($_REQUEST["CHECKER_COUNT_".$profileId]), "");
-                Option::set($module_id, "CHECKER_FIN_".$profileId, serialize($_REQUEST["CHECKER_FIN_".$profileId]), "");
+                if(isset($exList[$profileId])) continue;
+                $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
+                Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
+                $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
+                Option::set($module_id, $key, $_REQUEST["PARAMS_STATUS_TO_".$profileId.'_'.$k], '');
+            }
+        }
+        foreach($statusListEx as $k=>$v) {
+            foreach ($deliveryProfileList as $profileId => $profileName) {
+                if(!isset($exList[$profileId])) continue;
                 $key = 'md5_'.md5("PARAMS_STATUS_FROM_".$profileId.'_'.$k);
                 Option::set($module_id, $key, serialize($_REQUEST["PARAMS_STATUS_FROM_".$profileId.'_'.$k]), '');
                 $key = 'md5_'.md5("PARAMS_STATUS_TO_".$profileId.'_'.$k);
@@ -471,8 +539,9 @@ foreach($deliveryProfileList as $profileId=>$profileName){
     if($minMode && $profileId!=$startProfile) continue;
     $tabControl->BeginNextTab();
 
-    $pvzList = Helper::getActiveProfileIds(Helper::DOST_TYPE_PVZ);
     $isPvz = isset($pvzList[$profileId]) ? true : false;
+    $isEx = isset($exList[$profileId]) ? true : false;
+    $isAdr = isset($adrList[$profileId]) ? true : false;
 
     ?>
 <?if(!$minMode){?>
@@ -515,6 +584,14 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         </td>
     </tr>
 
+<?}elseif($isEx){?>
+        <tr>
+            <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROP_NAME')?></td>
+            <td>
+                <?$val = Option::get($module_id, "PROP_NAME_".$profileId, "NAME", "");?>
+                <input type="text" size="35" maxlength="255" value="<?=$val?>" name="PROP_NAME_<?=$profileId?>"/>
+            </td>
+        </tr>
 <?}else{?>
     <?if(Loader::includeModule('yandex.market')){?>
         <tr>
@@ -524,6 +601,8 @@ foreach($deliveryProfileList as $profileId=>$profileName){
                 <input type="checkbox" value="Y" name="YM_TRADING_ON_<?=$profileId?>" <?if ($val=="Y") echo "checked";?>></td>
         </tr>
     <?}?>
+<?}?>
+<?if($isAdr || $isEx){?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ_ADR_CORD')?></td>
         <td>
@@ -532,7 +611,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         </td>
     </tr>
 <?}?>
-
+<?if($isAdr || $isPvz){?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROPPVZ_DATE')?></td>
         <td>
@@ -540,8 +619,8 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             <input type="text" size="35" maxlength="255" value="<?=$val?>" name="DATE_CODE_<?=$profileId?>"/>
         </td>
     </tr>
-
-
+<?}?>
+<?if(true){?>
     <tr class="heading">
         <td colspan="2">
             <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROFILE_PAYS')?>
@@ -556,7 +635,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             <input type="checkbox" value="Y" name="HIDE_PAY_ON_<?=$profileId?>" <?if ($val=="Y") echo "checked";?>></td>
     </tr>
     <?}?>
-        <?foreach($payYandexMethods as $keyPay=>$valPay){?>
+<?foreach($payYandexMethods as $keyPay=>$valPay){?>
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PAY_CHANGE')?> [<?=$keyPay?>] - <?=$valPay?></td>
         <td>
@@ -577,14 +656,13 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         </td>
     </tr>
         <?}?>
-
+<?}?>
 
     <tr class="heading">
         <td colspan="2">
             <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_PROFILE_AUTO')?>
         </td>
     </tr>
-
 
     <tr>
         <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_AUTOCREATE')?></td>
@@ -606,6 +684,7 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             </select>
         </td>
     </tr>
+        <?if(true){?>
     <tr>
         <td width="50%"><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC')?></td>
         <td>
@@ -655,7 +734,11 @@ foreach($deliveryProfileList as $profileId=>$profileName){
             ?>
             <select name="CHECKER_FIN_<?=$profileId?>[]" multiple="multiple" size="20" style="max-width:1200px;">
                 <?
-                foreach($statusList as $k=>$stat){
+                $statusList_ = $statusList;
+                if($isEx){
+                    $statusList_ = $statusListEx;
+                }
+                foreach($statusList_ as $k=>$stat){
                     if(in_array($k,$val_stat_disabled)) continue;
                     $selected = '';
                     if(in_array($k,$val)) $selected = ' selected="selected"';
@@ -666,8 +749,11 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         </td>
     </tr>
     <?
-
-    foreach($statusList as $k=>$v){
+    $statusList_ = $statusList;
+    if($isEx){
+        $statusList_ = $statusListEx;
+    }
+    foreach($statusList_ as $k=>$v){
         if(in_array($k,$val_stat_disabled)) continue;
         ?>
         <tr class="heading"><td colspan="2"><?=$k?>: <br><?=$v?></td></tr>
@@ -716,57 +802,64 @@ foreach($deliveryProfileList as $profileId=>$profileName){
         <?
     }
     ?>
+
+        <?}?>
 <?}else{?>
         <?
-
-        foreach($statusList as $k=>$v){
-            if(in_array($k,$val_stat_disabled)) continue;
-            if($startCode && ($startCode != $k)) continue;
-            ?>
-            <tr class="heading"><td colspan="2"><?=$k?>: <br><?=$v?></td></tr>
-            <tr>
-                <td>
-                    <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_FROM')?>
-                </td>
-                <td>
-                    <?
-                    $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$profileId.'_'.$k);
-
-                    $val = Option::get($module_id, $key, '', '');
-                    $val = unserialize($val);
-                    if(!is_array($val)) $val = array();
-                    ?>
-                    <select name="PARAMS_STATUS_FROM_<?=$profileId?>_<?=$k?>[]" multiple="multiple">
+        if(true){
+            $statusList_ = $statusList;
+            if($isEx){
+                $statusList_ = $statusListEx;
+            }
+            foreach($statusList_ as $k=>$v){
+                if(in_array($k,$val_stat_disabled)) continue;
+                if($startCode && ($startCode != $k)) continue;
+                ?>
+                <tr class="heading"><td colspan="2"><?=$k?>: <br><?=$v?></td></tr>
+                <tr>
+                    <td>
+                        <?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_FROM')?>
+                    </td>
+                    <td>
                         <?
-                        foreach($statusAr as $stat){
-                            $selected = '';
-                            if(in_array($stat['ID'],$val)) $selected = ' selected="selected"';
-                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
-                        }
+                        $key = 'md5_'.md5('PARAMS_STATUS_FROM_'.$profileId.'_'.$k);
+
+                        $val = Option::get($module_id, $key, '', '');
+                        $val = unserialize($val);
+                        if(!is_array($val)) $val = array();
                         ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_TO')?></td>
-                <td>
-                    <?
-                    $key = 'md5_'.md5('PARAMS_STATUS_TO_'.$profileId.'_'.$k);
-                    $val = Option::get($module_id, $key, '', '');?>
-                    <select name="PARAMS_STATUS_TO_<?=$profileId?>_<?=$k?>">
+                        <select name="PARAMS_STATUS_FROM_<?=$profileId?>_<?=$k?>[]" multiple="multiple">
+                            <?
+                            foreach($statusAr as $stat){
+                                $selected = '';
+                                if(in_array($stat['ID'],$val)) $selected = ' selected="selected"';
+                                echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><?=Loc::getMessage('AWZ_YDELIVERY_OPT_L_STATUS_SYNC_TO')?></td>
+                    <td>
                         <?
-                        foreach($statusAr2 as $stat){
-                            $selected = '';
-                            if($stat['ID'] == $val) $selected = ' selected="selected"';
-                            echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
-                        }
-                        ?>
-                    </select>
-                </td>
-            </tr>
+                        $key = 'md5_'.md5('PARAMS_STATUS_TO_'.$profileId.'_'.$k);
+                        $val = Option::get($module_id, $key, '', '');?>
+                        <select name="PARAMS_STATUS_TO_<?=$profileId?>_<?=$k?>">
+                            <?
+                            foreach($statusAr2 as $stat){
+                                $selected = '';
+                                if($stat['ID'] == $val) $selected = ' selected="selected"';
+                                echo '<option value="'.$stat['ID'].'"'.$selected.'>['.$stat['ID'].'] - '.$stat['NAME'].'</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
 
 
-            <?
+                <?
+            }
         }
         ?>
     <?}?>

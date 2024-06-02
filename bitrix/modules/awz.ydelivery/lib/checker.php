@@ -134,11 +134,15 @@ class Checker {
         }
 
         $deliveryProfileList = Helper::getActiveProfileIds();
+        $deliveryProfileListEx = Helper::getActiveProfileIds(Helper::DOST_TYPE_EX);
 
         $statusList = unserialize(Option::get(Handler::MODULE_ID, 'YD_STATUSLIST', '', ''));
+        $statusListEx = unserialize(Option::get(Handler::MODULE_ID, 'YD_STATUSLIST_EX', '', ''));
 
         $checkedOrder = [];
         foreach($deliveryProfileList as $profileId=>$profileName){
+
+            $isExtProfile = isset($deliveryProfileListEx[$profileId]);
 
             $activeChecker = Option::get(
                 Handler::MODULE_ID,
@@ -191,7 +195,46 @@ class Checker {
             $val_stat_disabled = unserialize($val_stat_disabled);
             if(!is_array($val_stat_disabled)) $val_stat_disabled = [];
 
+            $statusLinked = [];
+            $statusLinkedHash = [];
+            if($isExtProfile){
+                $cursor = Option::get(Handler::MODULE_ID, "CHECKER_CURSOR_".$profileId, "", '');
+                $cursor = '';
+                $ydResClaimRes = $api->offersHistoryEx($cursor);
+                if(!$ydResClaimRes->isSuccess()) continue;
+                $ydResClaim = $ydResClaimRes->getData();
+                foreach($ydResClaim['result']['events'] as $ev){
+                    if($ev['change_type']!='status_changed') continue;
+                    $claim_id = $ev['claim_id'];
+                    if(!isset($statusLinked[$claim_id])){
+                        $statusLinked[$claim_id] = [];
+                    }
+                    $hash = md5(serialize($ev));
+                    $statDesc = isset($statusListEx[$ev['new_status']]) ? $statusListEx[$ev['new_status']] : $ev['new_status'];
+                    $statusLinked[$claim_id][$hash] = [
+                        'status'=>$ev['new_status'],
+                        'description'=>$statDesc,
+                        'timestamp'=>strtotime($ev['updated_ts']),
+                        'hash'=>$hash,
+                        'status_m'=>$ev['new_status'],
+                        'status_d'=>$statDesc
+                    ];
+                    $statusLinkedHash[] = $hash;
+                }
+            }
+
+            $claimUps = unserialize(Option::get(Handler::MODULE_ID, "CHECKER_CURSOR_UPS_".$profileId, "a:0:{}", ''));
+            $findOrders = false;
             while($data = $rOffers->fetch()){
+                $findOrders = true;
+                $extUpTypeVersion = 1;
+                if($isExtProfile && $extUpTypeVersion==1){
+                    if(isset($statusLinked[$data['OFFER_ID']])) $extUpTypeVersion=2;
+                    //echo'<pre>';print_r($extUpTypeVersion);echo'</pre>';
+                    //die();
+                    //print_r($finUp['lastStatusCode']);
+                    //die();
+                }
 
                 $finUp = $data['HISTORY'];
                 if(!$finUp) $finUp = [];
@@ -213,42 +256,32 @@ class Checker {
 
                 $checkedOrder[] = $data['ORDER_ID'];
 
-                $ydRes = $api->offerHistory($data['OFFER_ID']);
+                if($isExtProfile && $extUpTypeVersion==1){
+                    $ydRes = $api->offerInfoEx($data['OFFER_ID']);
+                }elseif(!$isExtProfile){
+                    $ydRes = $api->offerHistory($data['OFFER_ID']);
+                }
 
                 $finUp['count_resp'] = intval($finUp['count_resp']) + 1;
 
                 $noUpdateDate = false;
                 $startStatusCode = $finUp['lastStatusCode'];
-                if($ydRes->isSuccess()){
-                    $ydData = $ydRes->getData();
 
-                    //$data['LAST_STATUS']
-
-                    $undStatus = self::unDoubleStatus($ydData['result']['state_history']);
-
-                    foreach($undStatus as $statRow){
-                        if(in_array($statRow['status_m'], $val_stat_disabled)) continue;
-                        if($statRow['status_m'])
-                            $data['LAST_STATUS'] = $statRow['status_m'];
+                if($isExtProfile && $extUpTypeVersion==2){
+                    foreach($statusLinked[$data['OFFER_ID']] as $statRow){
+                        $data['LAST_STATUS'] = $statRow['status_m'];
                     }
                     $lastStatusCode = '';
                     $upStatList = false;
-                    foreach($undStatus as $statRow){
-
-                        if(in_array($statRow['status_m'], $val_stat_disabled)) {
-                            $hash = $statRow['hash'];
-                            if(!isset($finUp['hist'][$hash])) {
-                                $finUp['hist'][$hash] = $statRow;
-                            }
-                            continue;
-                        }
+                    foreach($statusLinked[$data['OFFER_ID']] as $statRow){
 
                         $lastStatusCode = $statRow['status_m'];
-                        if($lastStatusCode && !isset($statusList[$lastStatusCode])){
-                            $statusList[$lastStatusCode] = $statRow['status_d'];
+                        if($lastStatusCode && !isset($statusListEx[$lastStatusCode])){
+                            $statusListEx[$lastStatusCode] = $statRow['status_d'];
                             $upStatList = true;
                         }
                         $hash = $statRow['hash'];
+                        if(!in_array($hash, $claimUps)) $claimUps[] = $hash;
                         if(!isset($finUp['hist'][$hash])){
                             $finUp['hist'][$hash] = $statRow;
                             $noUpdateDate = true;
@@ -259,9 +292,88 @@ class Checker {
                     $finUp['lastStatusCode'] = $lastStatusCode;
                     //обновление списка статусов, для настроек
                     if($upStatList)
-                        Option::set(Handler::MODULE_ID, 'YD_STATUSLIST', serialize($statusList), '');
+                        Option::set(Handler::MODULE_ID, 'YD_STATUSLIST_EX', serialize($statusListEx), '');
 
-                }else{
+                }elseif($ydRes->isSuccess()){
+                    $ydData = $ydRes->getData();
+                    if($isExtProfile && $extUpTypeVersion==1) {
+
+                        $lastStatusCode = $ydData['result']['status'];
+                        $statRow = [
+                            'status' => $lastStatusCode,
+                            'description' => isset($statusListEx[$lastStatusCode]) ? $statusListEx[$lastStatusCode] : $lastStatusCode,
+                            'timestamp' => strtotime($ydData['result']['updated_ts']),
+                            'hash' => md5($lastStatusCode),
+                            //'status_m' => 'CREATED_IN_PLATFORM',
+                            //'status_d' => 'Принят',
+                        ];
+                        $statRow['status_m'] = $statRow['status'];
+                        $statRow['status_d'] = $statRow['description'];
+                        //echo'<pre>';print_r($ydData);echo'</pre>';
+                        //die();
+
+
+                        $upStatList = false;
+                        if ($lastStatusCode && !isset($statusListEx[$lastStatusCode])) {
+                            $statusListEx[$lastStatusCode] = $lastStatusCode;
+                            $upStatList = true;
+                        }
+
+                        $hash = $statRow['hash'];
+                        if (!isset($finUp['hist'][$hash])) {
+                            $finUp['hist'][$hash] = $statRow;
+                        }
+
+                        $finUp['lastStatusCode'] = $lastStatusCode;
+                        if($lastStatusCode)
+                            $data['LAST_STATUS'] = $lastStatusCode;
+                        //обновление списка статусов, для настроек
+                        if ($upStatList)
+                            Option::set(Handler::MODULE_ID, 'YD_STATUSLIST_EX', serialize($statusListEx), '');
+
+                    }
+                    elseif(!$isExtProfile){
+
+                        $undStatus = self::unDoubleStatus($ydData['result']['state_history']);
+
+                        foreach($undStatus as $statRow){
+                            if(in_array($statRow['status_m'], $val_stat_disabled)) continue;
+                            if($statRow['status_m'])
+                                $data['LAST_STATUS'] = $statRow['status_m'];
+                        }
+                        $lastStatusCode = '';
+                        $upStatList = false;
+                        foreach($undStatus as $statRow){
+
+                            if(in_array($statRow['status_m'], $val_stat_disabled)) {
+                                $hash = $statRow['hash'];
+                                if(!isset($finUp['hist'][$hash])) {
+                                    $finUp['hist'][$hash] = $statRow;
+                                }
+                                continue;
+                            }
+
+                            $lastStatusCode = $statRow['status_m'];
+                            if($lastStatusCode && !isset($statusList[$lastStatusCode])){
+                                $statusList[$lastStatusCode] = $statRow['status_d'];
+                                $upStatList = true;
+                            }
+                            $hash = $statRow['hash'];
+                            if(!isset($finUp['hist'][$hash])){
+                                $finUp['hist'][$hash] = $statRow;
+                                $noUpdateDate = true;
+                                //не обновляем дату т.к. могут быть еще новые статусы
+                                break;
+                            }
+                        }
+                        $finUp['lastStatusCode'] = $lastStatusCode;
+                        //обновление списка статусов, для настроек
+                        if($upStatList)
+                            Option::set(Handler::MODULE_ID, 'YD_STATUSLIST', serialize($statusList), '');
+
+                    }
+                }
+                else{
                     $finUp['errors'][] = $ydRes->getErrorMessages();
                     $finUp['count_error'] = intval($finUp['count_error']) + 1;
                 }
@@ -288,10 +400,13 @@ class Checker {
                 if(!$noUpdateDate){
                     $arChange['LAST_DATE'] = DateTime::createFromTimestamp(time());
                 }
+
                 OffersTable::update(
                     ['ID'=>$data['ID']],
                     $arChange
                 );
+                //echo'<pre>';print_r($arChange);echo'</pre>';
+                //die();
 
                 if($finUp['lastStatusCode']){
                     $lStatus = $finUp['lastStatusCode'];
@@ -425,7 +540,15 @@ class Checker {
                 //die();
 
             }
-
+            $claimAll = true;
+            foreach($statusLinkedHash as $hash){
+                if(!in_array($hash, $claimUps)) $claimAll = false;
+            }
+            if((!$claimAll || !$findOrders) && isset($ydResClaim['result']['cursor'])){
+                $claimUps = [];
+                Option::set(Handler::MODULE_ID, "CHECKER_CURSOR_".$profileId, $ydResClaim['result']['cursor'], '');
+            }
+            Option::set(Handler::MODULE_ID, "CHECKER_CURSOR_UPS_".$profileId, serialize($claimUps), '');
         }
 
         return "\\Awz\\Ydelivery\\Checker::agentGetStatus();";

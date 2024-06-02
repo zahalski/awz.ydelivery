@@ -43,7 +43,7 @@ class Ydapi {
     private $lastResponseType;
 
     private $cacheParams = array();
-	
+
 	private $standartJson = false;
 
 	private static $staticCache = array();
@@ -154,6 +154,16 @@ class Ydapi {
     }
 
     /**
+     * Отмена заявки экспресс
+     *
+     * @param string $offerId ид заявки
+     * @return Result
+     */
+    public function offerCanselEx(string $offerId, string $state = 'free'){
+        return $this->send('b2b/cargo/integration/v2/claims/cancel?claim_id='.$offerId, array('version'=>1, 'cancel_state'=>$state));
+    }
+
+    /**
      * Информация о заявке
      *
      * @param string $offerId ид заявки
@@ -161,6 +171,16 @@ class Ydapi {
      */
     public function offerInfo(string $offerId){
         return $this->send('api/b2b/platform/request/info?request_id='.$offerId, array(), 'get');
+    }
+
+    /**
+     * Информация о заявке экспресс
+     *
+     * @param string $offerId ид заявки
+     * @return Result
+     */
+    public function offerInfoEx(string $offerId){
+        return $this->send('b2b/cargo/integration/v2/claims/info?claim_id='.$offerId, [], 'post');
     }
 
     /**
@@ -226,6 +246,28 @@ class Ydapi {
     }
 
     /**
+     * Получение номера телефона курьера
+     *
+     * @param string $offerId ид заявки
+     * @return Result
+     */
+    public function getCourierPhone(string $offerId){
+        return $this->send('b2b/cargo/integration/v2/driver-voiceforwarding', array('claim_id'=>$offerId));
+    }
+
+    /**
+     * История статусов заявок
+     *
+     * @param string $offerId ид последней записи журнала
+     * @return Result
+     */
+    public function offersHistoryEx(string $cursor=''){
+        if(!$cursor)
+            return $this->send('b2b/cargo/integration/v2/claims/journal', '', 'raw_post');
+        return $this->send('b2b/cargo/integration/v2/claims/journal', ['cursor'=>$cursor]);
+    }
+
+    /**
      * Получение ярлыков
      *
      * @param array $data
@@ -261,6 +303,28 @@ class Ydapi {
     }
 
     /**
+     * Список экспресс предложений для параметров заказа
+     *
+     * @param array $data параметры заказа
+     * @return Result
+     */
+    public function getOffersEx(array $data){
+        return $this->send('b2b/cargo/integration/v2/offers/calculate', $data);
+    }
+
+    /**
+     * Создание заявки в экспресс доставку
+     *
+     * @param array $data параметры заказа
+     * @return Result
+     */
+    public function createOffersEx(array $data){
+        $r_id = $data['request_id'];
+        unset($data['request_id']);
+        return $this->send('b2b/cargo/integration/v2/claims/create?request_id='.$r_id, $data);
+    }
+
+    /**
      * Получение идентификатора местоположения по адресу
      *
      * @param string $address
@@ -278,6 +342,16 @@ class Ydapi {
      */
     public function calc(array $data){
         return $this->send('api/b2b/platform/pricing-calculator', $data);
+    }
+
+    /**
+     * Предварительная оценка без создания заявки
+     *
+     * @param array $data
+     * @return Result
+     */
+    public function calcExpress(array $data){
+        return $this->send('b2b/cargo/integration/v2/check-price', $data);
     }
 
     /**
@@ -341,6 +415,8 @@ class Ydapi {
 			}
             if($type == 'get'){
                 $res = $httpClient->get($url);
+            }elseif($type == 'raw_post'){
+                $res = $httpClient->post($url, $data);
             }else{
                 $res = $httpClient->post($url, Json::encode($data));
             }
