@@ -15,7 +15,7 @@ $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP"] = "Коммента
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP2"] = "Комментарий для курьера, если заказ оплачен";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP_DEF"] = "Доставка из магазина. Сообщите менеджеру, что заказ для Яндекс Доставки. Назовите номер заказа #ORDER_ID# и заберите посылку. Заказ не оплачен.";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP_DEF2"] = "Доставка из магазина. Сообщите менеджеру, что заказ для Яндекс Доставки. Назовите номер заказа #ORDER_ID# и заберите посылку. Заказ оплачен безналично, при передаче заказа нельзя требовать с получателя деньги за доставку.";
-$MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_NDS"] = "НДС товаров (-1 = нулевой НДС, 0 - НДС по умолчанию в Яндексе, 1+ - ваша ставка НДС).";
+$MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_NDS"] = "НДС товаров (-1 = без НДС, 0 - НДС 0%, 1+ - ваша ставка НДС).";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_BTN_CLASS"] = "Класс кнопки выбора GPS";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_WEIGHT_DEF"] = "Вес товара в граммах по умолчанию (если не найден вес товара)";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_DEM_DEF_DX"] = "Ширина товара в см по умолчанию (если не найдены габариты товара)";
