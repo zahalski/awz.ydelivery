@@ -199,8 +199,8 @@ class handlersBx {
                         $errorText = Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_PAY1');
                     }
                 }else{
-                    //$setPoints = false;
-                    $errorText = Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_PVZDATA');
+                    if(!$request->isAdminSection())
+                        $errorText = Loc::getMessage('AWZ_YDELIVERY_HANDLERBX_ERR_PVZDATA');
                 }
             }
 
