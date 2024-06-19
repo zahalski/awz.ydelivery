@@ -156,13 +156,13 @@ class Checker {
             $opt_interval = Option::get(
                 Handler::MODULE_ID,
                 'CHECKER_INTERVAL_'.$profileId,
-                '',''
+                0,''
                 )*60*60;
             if($disableTimer) $opt_interval = 0;
             $opt_maxcount = Option::get(
                 Handler::MODULE_ID,
                 'CHECKER_COUNT_'.$profileId,
-                '',''
+                0,''
             );
             $opt_CHECKER_FIN = unserialize(
                 Option::get(
