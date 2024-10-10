@@ -196,6 +196,7 @@ class Standart extends Base
 
         $maxWd = 0;
         $allWd = 0;
+		$cPlaces = [];
         foreach($items as $item){
             if(!isset($item['physical_dims']['dx'], $item['physical_dims']['dy'], $item['physical_dims']['dz'])){
                 continue;
@@ -205,6 +206,18 @@ class Standart extends Base
             if($item['physical_dims']['dz'] > $maxWd) $maxWd = $item['physical_dims']['dz'];
             $allWd_ = $item['physical_dims']['dx'] + $item['physical_dims']['dy'] + $item['physical_dims']['dz'];
             if($allWd_ > $allWd) $allWd = $allWd_;
+			$ost = intval($item['count']);
+            while($ost>0){
+                $ost = $ost -1;
+                $cPlaces[] = [
+                    'physical_dims'=>[
+                        'weight_gross'=>$item['physical_dims']['weight_gross'],
+                        'dx'=>$item['physical_dims']['dx'],
+                        'dy'=>$item['physical_dims']['dy'],
+                        'dz'=>$item['physical_dims']['dz']
+                    ]
+                ];
+            }
         }
 
         /*
@@ -308,6 +321,9 @@ class Standart extends Base
                 'address'=>$locationName
             )
         );
+		if(!empty($cPlaces)){
+			$data['places'] = $cPlaces;
+		}
 
         if($request->get('AWZ_YD_CORD_ADRESS')){
             $data['destination']['address'] = $request->get('AWZ_YD_CORD_ADRESS');
