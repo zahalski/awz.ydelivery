@@ -33,3 +33,4 @@ $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_CACHE_TTL_POINTS2"] = "Время дейст
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_SET_PVZ_AUTO_EXPERIMENTAL"] = "Включить экспериментальный алгоритм запоминания ПВЗ с минимальным сроком доставки (для расчета до выбора ПВЗ)";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_SROK_DAYS_EMPTYPVZ"] = "Срок доставки, если не указан ПВЗ. Если 0, то будет попытка получения первого ПВЗ или ПВЗ с минимальным сроком.";
 $MESS["AWZ_YDELIVERY_PROFILE_PICKUP_NDS"] = "НДС товаров (-1 = нулевой НДС, 0 - НДС по умолчанию в Яндексе, 1+ - ваша ставка НДС).";
+$MESS["AWZ_YDELIVERY_PROFILE_PICKUP_SETT_ADD_PRICE"] = "Добавить к рассчитанной цене доставки (10%, 100, -10%, -100)";

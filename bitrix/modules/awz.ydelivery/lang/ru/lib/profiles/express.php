@@ -38,3 +38,4 @@ $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_COST_DEF"] = "Стоимость до
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SKIP_DOOR"] = "Отключить доставку до двери";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_CACHE_TIME"] = "Кеш расчета доставки (секунд)";
 $MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_ADD_MINUTES"] = "Расчетное время прибытия курьера (отложить расчетное время подачи можно на 30-60 минут от текущего момента)";
+$MESS["AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_ADD_PRICE"] = "Добавить к рассчитанной цене доставки (10%, 100, -10%, -100)";

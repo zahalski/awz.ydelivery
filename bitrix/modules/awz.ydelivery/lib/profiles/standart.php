@@ -166,6 +166,11 @@ class Standart extends Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_SROK_FROM_STARTDAY'),
                         "DEFAULT" => 'N'
                     ),
+                    'ADD_PRICE'=> array(
+                        'TYPE' => 'STRING',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_STANDART_SETT_ADD_PRICE'),
+                        "DEFAULT" => 0
+                    )
                 )
             )
         );
@@ -470,6 +475,16 @@ class Standart extends Base
                 );
                 return $result;
             }
+
+            if(!$config['MAIN']['ADD_PRICE']) $config['MAIN']['ADD_PRICE'] = 0;
+            $calkData['result']['pricing_total'] = (float) $calkData['result']['pricing_total'];
+            if(mb_strpos($config['MAIN']['ADD_PRICE'],'%')){
+                $calkData['result']['pricing_total'] = round($calkData['result']['pricing_total'],2) + intval($config['MAIN']['ADD_PRICE'])*round($calkData['result']['pricing_total'],2)*0.01;
+            }else{
+                $calkData['result']['pricing_total'] = round($calkData['result']['pricing_total'],2) + intval($config['MAIN']['ADD_PRICE']);
+            }
+            $calkData['result']['pricing_total'] = round($calkData['result']['pricing_total'], 2);
+
 
             $result->setDeliveryPrice(
                 roundEx(

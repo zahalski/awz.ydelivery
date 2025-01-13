@@ -191,6 +191,11 @@ class Express extends Base
                         "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP2'),
                         "DEFAULT" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_STORE_NAME_SHOP_DEF2')
                     ),
+                    'ADD_PRICE'=> array(
+                        'TYPE' => 'STRING',
+                        "NAME" => Loc::getMessage('AWZ_YDELIVERY_PROFILE_EXSPRESS_SETT_ADD_PRICE'),
+                        "DEFAULT" => 0
+                    )
                     /*
                     'ADD_MINUTES' => array(
                         'TYPE' => 'NUMBER',
@@ -451,6 +456,17 @@ class Express extends Base
                 $result->setPeriodFrom(0);
                 $result->setPeriodTo(0);
                 if($calkData['result']['price']){
+
+                    if(!$config['MAIN']['ADD_PRICE']) $config['MAIN']['ADD_PRICE'] = 0;
+                    $calkData['result']['price'] = (float) $calkData['result']['price'];
+                    if(mb_strpos($config['MAIN']['ADD_PRICE'],'%')){
+                        $calkData['result']['price'] = round($calkData['result']['price'],2) + intval($config['MAIN']['ADD_PRICE'])*round($calkData['result']['price'],2)*0.01;
+                    }else{
+                        $calkData['result']['price'] = round($calkData['result']['price'],2) + intval($config['MAIN']['ADD_PRICE']);
+                    }
+                    $calkData['result']['price'] = round($calkData['result']['price'], 2);
+
+
                     $result->setDeliveryPrice(
                         roundEx(
                             $calkData['result']['price'],
